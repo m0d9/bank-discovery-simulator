@@ -12,7 +12,9 @@ _REPO_ROOT = Path(__file__).resolve().parents[2]
 class Settings(BaseSettings):
     """Runtime configuration. Every field has a default so the app starts with no `.env`."""
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=_REPO_ROOT / ".env", env_file_encoding="utf-8", extra="ignore"
+    )
 
     APP_ENV: Literal["dev", "test", "prod"] = "dev"
     FRONTEND_DIST: Path = _REPO_ROOT / "frontend" / "dist"
