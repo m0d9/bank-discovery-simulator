@@ -42,6 +42,11 @@ class EventLogger:
 
 
 @lru_cache
+def event_logger_for(data_dir: Path) -> EventLogger:
+    """Return the shared event logger for `data_dir`, so writers to one file share one lock."""
+    return EventLogger(data_dir / EVENTS_FILE)
+
+
 def get_event_logger() -> EventLogger:
     """Return the process-wide event logger, writing under `DATA_DIR`."""
-    return EventLogger(get_settings().DATA_DIR / EVENTS_FILE)
+    return event_logger_for(get_settings().DATA_DIR)
