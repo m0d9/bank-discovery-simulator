@@ -71,7 +71,7 @@ def _mount_dev_note(app: FastAPI) -> None:
 def create_app(settings: Settings | None = None) -> FastAPI:
     """Build the FastAPI app. Pass `settings` to override the cached defaults (tests)."""
     settings = settings or get_settings()
-    configure_logging()
+    configure_logging(secrets=[settings.LLM_API_KEY.get_secret_value()])
 
     app = FastAPI(
         title="Bank Client Discovery Simulator",
