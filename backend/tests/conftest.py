@@ -27,6 +27,7 @@ except ValidationError:
 from app.llm import llm_dep  # noqa: E402
 from app.llm.fake import FakeLLM  # noqa: E402
 from app.main import create_app  # noqa: E402
+from tests.content_factory import ContentDir, make_content  # noqa: E402
 
 TEST_BASE_URL = "http://llm.test/v1"
 # Deliberately low-entropy so secret scanners don't flag the test suite.
@@ -66,6 +67,12 @@ def settings_factory(tmp_path: Path) -> SettingsFactory:
 @pytest.fixture
 def settings(settings_factory: SettingsFactory) -> Settings:
     return settings_factory()
+
+
+@pytest.fixture
+def content(tmp_path: Path) -> ContentDir:
+    """Valid sample content in `tmp_path/content`, for tests to change or break."""
+    return make_content(tmp_path)
 
 
 @pytest.fixture
