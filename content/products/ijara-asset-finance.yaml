@@ -1,0 +1,38 @@
+# yaml-language-server: $schema=../schema/product.schema.json
+id: ijara-asset-finance
+schema_version: 1
+name:
+  en: Ijara Asset Finance
+  ar: تمويل الأصول بالإجارة
+summary:
+  en: Lease-to-own finance for vehicles and equipment. The bank buys the asset and leases it to you until it becomes yours.
+  ar: تمويل بنظام الإجارة المنتهية بالتمليك للمركبات والمعدات، إذ يشتري البنك الأصل ويؤجره لك حتى تنتقل ملكيته إليك.
+segments: [retail, sme]
+category: financing
+sharia_compliant: true
+interest_based: false
+features:
+  - en: Lease-to-own for vehicles and equipment
+    ar: إجارة منتهية بالتمليك للمركبات والمعدات
+  - en: Terms of up to 5 years
+    ar: مدة تصل إلى 5 سنوات
+  - en: Ownership passes to you with the final payment
+    ar: تنتقل ملكية الأصل إليك مع آخر دفعة
+limitations:
+  - en: Tied to one specific asset
+    ar: مرتبط بأصل محدد
+  - en: The bank owns the asset until the final payment
+    ar: يبقى الأصل ملكًا للبنك حتى سداد آخر دفعة
+  - en: Comprehensive insurance is required
+    ar: التأمين الشامل إلزامي
+  - en: Advance payment of 10–20% of the asset's price
+    ar: دفعة مقدمة تتراوح بين 10% و20% من سعر الأصل
+eligibility:
+  - en: Businesses registered in Qatar, or salaried individuals living in Qatar
+    ar: المنشآت المسجلة في قطر، أو الأفراد المقيمون في قطر من أصحاب الرواتب
+  - en: A quotation from an approved dealer or supplier
+    ar: عرض سعر من وكيل أو مورد معتمد
+pricing:
+  en: Rental equivalent to 4.75% a year, plus an advance payment of 10–20% of the price (fictional)
+  ar: أجرة تعادل 4.75% سنويًا، إضافةً إلى دفعة مقدمة بين 10% و20% من السعر (أرقام افتراضية)
+client_view: An Islamic lease-to-own plan for a vehicle or equipment, where the bank owns it and rents it to you until the last payment makes it yours; it needs a deposit and insurance.

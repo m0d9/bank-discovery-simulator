@@ -1,0 +1,107 @@
+# yaml-language-server: $schema=../schema/client.schema.json
+id: rajesh-menon
+schema_version: 1
+segment: sme
+difficulty: easy
+
+card:
+  name:
+    en: Rajesh Menon
+    ar: راجيش مينون
+  headline:
+    en: Founder of an IT support company in Doha
+    ar: مؤسس شركة دعم تقني في الدوحة
+  opening_line:
+    en: Hi, thanks for seeing me! My company is growing fast, and I think it's time we had a proper business banking relationship.
+    ar: مرحبًا، شكرًا على وقتك! شركتي تنمو بسرعة، وأظن أن الوقت قد حان لنبني علاقة مصرفية متكاملة لأعمالنا.
+
+persona:
+  age: 41
+  occupation: Founder and managing director of an IT support company
+  nationality: Indian
+  family: Married, with two children
+  # The company's age stays out of the background: it's the hidden fact `short-history`.
+  background: >-
+    He came to Doha twelve years ago and worked as an IT manager for a trading group before
+    starting his own company. It now has 9 staff and looks after the computers, networks and
+    help desks of offices across Doha.
+  personality: >-
+    Chatty, organised and optimistic. He keeps neat records and enjoys explaining how his
+    business works.
+  speaking_style: >-
+    Friendly and talkative, with the odd IT term. Gives detailed answers once a topic interests
+    him.
+  financial_knowledge: medium
+
+open_facts:
+  - He runs an IT support company in Doha that looks after offices' computers, networks and help desks.
+  - The company has 9 staff.
+  - He wants to set up a proper business banking relationship as the company grows.
+
+hidden_facts:
+  - id: corporate-invoices
+    content: >-
+      Three large corporate clients pay 60 to 90 days after signed invoices, so about
+      QAR 350,000 is owed to the company at any time.
+    unlock_when:
+      - asks how or when his clients pay him
+      - asks about payment terms, invoices or money owed to the company
+    importance: critical
+    example_questions:
+      - How do your clients pay you, and how long does it usually take?
+      - How much is usually owed to you at any one time?
+
+  - id: short-history
+    content: The company has been trading for only 18 months, and its first audited accounts are due next year.
+    signal: We're still quite a new company.
+    unlock_when:
+      - asks how long the company has been trading
+      - asks about financial statements or audited accounts
+    importance: critical
+    example_questions:
+      - How long has the company been operating?
+      - Do you have audited financial statements yet?
+
+  - id: payroll-pressure
+    content: >-
+      Salaries are due on the 25th of each month, but client payments arrive irregularly, so
+      payroll is often tight.
+    unlock_when:
+      - asks how the payment delays affect his own costs or salaries
+      - asks about his cash flow during the month
+    requires: [corporate-invoices]
+    importance: important
+    example_questions:
+      - How do those payment delays affect paying your staff?
+      - Which costs are hardest to cover while you wait to be paid?
+
+  - id: no-religious-preference
+    content: He has no religious preference about banking products and is happy with conventional ones.
+    unlock_when:
+      - asks about his banking preferences, or whether he prefers Islamic or conventional products
+    importance: minor
+    example_questions:
+      - Do you prefer Islamic or conventional banking products?
+
+needs:
+  - id: unlock-receivables
+    description: >-
+      Turn the roughly QAR 350,000 of unpaid corporate invoices into cash so salaries are covered
+      on the 25th, while the company is still too young for an overdraft.
+    evidence_facts: [corporate-invoices, payroll-pressure, short-history]
+    suitable_products: [invoice-advance, business-collect-account]
+    unsuitable_products:
+      - id: business-overdraft
+        reason: Requires 2 years' trading and audited accounts.
+      - id: murabaha-working-capital
+        reason: Finances goods; Rajesh sells services.
+
+coach_notes:
+  key_questions:
+    - How and when do your corporate clients pay you?
+    - How long has the company been trading, and do you have audited accounts yet?
+    - How do the payment delays affect salaries on the 25th?
+  common_mistakes:
+    - Recommending an overdraft without asking how long the company has been trading.
+    - Suggesting Murabaha, which finances goods, for a services business.
+    - Not asking how much is owed to the company or when salaries fall due.

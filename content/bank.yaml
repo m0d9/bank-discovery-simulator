@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=./schema/bank.schema.json
+name:
+  en: Al Murjan Bank
+  ar: بنك المرجان
+tagline:
+  en: We listen first
+  ar: نستمع إليك أولًا
+disclaimer:
+  en: Fictional bank and products for teaching only. Not financial advice.
+  ar: بنك ومنتجات افتراضية لأغراض تعليمية فقط، ولا تُعدّ نصيحة مالية.
+currency: QAR

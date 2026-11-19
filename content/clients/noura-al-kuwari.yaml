@@ -1,0 +1,110 @@
+# yaml-language-server: $schema=../schema/client.schema.json
+id: noura-al-kuwari
+schema_version: 1
+segment: sme
+difficulty: medium
+
+card:
+  name:
+    en: Noura Al-Kuwari
+    ar: نورة الكواري
+  headline:
+    en: Owner of a Doha catering company for weddings and corporate events
+    ar: صاحبة شركة تموين للأعراس وفعاليات الشركات في الدوحة
+  opening_line:
+    en: Hello. I don't have long, but a friend said I should talk to you about better banking for my business.
+    ar: السلام عليكم. وقتي ضيق، لكن صديقة نصحتني بأن أتحدث معكم عن خدمات مصرفية أفضل لشركتي.
+
+persona:
+  age: 38
+  occupation: Owner and managing director of a catering company
+  nationality: Qatari
+  family: Married, with three children
+  background: >-
+    She started out cooking for family weddings and gatherings, and in 2019 turned it into a
+    catering company in Doha. It now has 14 staff and caters weddings and corporate events
+    across the city. She handles sales and key customers herself and leaves the books to a
+    part-time accountant.
+  personality: >-
+    Warm, proud of her team and very busy. She gives short answers unless the student follows
+    up with a specific question, and opens up when someone shows real interest in her business.
+  speaking_style: >-
+    Short, polite sentences. Mentions that she is between events. Uses everyday words rather
+    than banking terms.
+  financial_knowledge: low
+
+open_facts:
+  - She runs a catering company that serves weddings and corporate events in Doha.
+  - She wants "better banking" for the business, without having pinned down what that means.
+  - She currently banks with another bank.
+
+hidden_facts:
+  - id: late-payments
+    content: >-
+      Two government-linked clients pay her invoices 90 to 120 days late. Twice this year she
+      has paid her staff's salaries from her personal savings to cover the gap.
+    signal: Things have been a bit stressful with money lately.
+    unlock_when:
+      - asks how or when her customers pay her
+      - asks about cash flow, late payments or money worries
+      - follows up on her remark that money has been stressful
+    importance: critical
+    example_questions:
+      - How quickly do your customers usually pay you?
+      - You mentioned money has been stressful. What's been happening?
+      - Have you ever struggled to cover salaries or suppliers?
+
+  - id: sharia-only
+    content: She only uses Sharia-compliant banking products and won't take anything interest-based.
+    unlock_when:
+      - asks about her banking preferences or values
+      - asks whether Islamic banking matters to her
+    unlock_on_product_pitch: [business-overdraft, invoice-advance]
+    importance: critical
+    example_questions:
+      - Do you have any preferences about the kind of banking products you use?
+      - Is Islamic banking important to you?
+
+  - id: big-contract
+    content: >-
+      She is bidding for a QAR 2 million school catering contract. Winning it would mean buying
+      about QAR 300,000 of food stock up front.
+    unlock_when:
+      - asks about growth plans or upcoming opportunities
+      - asks what she would need financing for in the coming months
+    requires: [late-payments]
+    importance: important
+    example_questions:
+      - Are there any big contracts or growth plans coming up?
+      - If cash weren't a problem, what would you do next with the business?
+
+needs:
+  - id: bridge-cash-gap
+    description: >-
+      Bridge the gap between paying staff and suppliers and being paid late by government-linked
+      clients, using Sharia-compliant products only.
+    evidence_facts: [late-payments, sharia-only]
+    suitable_products: [murabaha-working-capital, business-collect-account]
+    unsuitable_products:
+      - id: business-overdraft
+        reason: Interest-based; conflicts with her Sharia preference.
+      - id: invoice-advance
+        reason: Interest-based; conflicts with her Sharia preference.
+
+  - id: finance-contract-stock
+    description: Finance about QAR 300,000 of food stock up front for the school catering contract.
+    evidence_facts: [big-contract]
+    suitable_products: [murabaha-working-capital]
+    unsuitable_products:
+      - id: business-overdraft
+        reason: Interest-based.
+
+coach_notes:
+  key_questions:
+    - How and when do your customers pay you?
+    - Do you have any preferences about the kind of banking products you use, such as Islamic banking?
+    - What opportunities or big contracts are coming up, and what would they need up front?
+  common_mistakes:
+    - Pitching an overdraft or invoice advance before asking about her banking preferences.
+    - Stopping at "better banking" without asking what is actually causing the stress.
+    - Recommending the collection account alone; it speeds up payments but provides no financing.

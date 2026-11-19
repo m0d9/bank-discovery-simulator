@@ -1,0 +1,36 @@
+# yaml-language-server: $schema=../schema/product.schema.json
+id: invoice-advance
+schema_version: 1
+name:
+  en: Invoice Advance
+  ar: تمويل الفواتير
+summary:
+  en: Get most of the value of your approved invoices in cash before your customers pay them.
+  ar: احصل على معظم قيمة فواتيرك المعتمدة نقدًا قبل أن يسددها عملاؤك.
+segments: [sme]
+category: financing
+sharia_compliant: false
+interest_based: true
+features:
+  - en: Advance of up to 80% of the value of approved invoices
+    ar: دفعة مقدمة تصل إلى 80% من قيمة الفواتير المعتمدة
+  - en: Funds paid within 2 working days of approval
+    ar: صرف المبلغ خلال يومي عمل من الاعتماد
+  - en: The rest, minus charges, is paid when your customer settles the invoice
+    ar: يُصرف باقي المبلغ، بعد خصم الرسوم، عندما يسدد العميل الفاتورة
+limitations:
+  - en: Only for invoices to approved corporate or government buyers
+    ar: يقتصر على الفواتير الصادرة لمشترين معتمدين من الشركات أو الجهات الحكومية
+  - en: Invoice payment terms of up to 90 days
+    ar: لا تتجاوز مدة سداد الفاتورة 90 يومًا
+  - en: Each invoice carries a fee plus a discount charge, which is interest for the days until the buyer pays
+    ar: تُفرض على كل فاتورة رسوم ثابتة ورسم خصم، وهو فائدة تُحتسب عن الأيام المتبقية حتى سداد المشتري
+eligibility:
+  - en: Business registered in Qatar that invoices approved corporate or government buyers
+    ar: منشأة مسجلة في قطر تصدر فواتير لمشترين معتمدين من الشركات أو الجهات الحكومية
+  - en: Signed invoices, with delivery or completion confirmed by the buyer
+    ar: فواتير موقعة مع تأكيد المشتري للتسليم أو إنجاز العمل
+pricing:
+  en: QAR 150 per invoice, plus a discount charge of 0.9% per 30 days on the amount advanced (fictional)
+  ar: 150 ريال قطري لكل فاتورة، إضافةً إلى رسم خصم بنسبة 0.9% عن كل 30 يومًا على المبلغ المدفوع مقدمًا (أرقام افتراضية)
+client_view: Invoice financing, where the bank pays you most of an invoice early and charges a fee plus interest until your customer pays; only for invoices to large companies or government.

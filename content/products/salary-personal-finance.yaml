@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=../schema/product.schema.json
+id: salary-personal-finance
+schema_version: 1
+name:
+  en: Personal Loan (Salary Transfer)
+  ar: القرض الشخصي بتحويل الراتب
+summary:
+  en: A personal loan for employees who transfer their salary to Al Murjan Bank.
+  ar: قرض شخصي للموظفين الذين يحولون رواتبهم إلى بنك المرجان.
+segments: [retail]
+category: financing
+sharia_compliant: false
+interest_based: true
+features:
+  - en: Borrow up to 20 times your monthly salary
+    ar: قرض يصل إلى 20 ضعف راتبك الشهري
+  - en: Repay over up to 6 years
+    ar: مدة سداد تصل إلى 6 سنوات
+limitations:
+  - en: Your salary must be transferred to Al Murjan Bank
+    ar: يجب تحويل راتبك إلى بنك المرجان
+  - en: Monthly repayments on all your debts together are capped at 50% of your salary
+    ar: يجب ألا يتجاوز مجموع أقساطك الشهرية على جميع ديونك 50% من راتبك
+  - en: A fee applies if you repay early
+    ar: تُفرض رسوم على السداد المبكر
+eligibility:
+  - en: Employee in Qatar with a salary-transfer letter from the employer
+    ar: موظف في قطر لديه خطاب تحويل راتب من جهة عمله
+  - en: Minimum monthly salary of QAR 5,000
+    ar: ألا يقل الراتب الشهري عن 5,000 ريال قطري
+pricing:
+  en: Interest from 5.99% a year, a processing fee of 1% of the loan (up to QAR 2,500) and an early settlement fee of 1% of the amount repaid early (fictional)
+  ar: فائدة تبدأ من 5.99% سنويًا، ورسوم معالجة بنسبة 1% من قيمة القرض (بحد أقصى 2,500 ريال قطري)، ورسوم سداد مبكر بنسبة 1% من المبلغ المسدد مبكرًا (أرقام افتراضية)
+client_view: A personal loan with interest for salaried people, up to 20 times the monthly salary over up to 6 years, if the salary is paid into this bank; all loan repayments together can't exceed half the salary.

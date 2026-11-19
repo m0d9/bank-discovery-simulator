@@ -1,0 +1,32 @@
+# yaml-language-server: $schema=../schema/product.schema.json
+id: multicurrency-remit-account
+schema_version: 1
+name:
+  en: Multi-Currency Remittance Account
+  ar: حساب التحويلات متعدد العملات
+summary:
+  en: One account to hold several currencies and send money abroad for low fees.
+  ar: حساب واحد للاحتفاظ بعدة عملات وتحويل الأموال إلى الخارج برسوم منخفضة.
+segments: [retail]
+category: transfer
+sharia_compliant: false
+interest_based: false
+features:
+  - en: Holds QAR, USD, EUR, INR, EGP and PHP
+    ar: يحتفظ بالريال القطري والدولار الأمريكي واليورو والروبية الهندية والجنيه المصري والبيزو الفلبيني
+  - en: Low-fee international transfers
+    ar: تحويلات دولية برسوم منخفضة
+limitations:
+  - en: An exchange-rate margin applies when you convert between currencies
+    ar: يُضاف هامش على سعر الصرف عند التحويل بين العملات
+  - en: Transfers are capped at QAR 40,000 a month
+    ar: الحد الأقصى للتحويلات 40,000 ريال قطري شهريًا
+  - en: Some destinations take up to 2 working days
+    ar: قد تستغرق التحويلات إلى بعض الوجهات حتى يومي عمل
+eligibility:
+  - en: Individuals living in Qatar with a valid Qatar ID
+    ar: الأفراد المقيمون في قطر ممن يحملون بطاقة شخصية قطرية سارية
+pricing:
+  en: QAR 10 per transfer, plus an exchange-rate margin of 0.75% on conversions (fictional)
+  ar: 10 ريال قطري لكل تحويل، إضافةً إلى هامش بنسبة 0.75% على سعر الصرف عند تحويل العملات (أرقام افتراضية)
+client_view: An account for sending money abroad that holds several currencies, with a small fee per transfer plus an exchange-rate margin, and a limit of QAR 40,000 a month.
