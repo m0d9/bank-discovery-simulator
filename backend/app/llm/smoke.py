@@ -37,7 +37,9 @@ LONG_TARGET_TOKENS = 6000
 LONG_MAX_TOKENS = 1024
 SMOKE_PROMPT_VERSION = "smoke"
 
-_CHARS_PER_TOKEN = 4  # rough English estimate; real tokenizers usually need more tokens
+# Deliberately generous: gpt-oss packs this filler at ~4.9 characters per token and qwen at
+# ~4, so the real count lands at or above the estimate, well clear of a 4,096-token cut.
+_CHARS_PER_TOKEN = 5
 _SIZE_FLOOR = 0.75  # a prompt that arrives smaller than this share of the estimate was cut
 _THINK_MARKERS = ("<think", "</think", "<thinking", "</thinking")
 _FILLER = "Line {n:04d}: the quarterly statement lists routine card payments, transfers and fees.\n"
