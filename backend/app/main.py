@@ -70,8 +70,9 @@ def _mount_dev_note(app: FastAPI) -> None:
 
 def create_app(settings: Settings | None = None) -> FastAPI:
     """Build the FastAPI app. Pass `settings` to override the cached defaults (tests)."""
+    injected = settings
     settings = settings or get_settings()
-    configure_logging()
+    configure_logging(secrets=[settings.LLM_API_KEY.get_secret_value()])
 
     app = FastAPI(
         title="Bank Client Discovery Simulator",
@@ -79,6 +80,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         redoc_url=None,
         openapi_url="/api/openapi.json",
     )
+    if injected is not None:
+        # Routes read settings through Depends(get_settings); make them see the injected ones.
+        app.dependency_overrides[get_settings] = lambda: injected
     app.include_router(api_router, prefix="/api")
     app.include_router(_api_not_found_router(), prefix="/api")
 

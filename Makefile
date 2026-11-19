@@ -3,7 +3,15 @@ SHELL := /bin/bash
 BACKEND := backend
 FRONTEND := frontend
 
-.PHONY: help install hooks dev dev-backend dev-frontend test test-live lint typecheck fmt build docker-up validate-content openapi eval
+# Model routing. `make dev` uses .env (default: 4b gate, 9b client and coach; no model swap).
+# `make dev COACH=gpt-oss:20b` (or `make dev-strong-coach`) starts the backend with that coach
+# and LLM_MAX_RETRIES=4 without editing .env: the bigger coach makes Ollama swap models at
+# feedback time, and the extra retries absorb Ollama's occasional reload crash (HTTP 500).
+STRONG_COACH := gpt-oss:20b
+COACH ?=
+COACH_ENV := $(if $(strip $(COACH)),LLM_MODEL_COACH=$(COACH) LLM_MAX_RETRIES=4)
+
+.PHONY: help install hooks dev dev-strong-coach dev-backend dev-frontend test test-live lint typecheck fmt build docker-up validate-content openapi eval
 
 help: ## List targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-18s %s\n", $$1, $$2}'
@@ -16,11 +24,14 @@ hooks: ## Install pre-commit persistently and enable the git hook
 	uv tool install pre-commit
 	pre-commit install
 
-dev: ## Run backend (:8000) and frontend (:5173) together
+dev: ## Run backend (:8000) and frontend (:5173); COACH=<model> overrides the coach
 	@$(MAKE) -j2 --no-print-directory dev-backend dev-frontend
 
-dev-backend: ## Run the FastAPI backend with reload on :8000
-	cd $(BACKEND) && uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+dev-strong-coach: ## Same as `make dev COACH=gpt-oss:20b` (models swap at feedback time)
+	@$(MAKE) --no-print-directory dev COACH=$(STRONG_COACH)
+
+dev-backend: ## Run the FastAPI backend with reload on :8000 (accepts COACH= like dev)
+	cd $(BACKEND) && $(COACH_ENV) uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 dev-frontend: ## Run the Vite dev server on :5173
 	cd $(FRONTEND) && npm run dev
