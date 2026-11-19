@@ -7,29 +7,29 @@ from pydantic import BaseModel
 HealthStatus = Literal["ok", "degraded", "down"]
 
 
-class EndpointOut(BaseModel):
+class EndpointDTO(BaseModel):
     """The model endpoint: its host only (never the URL or key), and whether it answered."""
 
     reachable: bool
     host: str
 
 
-class ModelStatusOut(BaseModel):
+class ModelStatusDTO(BaseModel):
     """One role's model and whether the endpoint offers it."""
 
     name: str
     available: bool
 
 
-class ModelsOut(BaseModel):
+class ModelsDTO(BaseModel):
     """The model each role uses."""
 
-    gate: ModelStatusOut
-    client: ModelStatusOut
-    coach: ModelStatusOut
+    gate: ModelStatusDTO
+    client: ModelStatusDTO
+    coach: ModelStatusDTO
 
 
-class HealthOut(BaseModel):
+class HealthDTO(BaseModel):
     """Response of `GET /api/health`.
 
     `down`: the endpoint can't be used. `degraded`: a role's model is missing. `hint` says
@@ -38,6 +38,6 @@ class HealthOut(BaseModel):
 
     status: HealthStatus
     version: str
-    endpoint: EndpointOut
-    models: ModelsOut
+    endpoint: EndpointDTO
+    models: ModelsDTO
     hint: str | None

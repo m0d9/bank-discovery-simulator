@@ -7,7 +7,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request
 
-from app.api.dto import EndpointOut, HealthOut, HealthStatus, ModelsOut, ModelStatusOut
+from app.api.dto import EndpointDTO, HealthDTO, HealthStatus, ModelsDTO, ModelStatusDTO
 from app.config import Settings, get_settings
 from app.llm import (
     LLMClient,
@@ -28,7 +28,7 @@ _now = time.monotonic  # module-level so tests can move the clock
 
 @dataclass(frozen=True)
 class _Cached:
-    value: HealthOut
+    value: HealthDTO
     expires_at: float
 
 
@@ -39,12 +39,12 @@ def _app_version() -> str:
         return "0.0.0"
 
 
-@router.get("/health", response_model=HealthOut)
+@router.get("/health", response_model=HealthDTO)
 async def health(
     request: Request,
     llm: Annotated[LLMClient, Depends(llm_dep)],
     settings: Annotated[Settings, Depends(get_settings)],
-) -> HealthOut:
+) -> HealthDTO:
     """Report the app version, the model endpoint and each role's model.
 
     Always HTTP 200: the body says whether the models can be used. Cached for 30 seconds.
@@ -57,7 +57,7 @@ async def health(
     return value
 
 
-async def _check(llm: LLMClient, settings: Settings) -> HealthOut:
+async def _check(llm: LLMClient, settings: Settings) -> HealthDTO:
     host = endpoint_host(settings.LLM_BASE_URL)
     names = {role: resolve_model(role, None, settings=settings) for role in Role}
     try:
@@ -95,14 +95,14 @@ def _report(
     names: dict[Role, str],
     present: set[str],
     hint: str | None,
-) -> HealthOut:
-    def model(role: Role) -> ModelStatusOut:
-        return ModelStatusOut(name=names[role], available=names[role] in present)
+) -> HealthDTO:
+    def model(role: Role) -> ModelStatusDTO:
+        return ModelStatusDTO(name=names[role], available=names[role] in present)
 
-    return HealthOut(
+    return HealthDTO(
         status=status,
         version=_app_version(),
-        endpoint=EndpointOut(reachable=reachable, host=host),
-        models=ModelsOut(gate=model(Role.GATE), client=model(Role.CLIENT), coach=model(Role.COACH)),
+        endpoint=EndpointDTO(reachable=reachable, host=host),
+        models=ModelsDTO(gate=model(Role.GATE), client=model(Role.CLIENT), coach=model(Role.COACH)),
         hint=hint,
     )
