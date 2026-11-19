@@ -11,7 +11,7 @@ STRONG_COACH := gpt-oss:20b
 COACH ?=
 COACH_ENV := $(if $(strip $(COACH)),LLM_MODEL_COACH=$(COACH) LLM_MAX_RETRIES=4)
 
-.PHONY: help install hooks dev dev-strong-coach dev-backend dev-frontend test test-live lint typecheck fmt build docker-up validate-content openapi eval
+.PHONY: help install hooks dev dev-strong-coach dev-backend dev-frontend test test-live lint typecheck fmt build docker-up validate-content content-schema openapi eval
 
 help: ## List targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-18s %s\n", $$1, $$2}'
@@ -61,8 +61,11 @@ build: ## Build the frontend into frontend/dist
 docker-up: ## Build and run the app container on :8000
 	docker compose up --build
 
-validate-content: ## Validate content YAML
-	@echo "validate-content: added in M2"
+validate-content: ## Validate content/ YAML: prints the counts, or every error with its file and field
+	@cd $(BACKEND) && uv run python -m app.content validate
+
+content-schema: ## Regenerate content/schema/*.schema.json (editor autocomplete) from the models
+	@cd $(BACKEND) && uv run python -m app.content schema
 
 openapi: ## Export OpenAPI schema and TS types
 	@echo "openapi: added in M3"

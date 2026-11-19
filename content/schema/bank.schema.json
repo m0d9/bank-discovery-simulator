@@ -1,0 +1,73 @@
+{
+  "$defs": {
+    "LocalizedText": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "en": {
+              "description": "English text.",
+              "minLength": 1,
+              "title": "En",
+              "type": "string"
+            },
+            "ar": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Arabic text, in Modern Standard Arabic.",
+              "title": "Ar"
+            }
+          },
+          "required": [
+            "en"
+          ],
+          "title": "LocalizedText",
+          "type": "object"
+        }
+      ],
+      "description": "Text in English (required) and Arabic (optional). A plain string means English only."
+    }
+  },
+  "additionalProperties": false,
+  "description": "The fictional bank (`content/bank.yaml`).",
+  "properties": {
+    "name": {
+      "$ref": "#/$defs/LocalizedText",
+      "description": "The bank's name, shown in the page header."
+    },
+    "tagline": {
+      "$ref": "#/$defs/LocalizedText",
+      "description": "A short slogan."
+    },
+    "disclaimer": {
+      "$ref": "#/$defs/LocalizedText",
+      "description": "Shown in the footer: the bank and its products are fictional and for teaching only."
+    },
+    "currency": {
+      "const": "QAR",
+      "description": "Every amount in the content is in Qatari riyals.",
+      "title": "Currency",
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "tagline",
+    "disclaimer",
+    "currency"
+  ],
+  "title": "Bank",
+  "type": "object"
+}

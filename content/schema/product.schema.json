@@ -1,0 +1,148 @@
+{
+  "$defs": {
+    "LocalizedText": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "en": {
+              "description": "English text.",
+              "minLength": 1,
+              "title": "En",
+              "type": "string"
+            },
+            "ar": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Arabic text, in Modern Standard Arabic.",
+              "title": "Ar"
+            }
+          },
+          "required": [
+            "en"
+          ],
+          "title": "LocalizedText",
+          "type": "object"
+        }
+      ],
+      "description": "Text in English (required) and Arabic (optional). A plain string means English only."
+    }
+  },
+  "additionalProperties": false,
+  "description": "One product in the catalogue (`content/products/<id>.yaml`).",
+  "properties": {
+    "id": {
+      "description": "Lowercase words joined by hyphens. Must equal the file name without `.yaml`.",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "title": "Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "name": {
+      "$ref": "#/$defs/LocalizedText"
+    },
+    "summary": {
+      "$ref": "#/$defs/LocalizedText",
+      "description": "One or two sentences describing the product."
+    },
+    "segments": {
+      "description": "Who can have it: `retail` (individuals) and/or `sme` (small and medium businesses).",
+      "items": {
+        "enum": [
+          "retail",
+          "sme"
+        ],
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Segments",
+      "type": "array"
+    },
+    "category": {
+      "enum": [
+        "financing",
+        "deposit",
+        "account",
+        "transfer"
+      ],
+      "title": "Category",
+      "type": "string"
+    },
+    "sharia_compliant": {
+      "title": "Sharia Compliant",
+      "type": "boolean"
+    },
+    "interest_based": {
+      "description": "True for conventional products that charge interest. Never true with `sharia_compliant`.",
+      "title": "Interest Based",
+      "type": "boolean"
+    },
+    "features": {
+      "items": {
+        "$ref": "#/$defs/LocalizedText"
+      },
+      "minItems": 2,
+      "title": "Features",
+      "type": "array"
+    },
+    "limitations": {
+      "items": {
+        "$ref": "#/$defs/LocalizedText"
+      },
+      "minItems": 2,
+      "title": "Limitations",
+      "type": "array"
+    },
+    "eligibility": {
+      "items": {
+        "$ref": "#/$defs/LocalizedText"
+      },
+      "minItems": 1,
+      "title": "Eligibility",
+      "type": "array"
+    },
+    "pricing": {
+      "$ref": "#/$defs/LocalizedText",
+      "description": "Fictional figures, marked \"(fictional)\" in the English text."
+    },
+    "client_view": {
+      "description": "One plain-English line describing the product as a customer would understand it.\nThis is what the AI client is told about the product.",
+      "minLength": 1,
+      "title": "Client View",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "schema_version",
+    "name",
+    "summary",
+    "segments",
+    "category",
+    "sharia_compliant",
+    "interest_based",
+    "features",
+    "limitations",
+    "eligibility",
+    "pricing",
+    "client_view"
+  ],
+  "title": "Product",
+  "type": "object"
+}
