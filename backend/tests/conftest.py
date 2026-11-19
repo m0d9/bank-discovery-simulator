@@ -24,6 +24,8 @@ except ValidationError:
     }.items():
         os.environ.setdefault(_name, _value)
 
+from app.llm import llm_dep  # noqa: E402
+from app.llm.fake import FakeLLM  # noqa: E402
 from app.main import create_app  # noqa: E402
 
 TEST_BASE_URL = "http://llm.test/v1"
@@ -76,14 +78,26 @@ def dist_dir(tmp_path: Path) -> Path:
 
 
 @pytest.fixture
-def client(dist_dir: Path, settings_factory: SettingsFactory) -> Iterator[TestClient]:
+def fake_llm() -> FakeLLM:
+    """A FakeLLM whose endpoint offers the test model, so /api/health reports ok."""
+    return FakeLLM(models=[TEST_MODEL])
+
+
+@pytest.fixture
+def client(
+    dist_dir: Path, settings_factory: SettingsFactory, fake_llm: FakeLLM
+) -> Iterator[TestClient]:
     app = create_app(settings_factory(FRONTEND_DIST=dist_dir))
+    app.dependency_overrides[llm_dep] = lambda: fake_llm
     with TestClient(app) as c:
         yield c
 
 
 @pytest.fixture
-def dev_client(tmp_path: Path, settings_factory: SettingsFactory) -> Iterator[TestClient]:
+def dev_client(
+    tmp_path: Path, settings_factory: SettingsFactory, fake_llm: FakeLLM
+) -> Iterator[TestClient]:
     app = create_app(settings_factory(FRONTEND_DIST=tmp_path / "missing"))
+    app.dependency_overrides[llm_dep] = lambda: fake_llm
     with TestClient(app) as c:
         yield c

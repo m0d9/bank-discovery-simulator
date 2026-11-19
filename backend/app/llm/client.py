@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from email.utils import parsedate_to_datetime
 from typing import TYPE_CHECKING, Literal, Protocol
+from urllib.parse import urlsplit
 
 import openai
 from openai import AsyncOpenAI, Omit, omit
@@ -409,6 +410,19 @@ class OpenAICompatClient:
         if retry_after is not None:
             return min(retry_after, _RETRY_AFTER_CAP_S)
         return _BACKOFF_BASE_S * 2.0**retry + self._jitter() * _JITTER_S
+
+
+def endpoint_host(base_url: str) -> str:
+    """Return the endpoint's `host[:port]`, never its credentials or path."""
+    parts = urlsplit(base_url)
+    host = parts.hostname or ""
+    if ":" in host:  # IPv6 literal
+        host = f"[{host}]"
+    try:
+        port = parts.port
+    except ValueError:
+        port = None
+    return f"{host}:{port}" if port else host
 
 
 def _reply(completion: ChatCompletion) -> tuple[str, str | None]:
