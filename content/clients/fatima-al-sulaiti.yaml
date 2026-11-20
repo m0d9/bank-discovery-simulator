@@ -1,0 +1,127 @@
+# yaml-language-server: $schema=../schema/client.schema.json
+id: fatima-al-sulaiti
+schema_version: 1
+segment: retail
+difficulty: easy
+
+card:
+  name:
+    en: Fatima Al-Sulaiti
+    ar: فاطمة السليطي
+  headline:
+    en: Secondary-school teacher saving for her daughter's university
+    ar: معلّمة في مدرسة ثانوية تدّخر لدراسة ابنتها الجامعية
+  opening_line:
+    en: Good morning. I'd like to start saving properly for my daughter's university, but I'm not sure where to begin.
+    ar: صباح الخير. أودّ أن أبدأ الادخار بجدية لدراسة ابنتي الجامعية، لكنني لا أعرف من أين أبدأ.
+
+persona:
+  age: 45
+  gender: female
+  occupation: Mathematics teacher at a government girls' secondary school
+  nationality: Qatari
+  family: Married, with a son in his twenties and a 14-year-old daughter
+  background: >-
+    She has taught mathematics at a girls' secondary school in Doha for almost twenty years.
+    Her salary is paid into a current account at another bank, where she has also kept her
+    savings so far.
+  personality: >-
+    Polite, careful and practical. She asks questions until she understands, and she trusts
+    people who explain things plainly more than people who try to sell.
+  speaking_style: >-
+    Clear, measured sentences, the way a teacher explains things. Asks what banking terms
+    mean.
+  financial_knowledge: low
+
+open_facts:
+  - She teaches mathematics at a girls' secondary school in Doha.
+  - >-
+    She wants to save for her daughter's university, which starts in about four years, so
+    that her daughter can choose to study abroad or at a private university.
+  - Her savings, about QAR 200,000, sit in a current account at another bank that pays her nothing.
+
+hidden_facts:
+  - id: sharia-preference
+    content: >-
+      She uses only Sharia-compliant banking products. She won't put her savings in anything
+      interest-based, and she won't borrow with interest.
+    unlock_when:
+      - asks whether she prefers Islamic or conventional banking products
+      - asks about her preferences for the kind of banking or savings products she uses
+    unlock_on_product_pitch: [salary-personal-finance]
+    importance: critical
+    example_questions:
+      - Do you prefer Islamic or conventional banking products?
+      - Is it important to you that your savings are Sharia-compliant?
+
+  - id: risk-averse
+    content: >-
+      In 2024 she lost about QAR 60,000 on shares. Since then she wants no risk at all to the
+      money she saves.
+    signal: I've been burned before.
+    unlock_when:
+      - asks how much risk she is willing to take with her savings
+      - asks about her past experience with investments or the stock market
+      - follows up on her remark that she has been burned before
+    importance: critical
+    example_questions:
+      - How much risk are you comfortable taking with these savings?
+      - Have you ever invested, for example in shares?
+      - You said you've been burned before. What happened?
+
+  - id: may-need-funds
+    content: >-
+      Her son plans to marry within the next 2 years. She may need to take about QAR 50,000
+      from her savings then, as her contribution to the wedding.
+    signal: We have some family events coming up.
+    unlock_when:
+      - asks whether she might need any of the money before her daughter starts university
+      - asks about big expenses she expects in the next few years
+      - follows up on her remark about family events coming up
+    importance: important
+    example_questions:
+      - Might you need any of this money before your daughter starts university?
+      - Are there any big expenses coming up in the next couple of years?
+      - You mentioned some family events. Will they need money from your savings?
+
+needs:
+  - id: safe-savings
+    description:
+      en: >-
+        Save for her daughter's university, about 4 years away, in a Sharia-compliant product
+        that keeps her savings away from stock-market risk.
+      ar: >-
+        الادخار لدراسة ابنتها الجامعية التي تبدأ بعد نحو 4 سنوات، في منتج متوافق مع الشريعة
+        يُبعد مدخراتها عن مخاطر سوق الأسهم.
+    evidence_facts: [sharia-preference, risk-averse]
+    suitable_products: [wakala-term-deposit]
+    unsuitable_products:
+      - id: salary-personal-finance
+        reason:
+          en: She needs to save, not borrow, and a loan is interest-based, which conflicts with her Sharia preference.
+          ar: تحتاج إلى الادخار لا إلى الاقتراض، كما أن القرض قائم على الفائدة ويتعارض مع تفضيلها للمنتجات المتوافقة مع الشريعة.
+
+  - id: keep-flexibility
+    description:
+      en: >-
+        Keep her contribution to her son's wedding, about QAR 50,000, within reach in the next
+        2 years: split her savings between a short Wakala term of 6 to 12 months and a
+        24-month term, so she can use that money without forfeiting profit.
+      ar: >-
+        إبقاء مساهمتها في زفاف ابنها، وهي نحو 50,000 ريال قطري، في متناولها خلال السنتين
+        القادمتين، بتقسيم مدخراتها بين وديعة وكالة قصيرة الأجل، من 6 إلى 12 شهرًا، ووديعة لأجل
+        24 شهرًا، لتتمكن من استخدام هذا المبلغ دون أن يسقط حقها في الربح.
+    evidence_facts: [may-need-funds]
+    suitable_products: [wakala-term-deposit]
+    unsuitable_products: []
+
+coach_notes:
+  key_questions:
+    - Do you prefer Islamic or conventional banking products?
+    - How much risk are you comfortable taking with these savings?
+    - Might you need any of this money before your daughter starts university?
+  common_mistakes:
+    - Suggesting a loan or any other borrowing to a client who came to save.
+    - Recommending a savings product without asking how much risk she is willing to take.
+    - Putting all her savings in the 24-month term without asking whether she will need some of it sooner.
+    - Assuming a conventional product is fine without asking about her banking preferences.

@@ -19,7 +19,7 @@ PRODUCT_IDS = [
     "salary-personal-finance",
     "wakala-term-deposit",
 ]
-CLIENT_IDS = ["rajesh-menon", "noura-al-kuwari"]  # easy, then medium
+CLIENT_IDS = ["fatima-al-sulaiti", "rajesh-menon", "noura-al-kuwari"]  # easy, then medium
 ARABIC_FICTIONAL_MARKER = "(أرقام افتراضية)"
 ARABIC_INTEREST = "فائدة"
 # Covers فائدة, الفائدة, فوائد and their other forms.
@@ -34,7 +34,7 @@ def registry() -> ContentRegistry:
 
 def test_the_real_content_validates(capsys: pytest.CaptureFixture[str]) -> None:
     assert validate(REPO_CONTENT) == 0
-    assert capsys.readouterr().out == "✓ 8 products, 2 clients\n"
+    assert capsys.readouterr().out == "✓ 8 products, 3 clients\n"
 
 
 def test_the_catalogue_and_clients_are_the_ones_the_brief_fixes(registry: ContentRegistry) -> None:
