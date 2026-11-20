@@ -72,11 +72,11 @@ export function AlertIcon(props: IconProps) {
   );
 }
 
-/** Points to the inline end; mirrored in right-to-left layouts. */
-export function ChevronIcon({ className = 'size-4' }: IconProps) {
+/** Points down; turned over when its disclosure is open. The same in both directions. */
+export function ChevronDownIcon(props: IconProps) {
   return (
-    <Icon className={`rtl:-scale-x-100 ${className}`}>
-      <path d="M9 6l6 6-6 6" />
+    <Icon {...props}>
+      <path d="M6 9l6 6 6-6" />
     </Icon>
   );
 }
