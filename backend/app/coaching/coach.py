@@ -198,6 +198,9 @@ def check_report(
     - Praise must be grounded. A `went_well` item is dropped, never rewritten, when it cites
       no student turn, or cites a turn where the student pitched a product that is
       unsuitable, or a turn that a `missed` item cites.
+    - A `missed` item about a product the student recommended is dropped, unless that product
+      is unsuitable: a recommended product was not missed, and an unsuitable one keeps its
+      item, which explains the verdict.
     - A `missed` or `how_to_improve` item is dropped when its `better_question` or `example`
       is words the client said (two or more words, in order, from one client message): that
       field is the student's question. A tip cut short at a straight double quote leaves the
@@ -230,6 +233,7 @@ def check_report(
 
     need_ids = _by_folded(need.id for need in session.client.needs)
     product_ids = _by_folded(session.products)
+    recommended = {verdict.product_id: verdict.verdict for verdict in analysis.products}
 
     def turns(values: Sequence[int]) -> list[int]:
         return sorted({n for n in values if n in student_turns})
@@ -238,6 +242,12 @@ def check_report(
     for item in report.missed:
         if not item.point:
             continue
+        product_id = _known(item.product_id, product_ids)
+        if product_id in recommended and recommended[product_id] != "unsuitable":
+            dropped.append(
+                Dropped(section="missed", reason="cites_recommended_product", text=item.point)
+            )
+            continue
         if quotes_client(item.better_question):
             dropped.append(Dropped(section="missed", reason="quoted_client", text=item.point))
             continue
@@ -245,7 +255,7 @@ def check_report(
             MissedPoint(
                 point=item.point,
                 need_id=_known(item.need_id, need_ids),
-                product_id=_known(item.product_id, product_ids),
+                product_id=product_id,
                 evidence_turns=turns(item.evidence_turns),
                 better_question=question(item.better_question, "missed", "better_question"),
             )

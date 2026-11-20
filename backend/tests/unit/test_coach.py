@@ -560,3 +560,91 @@ def test_a_question_that_only_shares_words_with_the_client_is_kept(example: str)
 
     assert [item.example for item in result.report.how_to_improve] == [example]
     assert result.dropped == ()
+
+
+RAJESH_STRONG = (
+    (
+        "Hi Rajesh, thanks for your time. Could you tell me a bit about your company and the "
+        "clients you work with?",
+        [],
+        [],
+    ),
+    (
+        "How quickly do your corporate clients usually pay your invoices?",
+        ["corporate-invoices"],
+        [],
+    ),
+    (
+        "How long has the company been trading, and do you have audited accounts yet?",
+        ["short-history"],
+        [],
+    ),
+    (
+        "When do you pay salaries each month? Has the timing of client payments ever made that "
+        "difficult?",
+        ["payroll-pressure"],
+        [],
+    ),
+    (
+        "Do you have a preference between conventional and Islamic banking products?",
+        ["no-religious-preference"],
+        [],
+    ),
+)
+COLLECT_MISSED = (
+    "The only opportunity missed was suggesting a Business Collect Account to streamline "
+    "collections from his three large corporate clients."
+)
+
+
+def test_a_missed_item_about_a_product_the_student_recommended_is_dropped() -> None:
+    # Run c-1 of the Addendum 3 re-runs: the student recommended both suitable products, and
+    # the coach called one of them a missed opportunity.
+    session = real_interview(
+        "rajesh-menon", *RAJESH_STRONG, recommend=["invoice-advance", "business-collect-account"]
+    )
+    reply = coach_reply(missed=[missed_item(COLLECT_MISSED, product_id="business-collect-account")])
+
+    result = check(session, reply)
+
+    assert result.report.missed == []
+    assert result.dropped == (
+        Dropped(section="missed", reason="cites_recommended_product", text=COLLECT_MISSED),
+    )
+
+
+def test_a_product_the_student_did_not_recommend_can_still_be_missed() -> None:
+    session = real_interview("rajesh-menon", *RAJESH_STRONG, recommend=["invoice-advance"])
+    reply = coach_reply(missed=[missed_item(COLLECT_MISSED, product_id="business-collect-account")])
+
+    result = check(session, reply)
+
+    assert [item.product_id for item in result.report.missed] == ["business-collect-account"]
+    assert result.dropped == ()
+
+
+def test_an_unsuitable_recommendation_keeps_the_item_that_explains_it() -> None:
+    # The prompt asks for this item; it carries the lesson when the client had already ruled
+    # the product out (run a-3).
+    lesson = (
+        "اقترحتِ السحب على المكشوف بعد أن قالت العميلة صراحةً في الرسالة 6 أنها تريد منتجات "
+        "متوافقة مع الشريعة دون فوائد، وهو ما يتعارض مع هذا المنتج القائم على الفائدة."
+    )
+    session = real_interview(
+        "noura-al-kuwari",
+        ("مرحبًا نورة، حدّثيني عن عملك.", [], []),
+        ("كيف تسير الأمور؟", [], []),
+        ("ماذا تحتاجين من البنك؟", ["sharia-only"], []),
+        ("أقترح عليكِ السحب على المكشوف للأعمال.", [], []),
+        recommend=["business-overdraft"],
+        pitched={"business-overdraft": [7]},
+    )
+    reply = coach_reply(
+        missed=[missed_item(lesson, product_id="business-overdraft", evidence_turns=[7])]
+    )
+
+    result = check(session, reply, "ar")
+
+    (kept,) = [item for item in result.report.missed if item.point == lesson]
+    assert (kept.product_id, kept.evidence_turns) == ("business-overdraft", [7])
+    assert result.dropped == ()
