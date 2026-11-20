@@ -80,3 +80,60 @@ export function ChevronDownIcon(props: IconProps) {
     </Icon>
   );
 }
+
+/** Found in full: a circle with a tick. */
+export function CheckCircleIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M8 12.5l2.5 2.5L16 9.5" />
+    </Icon>
+  );
+}
+
+/** Found in part: a circle, half filled. Mirrors with the page, which is fine for "half". */
+export function HalfCircleIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor" />
+    </Icon>
+  );
+}
+
+/** Not found: an empty, dashed circle. */
+export function DashedCircleIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <circle cx="12" cy="12" r="9" strokeDasharray="3.5 3" />
+    </Icon>
+  );
+}
+
+/** Not suitable: a circle with a cross. */
+export function CrossCircleIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M9 9l6 6M15 9l-6 6" />
+    </Icon>
+  );
+}
+
+/** Not in the answer key: a circle with a dash. */
+export function MinusCircleIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M8 12h8" />
+    </Icon>
+  );
+}
+
+export function DownloadIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M12 4v11M7 10l5 5 5-5M5 20h14" />
+    </Icon>
+  );
+}

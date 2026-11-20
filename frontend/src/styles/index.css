@@ -49,6 +49,13 @@
     outline: none;
   }
 
+  /* A transcript turn that an evidence link moved focus to. After a mouse click,
+   * :focus-visible may not match, so the turn shows the ring on any focus. */
+  li[id^='turn-']:focus {
+    outline: 3px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     *,
     ::before,

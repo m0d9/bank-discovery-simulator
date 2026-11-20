@@ -4,10 +4,14 @@ const TONES = {
   neutral: 'bg-surface-sunken text-ink',
   sharia: 'bg-sharia-tint text-sharia-ink',
   interest: 'bg-interest-tint text-interest-ink',
+  found: 'bg-brand-tint text-brand-strong',
+  attention: 'bg-attention-tint text-attention',
 } as const;
 
+export type BadgeTone = keyof typeof TONES;
+
 interface BadgeProps {
-  tone?: keyof typeof TONES;
+  tone?: BadgeTone;
   /** A decorative icon; the text always carries the meaning. */
   icon?: ReactNode;
   children: ReactNode;

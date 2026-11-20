@@ -26,6 +26,10 @@
  *   danger on danger-tint: 6.44:1 (text)
  *   sharia-ink on sharia-tint: 6.93:1 (text)
  *   interest-ink on interest-tint: 6.98:1 (text)
+ *   brand-strong on brand-tint: 8.94:1 (text)
+ *   attention on attention-tint: 7.69:1 (text)
+ *   attention on surface: 9.12:1 (text)
+ *   ink on attention-tint: 13.27:1 (text)
  *   line-strong on surface: 4.39:1 (ui)
  *   line-strong on canvas: 4.00:1 (ui)
  *   focus on canvas: 9.63:1 (ui)
@@ -65,4 +69,9 @@
   --color-sharia-ink: #1e5a3c;
   --color-interest-tint: #f8edda;
   --color-interest-ink: #774310;
+
+  /* Feedback: a missed need or an unsuitable product. Deliberately not the error red: the
+   * student's choice isn't an app error. An icon and words always carry the meaning. */
+  --color-attention: #7d2a4a;
+  --color-attention-tint: #f6e8ee;
 }

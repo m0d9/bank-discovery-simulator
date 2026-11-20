@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import type { MessageResult, SessionPublic, Turn } from '../api/types';
-import { bank, clients, created, products, session, transcript } from './fixtures';
+import { bank, clients, created, feedback, products, session, transcript } from './fixtures';
 
 /** An API error in the envelope the backend sends. */
 export function apiError(code: string, status: number) {
@@ -19,6 +19,9 @@ export const server = setupServer(
   http.post('/api/sessions', () => HttpResponse.json(created(), { status: 201 })),
   http.get('/api/sessions/:sessionId', ({ params }) =>
     HttpResponse.json(session({ session_id: String(params.sessionId) })),
+  ),
+  http.post('/api/sessions/:sessionId/feedback', ({ params }) =>
+    HttpResponse.json(feedback({ session_id: String(params.sessionId) })),
   ),
 );
 

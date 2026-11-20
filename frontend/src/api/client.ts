@@ -3,6 +3,7 @@ import type { paths } from './schema';
 import type {
   Bank,
   ClientCard,
+  Feedback,
   Language,
   MessageResult,
   Product,
@@ -122,4 +123,18 @@ export function submitWrapUp(sessionId: string, wrapUp: WrapUpRequest): Promise<
       body: wrapUp,
     }),
   );
+}
+
+/** The analysis and the coach's report, in `language`. The first call can take a minute. */
+export function getFeedback(sessionId: string, language: Language): Promise<Feedback> {
+  return unwrap(
+    api.POST('/api/sessions/{session_id}/feedback', {
+      params: { path: { session_id: sessionId }, query: { lang: language } },
+    }),
+  );
+}
+
+/** Where the browser downloads the session as Markdown (the server names the file). */
+export function exportUrl(sessionId: string): string {
+  return `/api/sessions/${encodeURIComponent(sessionId)}/export?format=md`;
 }
