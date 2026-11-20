@@ -189,9 +189,8 @@
           "type": "string"
         },
         "description": {
-          "minLength": 1,
-          "title": "Description",
-          "type": "string"
+          "$ref": "#/$defs/LocalizedText",
+          "description": "Shown to the student with the feedback. Arabic is optional."
         },
         "evidence_facts": {
           "description": "Hidden fact ids that reveal this need. The student uncovers it by unlocking all of them.",
@@ -308,9 +307,8 @@
           "type": "string"
         },
         "reason": {
-          "minLength": 1,
-          "title": "Reason",
-          "type": "string"
+          "$ref": "#/$defs/LocalizedText",
+          "description": "Shown to the student with the feedback. Arabic is optional."
         }
       },
       "required": [
@@ -395,16 +393,14 @@
     "referral_note": {
       "anyOf": [
         {
-          "minLength": 1,
-          "type": "string"
+          "$ref": "#/$defs/LocalizedText"
         },
         {
           "type": "null"
         }
       ],
       "default": null,
-      "description": "Where to refer the client. Required when `no_catalogue_fit` is true.",
-      "title": "Referral Note"
+      "description": "Where to refer the client. Required when `no_catalogue_fit` is true. Arabic is optional."
     },
     "coach_notes": {
       "$ref": "#/$defs/CoachNotes"

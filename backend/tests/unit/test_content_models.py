@@ -70,8 +70,28 @@ def test_referral_note_is_required_only_without_a_catalogue_fit() -> None:
     referred = Client.model_validate(
         client_data(no_catalogue_fit=True, referral_note="Refer to the trade-finance team.")
     )
-    assert referred.referral_note == "Refer to the trade-finance team."
+    assert referred.referral_note == LocalizedText(en="Refer to the trade-finance team.")
     assert Client.model_validate(client_data()).referral_note is None
+
+
+def test_the_answer_key_text_shown_with_the_feedback_may_have_arabic() -> None:
+    data = client_data(
+        no_catalogue_fit=True,
+        referral_note={"en": "Refer to trade finance.", "ar": "الإحالة إلى التمويل التجاري."},
+    )
+    data["needs"][0]["description"] = {"en": "Bridge the gap.", "ar": "سدّ الفجوة."}
+    data["needs"][0]["unsuitable_products"][0]["reason"] = {"en": "No loan.", "ar": "لا قرض."}
+
+    need = Client.model_validate(data).needs[0]
+
+    assert need.description == LocalizedText(en="Bridge the gap.", ar="سدّ الفجوة.")
+    assert need.unsuitable_products[0].reason.ar == "لا قرض."
+    assert Client.model_validate(data).referral_note == LocalizedText(
+        en="Refer to trade finance.", ar="الإحالة إلى التمويل التجاري."
+    )
+    # Plain strings stay valid, as English only.
+    plain = Client.model_validate(client_data()).needs[0]
+    assert plain.description == LocalizedText(en="Bridge the gap until customers pay.")
 
 
 def test_valid_models_fill_their_defaults() -> None:
