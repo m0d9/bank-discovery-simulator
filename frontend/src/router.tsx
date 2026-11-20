@@ -3,6 +3,7 @@ import { type RouteObject, useParams } from 'react-router';
 import { AppShell } from './components/AppShell';
 import { RouteError } from './components/RouteError';
 import { ClientSelectPage } from './pages/ClientSelectPage';
+import { FeedbackPage } from './pages/FeedbackPage';
 import { InterviewPage } from './pages/InterviewPage';
 import { NotFound } from './pages/NotFound';
 import { WrapUpPage } from './pages/WrapUpPage';
@@ -21,6 +22,7 @@ export const routes: RouteObject[] = [
       { index: true, element: <ClientSelectPage /> },
       { path: 'interview/:sessionId', element: <SessionRoute page={InterviewPage} /> },
       { path: 'wrapup/:sessionId', element: <SessionRoute page={WrapUpPage} /> },
+      { path: 'feedback/:sessionId', element: <SessionRoute page={FeedbackPage} /> },
       { path: '*', element: <NotFound /> },
     ],
   },
