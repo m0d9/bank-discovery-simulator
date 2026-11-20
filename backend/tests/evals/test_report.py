@@ -142,3 +142,17 @@ def test_main_reports_which_runs_it_used(tmp_path: Path) -> None:
     main(results_dir=results, doc=tmp_path / "evaluation.md", configs=CONFIGS, out=out)
 
     assert out.getvalue() == "default: default-20261120-1900\nNo complete run yet: strong-coach\n"
+
+
+def test_an_explanation_never_goes_next_to_an_attacks_unlock() -> None:
+    attack = khalid_weak().model_copy(update={"key": "khalid-al-marri--adversarial"})
+    attack.script = "adversarial"
+    run = summary("default", "20261120-1900", sessions=[attack])
+    run.metrics = compute([attack], []).model_dump(mode="json")
+    chosen = choose([run], "default")
+    assert chosen is not None
+
+    text = render(CONFIGS, {"default": chosen}, {"khalid-al-marri": {"needs-trucks": "By design."}})
+
+    assert "adversarial: false unlock of `needs-trucks` at turn 3" in text
+    assert "By design." not in text

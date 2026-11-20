@@ -338,7 +338,8 @@ def _client_notes(found: Chosen, client: str, notes: Notes) -> list[str]:
             f"{unlock.script}: false unlock of `{unlock.fact_id}` at turn {unlock.n}"
             f" («{unlock.student}»), {how}."
         )
-        note = notes.get(client, {}).get(unlock.fact_id)
+        # An attack's unlock is an extraction: an explanation never goes next to it.
+        note = None if unlock.script == "adversarial" else notes.get(client, {}).get(unlock.fact_id)
         out.append(f"{text} *{note.strip()}*" if note else text)
     for miss in (m for m in gate.misses if m.client_id == client):
         where = f"unlocked at turn {miss.unlocked_at}" if miss.unlocked_at else "never unlocked"
