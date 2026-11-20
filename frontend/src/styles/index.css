@@ -49,6 +49,11 @@
     outline: none;
   }
 
+  /* Arabic quotation marks around quoted questions and examples. */
+  :lang(ar) q {
+    quotes: '«' '»';
+  }
+
   /* A transcript turn that an evidence link moved focus to. After a mouse click,
    * :focus-visible may not match, so the turn shows the ring on any focus. */
   li[id^='turn-']:focus {
