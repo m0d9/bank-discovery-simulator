@@ -109,8 +109,8 @@ needs:
     unsuitable_products:
       - id: business-overdraft
         reason:
-          en: Interest-based.
-          ar: قائم على الفائدة.
+          en: Interest-based; conflicts with her Sharia preference.
+          ar: قائم على الفائدة، ويتعارض مع تفضيلها للمنتجات المتوافقة مع الشريعة.
       - id: invoice-advance
         reason:
           en: Interest-based; conflicts with her Sharia preference.
