@@ -12,6 +12,7 @@ from app.api.dto import (
     ContentStatusDTO,
     EndpointDTO,
     HealthDTO,
+    HealthHintCode,
     HealthStatus,
     ModelsDTO,
     ModelStatusDTO,
@@ -44,6 +45,7 @@ class _ModelReport:
     endpoint: EndpointDTO
     models: ModelsDTO
     hint: str | None
+    hint_code: HealthHintCode | None
 
 
 @dataclass(frozen=True)
@@ -81,6 +83,7 @@ async def health(
         endpoint=report.endpoint,
         models=report.models,
         hint=report.hint,
+        hint_code=report.hint_code,
         content=ContentStatusDTO(ok=status.ok, errors=list(status.errors)),
     )
 
@@ -100,24 +103,29 @@ async def _check(llm: LLMClient, settings: Settings) -> _ModelReport:
     try:
         listed = await llm.list_models()
     except LLMError as exc:
-        reachable, hint = _down_hint(exc, host)
-        return _report("down", host, reachable, names, set(), hint)
+        reachable, hint, code = _down_hint(exc, host)
+        return _report("down", host, reachable, names, set(), hint, code)
     available = {_canonical(name) for name in listed}
     present = {name for name in names.values() if _canonical(name) in available}
     missing = [name for name in dict.fromkeys(names.values()) if name not in present]
+    if not missing:
+        return _report("ok", host, True, names, present, None, None)
     hint = " ".join(f"Model {name} not found. Run: ollama pull {name}" for name in missing)
-    return _report("degraded" if missing else "ok", host, True, names, present, hint or None)
+    return _report("degraded", host, True, names, present, hint, "MODEL_MISSING")
 
 
-def _down_hint(exc: LLMError, host: str) -> tuple[bool, str]:
-    """Return (endpoint reachable, hint) for a failed model listing."""
+def _down_hint(exc: LLMError, host: str) -> tuple[bool, str, HealthHintCode]:
+    """Return (endpoint reachable, hint, hint code) for a failed model listing."""
     if isinstance(exc, ModelTimeout) or (
         isinstance(exc, ModelUnavailable) and exc.reason == "unreachable"
     ):
-        return False, f"Cannot reach the model endpoint at {host}. Is Ollama running?"
+        hint = f"Cannot reach the model endpoint at {host}. Is Ollama running?"
+        return False, hint, "ENDPOINT_UNREACHABLE"
     if isinstance(exc, ModelUnavailable) and exc.reason == "auth":
-        return True, f"The model endpoint at {host} rejected the API key. Check LLM_API_KEY."
-    return True, f"The model endpoint at {host} answered with an error. Check LLM_BASE_URL."
+        hint = f"The model endpoint at {host} rejected the API key. Check LLM_API_KEY."
+        return True, hint, "ENDPOINT_AUTH"
+    hint = f"The model endpoint at {host} answered with an error. Check LLM_BASE_URL."
+    return True, hint, "ENDPOINT_ERROR"
 
 
 def _canonical(name: str) -> str:
@@ -132,6 +140,7 @@ def _report(
     names: dict[Role, str],
     present: set[str],
     hint: str | None,
+    hint_code: HealthHintCode | None,
 ) -> _ModelReport:
     def model(role: Role) -> ModelStatusDTO:
         return ModelStatusDTO(name=names[role], available=names[role] in present)
@@ -142,4 +151,5 @@ def _report(
         endpoint=EndpointDTO(reachable=reachable, host=host),
         models=ModelsDTO(gate=model(Role.GATE), client=model(Role.CLIENT), coach=model(Role.COACH)),
         hint=hint,
+        hint_code=hint_code,
     )

@@ -5,7 +5,9 @@ fails `test_every_api_route_is_checked_for_leaks` until it's added here with its
 """
 
 from collections.abc import Iterator
+from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
@@ -13,21 +15,65 @@ from fastapi.testclient import TestClient
 from app.config import Settings
 from app.content import ContentRegistry, load_registry
 from app.content import store as store_module
-from app.llm import llm_dep
+from app.llm import Role, llm_dep
 from app.llm.fake import FakeLLM
 from app.main import create_app
 from tests.conftest import SettingsFactory
 from tests.content_factory import CLIENT, SECRET_CASH_GAP, ContentDir, client_data
+from tests.interview_factory import gate_reply
 from tests.no_leak import assert_no_leak, find_leaks
 
-# (method, schema path) -> (path to request, keys allowed to use a private key's name)
-PUBLIC_CALLS: dict[tuple[str, str], tuple[str, frozenset[str]]] = {
+NOURA = "noura-al-kuwari"
+SESSION = "/api/sessions/{session_id}"
+
+
+@dataclass(frozen=True)
+class PublicCall:
+    """How to call one route for the leak check.
+
+    For a session route, a session with Noura is started first and `turns` scripted messages
+    are sent, each unlocking one of her hidden facts, so the session has private state to leak.
+    """
+
+    path: str
+    body: dict[str, Any] | None = None
+    status: int = 200
+    turns: int = 0
+    unlocks: bool = False  # the call itself is a message that unlocks a fact
+    allowed_keys: frozenset[str] = field(default_factory=frozenset)
+
+
+PUBLIC_CALLS: dict[tuple[str, str], PublicCall] = {
     # `content` here is health's own status of the content files, not a hidden fact.
-    ("GET", "/api/health"): ("/api/health", frozenset({"$.content"})),
-    ("GET", "/api/bank"): ("/api/bank", frozenset()),
-    ("GET", "/api/clients"): ("/api/clients", frozenset()),
-    ("GET", "/api/products"): ("/api/products", frozenset()),
+    ("GET", "/api/health"): PublicCall("/api/health", allowed_keys=frozenset({"$.content"})),
+    ("GET", "/api/bank"): PublicCall("/api/bank"),
+    ("GET", "/api/clients"): PublicCall("/api/clients"),
+    ("GET", "/api/products"): PublicCall("/api/products"),
+    ("POST", "/api/sessions"): PublicCall(
+        "/api/sessions", body={"client_id": NOURA, "language": "en"}, status=201
+    ),
+    ("GET", SESSION): PublicCall(SESSION, turns=2),
+    ("POST", f"{SESSION}/messages"): PublicCall(
+        f"{SESSION}/messages",
+        body={"text": "Is Islamic banking important to you?"},
+        turns=1,
+        unlocks=True,
+    ),
+    ("POST", f"{SESSION}/wrapup"): PublicCall(
+        f"{SESSION}/wrapup",
+        body={
+            "needs_summary": "She is paid late by government clients and needs Islamic finance.",
+            "recommendations": [
+                {"product_id": "murabaha-working-capital", "reason": "Sharia-compliant stock."}
+            ],
+        },
+        turns=2,
+    ),
+    ("DELETE", SESSION): PublicCall(SESSION, status=204, turns=1),
 }
+
+# The order the scripted messages unlock Noura's facts in (each one's `requires` first).
+NOURA_UNLOCKS = ("late-payments", "sharia-only", "big-contract")
 
 
 @pytest.fixture
@@ -46,14 +92,40 @@ def test_every_api_route_is_checked_for_leaks(client: TestClient) -> None:
     assert routes == set(PUBLIC_CALLS), "add new routes to PUBLIC_CALLS with their leak rules"
 
 
+def _script_turn(fake: FakeLLM, fact_id: str) -> None:
+    fake.script(Role.GATE, gate_reply(fact_id))
+    fake.script(Role.CLIENT, "Let me think about how to put this.")
+
+
+def _prepare(client: TestClient, fake: FakeLLM, call: PublicCall) -> str:
+    """Start a session and send the setup turns, if the route needs them; return its path."""
+    if "{session_id}" not in call.path:
+        return call.path
+    created = client.post("/api/sessions", json={"client_id": NOURA, "language": "en"})
+    session_id = created.json()["session_id"]
+    for index in range(call.turns):
+        _script_turn(fake, NOURA_UNLOCKS[index])
+        sent = client.post(f"/api/sessions/{session_id}/messages", json={"text": f"Q{index}?"})
+        assert sent.status_code == 200, sent.text
+    if call.unlocks:
+        _script_turn(fake, NOURA_UNLOCKS[call.turns])
+    return call.path.format(session_id=session_id)
+
+
 @pytest.mark.parametrize("route", list(PUBLIC_CALLS), ids=lambda route: " ".join(route))
 def test_public_responses_carry_no_private_content(
-    client: TestClient, real_registry: ContentRegistry, route: tuple[str, str]
+    client: TestClient, fake_llm: FakeLLM, real_registry: ContentRegistry, route: tuple[str, str]
 ) -> None:
-    path, allowed_keys = PUBLIC_CALLS[route]
-    response = client.request(route[0], path)
-    assert response.status_code == 200
-    assert_no_leak(response.json(), real_registry, allowed_keys=allowed_keys)
+    call = PUBLIC_CALLS[route]
+    path = _prepare(client, fake_llm, call)
+
+    response = client.request(route[0], path, json=call.body)
+
+    assert response.status_code == call.status, response.text
+    if call.status == 204:
+        assert response.content == b""
+        return
+    assert_no_leak(response.json(), real_registry, allowed_keys=call.allowed_keys)
 
 
 def test_the_helper_catches_private_keys_and_hidden_facts(real_registry: ContentRegistry) -> None:
