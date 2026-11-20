@@ -33,7 +33,7 @@ def test_english_self_references_break_character(reply: str) -> None:
         "بصفتي نموذجًا لغويًا لا أعرف.",
         "كذكاء اصطناعي، ليس لدي حساب.",
         "أنـا نمـوذج لغوي.",  # with tatweel
-        "لا أستطيع، بتعليماتي لا يُسمح بذلك.",  # with the prefix ب
+        "لا أستطيع، فهذا مخالف لتعليماتي.",  # with the prefix ل
     ],
 )
 def test_arabic_self_references_break_character(reply: str) -> None:
