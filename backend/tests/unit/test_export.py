@@ -207,3 +207,30 @@ def test_the_ruled_out_line_is_in_arabic_in_an_arabic_export() -> None:
     text = export_markdown(session, arabic)
 
     assert "كانت المقابلة قد كشفت ما يستبعد هذا المنتج (الرسالة 2)." in text
+
+
+def test_a_note_under_the_coachs_sections_says_that_a_model_wrote_them() -> None:
+    session, feedback = with_feedback(ASK_PAYMENTS, recommend=[ALPHA])
+
+    text = export_markdown(session, feedback)
+
+    note = (
+        "*The AI coach wrote these notes and can make mistakes. The discovery map and the "
+        "verdicts above come from the answer key.*"
+    )
+    assert note in text
+    assert text.index(f"## {LABELS['en']['discovery_map']}") < text.index(note)
+    assert text.index(note) < text.index(f"### {LABELS['en']['about_summary']}")
+
+
+def test_the_coach_note_is_in_arabic_and_only_with_a_report() -> None:
+    session, english = with_feedback(ASK_PAYMENTS, recommend=[ALPHA])
+
+    arabic = export_markdown(session, english.model_copy(update={"language": "ar"}))
+    unavailable = export_markdown(session, english.model_copy(update={"report": None}))
+
+    assert (
+        "*كتب المدرّب الافتراضي هذه الملاحظات وقد يخطئ. أما خريطة الاكتشاف وتقييم توصياتك أعلاه "
+        "فمبنيان على الإجابة النموذجية.*" in arabic
+    )
+    assert LABELS["en"]["coach_note"] not in unavailable

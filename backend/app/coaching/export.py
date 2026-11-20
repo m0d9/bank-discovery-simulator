@@ -198,6 +198,8 @@ class _Document:
                     item += "  \n  " + self._label("example", example=self._free(tip.example))
                 items.append(item)
             self._list(items)
+        # As on the page, under the coach's sections: a model wrote them, the key did not.
+        self._paragraph(f"*{self._label('coach_note')}*")
         self._paragraph(f"### {self._label('about_summary')}")
         self._paragraph(self._free(report.summary_feedback))
 

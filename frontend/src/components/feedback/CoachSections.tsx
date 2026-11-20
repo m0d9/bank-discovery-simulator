@@ -10,8 +10,8 @@ interface CoachSectionsProps {
   onShowTurn: ShowTurn;
 }
 
-/** The three sections the brief asks the coach for, first on the page. Their text comes from
- * a model, so it keeps its own direction (`dir="auto"`). */
+/** The three sections the brief asks the coach for, first on the page, then a note that a
+ * model wrote them. Their text keeps its own direction (`dir="auto"`). */
 export function CoachSections({ report, onShowTurn }: CoachSectionsProps) {
   const { t } = useTranslation();
   return (
@@ -57,6 +57,7 @@ export function CoachSections({ report, onShowTurn }: CoachSectionsProps) {
           </li>
         ))}
       </Section>
+      <p className="text-sm text-ink-muted">{t('feedback.coach.note')}</p>
     </>
   );
 }

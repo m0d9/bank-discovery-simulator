@@ -157,7 +157,8 @@
       "evidence": "Evidence:",
       "betterQuestion": "A question you could have asked:",
       "example": "For example:",
-      "empty": "The coach has nothing to add here."
+      "empty": "The coach has nothing to add here.",
+      "note": "The AI coach wrote these notes and can make mistakes. The discovery map and the verdicts below come from the answer key."
     },
     "profile": {
       "title": "Behind the scenes: the full client profile",

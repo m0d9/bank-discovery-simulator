@@ -58,6 +58,18 @@ describe('FeedbackPage', () => {
     expect(counts.compareDocumentPosition(present(headings[0]))).toBe(
       Node.DOCUMENT_POSITION_FOLLOWING,
     );
+    // Under the coach's sections, before the map: the coach can be wrong, the answer key can't.
+    const note = screen.getByText(
+      'The AI coach wrote these notes and can make mistakes. The discovery map and the verdicts ' +
+        'below come from the answer key.',
+    );
+    expect(present(headings[2]).compareDocumentPosition(note)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+    expect(note.compareDocumentPosition(present(headings[3]))).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+    expect(note.closest('[role="alert"], [role="status"]')).toBeNull();
     expect(screen.getByText('Your feedback is ready.')).toBeInTheDocument();
 
     const map = screen.getByRole('table', { name: 'Discovery map' });
@@ -117,6 +129,12 @@ describe('FeedbackPage', () => {
 
     await screen.findByRole('heading', { level: 2, name: 'خريطة الاكتشاف' });
     expect(asked).toEqual(['ar']);
+    expect(
+      screen.getByText(
+        'كتب المدرّب الافتراضي هذه الملاحظات وقد يخطئ. أما خريطة الاكتشاف وتقييم توصياتك أدناه ' +
+          'فمبنيان على الإجابة النموذجية.',
+      ),
+    ).toBeInTheDocument();
     expect(screen.getByRole('rowheader', { name: 'سدّ الفجوة النقدية.' })).not.toHaveAttribute(
       'lang',
     );
@@ -181,11 +199,13 @@ describe('FeedbackPage', () => {
     expect(notice).toHaveTextContent('still accurate');
     expect(screen.getByRole('table', { name: 'Discovery map' })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'What went well' })).not.toBeInTheDocument();
+    expect(screen.queryByText(/The AI coach wrote these notes/)).not.toBeInTheDocument();
 
     await user.click(within(notice).getByRole('button', { name: 'Ask the coach again' }));
 
     await screen.findByRole('heading', { level: 2, name: 'What went well' });
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.getByText(/The AI coach wrote these notes/)).toBeInTheDocument();
     expect(calls).toBe(2);
   });
 
