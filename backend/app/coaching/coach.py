@@ -198,6 +198,10 @@ def check_report(
     - Praise must be grounded. A `went_well` item is dropped, never rewritten, when it cites
       no student turn, or cites a turn where the student pitched a product that is
       unsuitable, or a turn that a `missed` item cites.
+    - A `missed` or `how_to_improve` item is dropped when its `better_question` or `example`
+      is words the client said (two or more words, in order, from one client message): that
+      field is the student's question. A tip cut short at a straight double quote leaves the
+      client's phrase in `example` this way.
     - A `better_question` or `example` that names a product (its id, its English or Arabic
       name, or an alias) becomes None, and its item stays: those are the student's own
       discovery questions, not pitches. Their quotation marks are removed first, because
@@ -209,8 +213,13 @@ def check_report(
       first critical fact still locked. Those entries are never cut.
     """
     student_turns = {turn.n for turn in session.turns if turn.role == "student"}
+    client_turns = [_words(turn.text) for turn in session.turns if turn.role == "client"]
     names = _product_names(session.products.values())
     cleared: list[Cleared] = []
+    dropped: list[Dropped] = []
+
+    def quotes_client(text: str | None) -> bool:
+        return text is not None and _said_in(_unquote(text), client_turns)
 
     def question(text: str | None, section: str, field: str) -> str | None:
         text = _unquote(text) if text else None
@@ -225,17 +234,23 @@ def check_report(
     def turns(values: Sequence[int]) -> list[int]:
         return sorted({n for n in values if n in student_turns})
 
-    missed = [
-        MissedPoint(
-            point=item.point,
-            need_id=_known(item.need_id, need_ids),
-            product_id=_known(item.product_id, product_ids),
-            evidence_turns=turns(item.evidence_turns),
-            better_question=question(item.better_question, "missed", "better_question"),
+    missed: list[MissedPoint] = []
+    for item in report.missed:
+        if not item.point:
+            continue
+        if quotes_client(item.better_question):
+            dropped.append(Dropped(section="missed", reason="quoted_client", text=item.point))
+            continue
+        missed.append(
+            MissedPoint(
+                point=item.point,
+                need_id=_known(item.need_id, need_ids),
+                product_id=_known(item.product_id, product_ids),
+                evidence_turns=turns(item.evidence_turns),
+                better_question=question(item.better_question, "missed", "better_question"),
+            )
         )
-        for item in report.missed
-        if item.point
-    ][:MAX_ITEMS]
+    missed = missed[:MAX_ITEMS]
     covered = {item.need_id for item in missed}
     added = [
         _backfill(need, session.client, analysis, language)
@@ -251,7 +266,6 @@ def check_report(
     }
     missed_turns = {n for item in missed for n in item.evidence_turns}
     went_well: list[WentWell] = []
-    dropped: list[Dropped] = []
     for praise in report.went_well:
         if not praise.point:
             continue
@@ -261,11 +275,16 @@ def check_report(
             went_well.append(WentWell(point=praise.point, evidence_turns=cited))
         else:
             dropped.append(Dropped(section="went_well", reason=reason, text=praise.point))
-    how_to_improve = [
-        Improvement(tip=item.tip, example=question(item.example, "how_to_improve", "example"))
-        for item in report.how_to_improve
-        if item.tip
-    ][:MAX_ITEMS]
+    how_to_improve: list[Improvement] = []
+    for tip in report.how_to_improve:
+        if not tip.tip:
+            continue
+        if quotes_client(tip.example):
+            dropped.append(Dropped(section="how_to_improve", reason="quoted_client", text=tip.tip))
+            continue
+        example = question(tip.example, "how_to_improve", "example")
+        how_to_improve.append(Improvement(tip=tip.tip, example=example))
+    how_to_improve = how_to_improve[:MAX_ITEMS]
     checked = CoachReport(
         went_well=went_well[:MAX_ITEMS],
         missed=missed,
@@ -278,6 +297,30 @@ def check_report(
         dropped=tuple(dropped),
         cleared=tuple(cleared),
         mixed_script=_mixed_script(checked) if language == "ar" else 0,
+    )
+
+
+_WORD = re.compile(r"\w+")
+MIN_QUOTED_WORDS = 2
+"""A single word in common with the client is not a quote."""
+
+
+def _words(text: str) -> list[str]:
+    """The text's words, normalised as for the product names."""
+    return _WORD.findall(normalise(text))
+
+
+def _said_in(text: str, client_turns: Sequence[Sequence[str]]) -> bool:
+    """True if `text` is words the client said: at least two words, in the same order, in one
+    client message, ignoring punctuation, case and Arabic diacritics."""
+    words = _words(text)
+    size = len(words)
+    if size < MIN_QUOTED_WORDS:
+        return False
+    return any(
+        list(turn[start : start + size]) == words
+        for turn in client_turns
+        for start in range(len(turn) - size + 1)
     )
 
 

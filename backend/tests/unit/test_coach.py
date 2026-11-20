@@ -13,6 +13,7 @@ from app.coaching.coach import (
     MAX_ITEMS,
     Checked,
     CoachOutcome,
+    Dropped,
     check_report,
     run_coach,
 )
@@ -462,3 +463,100 @@ async def test_the_coach_reads_when_the_client_had_already_ruled_a_product_out()
     data = json.loads(fake.calls_for(Role.COACH)[0].messages[1].content)
     (verdict,) = data["analysis"]["products"]
     assert (verdict["ruled_out_at"], verdict["pitched_at"]) == (2, 3)
+
+
+def client_says(session: Session, n: int, text: str) -> Session:
+    """The session with client turn `n` saying `text` (the factory's client says "I see.")."""
+    session.turns = [
+        turn.model_copy(update={"text": text}) if turn.n == n else turn for turn in session.turns
+    ]
+    return session
+
+
+def test_a_tip_cut_short_at_a_quote_of_the_client_is_dropped() -> None:
+    # Run a-3 of the manual-test re-runs. The coach quoted Noura's «الأمور تتحرك بسرعة» (turn 4)
+    # in straight double quotes: the tip ended at the quote, and her words became the example.
+    session = client_says(
+        real_interview(
+            "noura-al-kuwari",
+            ("مرحبًا نورة، حدّثيني عن عملك.", [], []),
+            ("كيف تسير الأمور؟", [], []),
+            ("ماذا تحتاجين من البنك؟", ["sharia-only"], []),
+            ("أقترح عليكِ السحب على المكشوف للأعمال.", [], []),
+            recommend=["business-overdraft"],
+            pitched={"business-overdraft": [7]},
+        ),
+        4,
+        "الأمور تتحرك بسرعة بين الفعاليات والاحتفالات، لكن الأقساط المالية كانت مضطربة قليلاً "
+        "مؤخراً. هل هناك شيء محدد تودين معرفته عن حلول البنك التي قد تناسب وضعك الحالي؟",
+    )
+    ask_first = (
+        "ابدئي دائمًا بسؤال عملاءك عن تفضيلاتهم المصرفية (مثل الشريعة) قبل اقتراح أي منتج، "
+        "حتى لو بدا أنهم يرضون بأي شيء."
+    )
+    ask_plans = (
+        "اسألي عن الفرص المستقبلية أو العقود الكبيرة، لأن التمويل قد يكون ضروريًا لها قبل طرح أي حل."
+    )
+    # a-3's other cut tip ends at «الالتزام بالشريعة», the coach's own words rather than the
+    # client's, so this check can't see it: the prompt's quoting rule is what prevents it.
+    reply = coach_reply(
+        how_to_improve=[
+            {
+                "tip": ask_first,
+                "example": "هل لديكم تفضيلات معينة حول نوع المنتجات المصرفية التي تستخدمونها؟",
+            },
+            {"tip": "عندما يذكر العميل أن الأمور", "example": "تتحرك بسرعة"},
+            {
+                "tip": ask_plans,
+                "example": "إذا لم يكن المال عائقًا، ماذا ستفعلين بالمتجر في الشهر القادم؟",
+            },
+        ]
+    )
+
+    result = check(session, reply, "ar")
+
+    assert [item.tip for item in result.report.how_to_improve] == [ask_first, ask_plans]
+    assert result.dropped == (
+        Dropped(
+            section="how_to_improve", reason="quoted_client", text="عندما يذكر العميل أن الأمور"
+        ),
+    )
+
+
+def test_a_better_question_that_quotes_the_client_drops_its_item() -> None:
+    session = client_says(
+        interview(*ALL_FOUND, recommend=[BETA]),
+        2,
+        "They pay us 90 days late, so payroll gets tight.",
+    )
+    reply = coach_reply(
+        missed=[
+            missed_item("You didn't ask about payroll.", better_question='"Payroll gets tight."'),
+            missed_item("You didn't ask about growth."),
+        ]
+    )
+
+    result = check(session, reply)
+
+    assert [item.point for item in result.report.missed] == ["You didn't ask about growth."]
+    assert result.dropped == (
+        Dropped(section="missed", reason="quoted_client", text="You didn't ask about payroll."),
+    )
+
+
+@pytest.mark.parametrize(
+    "example",
+    [
+        "How late do they usually pay you?",  # the client's words, but not in the client's order
+        "Late?",  # one word in common is not a quote
+        "When is payroll due, and how do you cover it while you wait?",
+    ],
+)
+def test_a_question_that_only_shares_words_with_the_client_is_kept(example: str) -> None:
+    session = client_says(interview(*ALL_FOUND, recommend=[BETA]), 2, "They pay late, sometimes.")
+    reply = coach_reply(how_to_improve=[{"tip": "Ask about timing.", "example": example}])
+
+    result = check(session, reply)
+
+    assert [item.example for item in result.report.how_to_improve] == [example]
+    assert result.dropped == ()
