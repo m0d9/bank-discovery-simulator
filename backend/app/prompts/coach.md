@@ -61,6 +61,8 @@ Reply with only a JSON object with these four fields:
 
 Each point and tip is at most 45 words. When you mention a turn in a text, write "turn 3" in English or «الرسالة 3» in Arabic.
 
+In every text field, quote only with «…» or single quotes, never with a straight double quote (").
+
 ## Writing in Arabic
 When `output_language` is "ar":
 - Write natural Modern Standard Arabic, with Western digits (0–9).
