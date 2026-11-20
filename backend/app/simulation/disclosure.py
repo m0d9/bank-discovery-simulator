@@ -26,14 +26,20 @@ _IMPORTANCE_ORDER = {"critical": 0, "important": 1, "minor": 2}
 
 
 class GateDecision(BaseModel):
-    """The gate model's answer, before the rules are applied."""
+    """The gate model's answer, before the rules are applied.
 
+    `note` comes first on purpose: the model writes JSON in schema order, so it gives its
+    reason before it commits to a decision. With `unlocked` first, a small model sometimes
+    unlocked a fact and then explained why the message earned nothing.
+    """
+
+    note: str = Field(max_length=NOTE_LIMIT)
+    """One short sentence: which `unlock_when` behaviour, if any, the message does. Required,
+    so the model can't skip its reasoning."""
     unlocked: list[str]
     """Eligible fact ids the student's message earned."""
     products_mentioned: list[str]
     """Catalogue ids the student proposed, recommended or asked about."""
-    note: str = Field(default="", max_length=NOTE_LIMIT)
-    """One short sentence saying why."""
 
     @field_validator("note", mode="before")
     @classmethod
