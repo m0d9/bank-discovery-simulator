@@ -34,7 +34,7 @@ export function NeedStatusBadge({ status }: { status: NeedStatus }) {
   const { t } = useTranslation();
   const { tone, Icon } = NEED[status];
   return (
-    <Badge tone={tone} icon={<Icon />}>
+    <Badge tone={tone} icon={<Icon />} nowrap>
       {t(`feedback.status.${status}`)}
     </Badge>
   );

@@ -146,9 +146,9 @@
       "none": "لا يوجد"
     },
     "status": {
-      "uncovered": "اكتُشف بالكامل",
+      "uncovered": "مكتشَف",
       "revealed_by_pitch": "بعد اقتراح منتج",
-      "partial": "اكتُشف جزئيًا",
+      "partial": "مكتشَف جزئيًا",
       "missed": "لم يُكتشف"
     },
     "recommendations": {

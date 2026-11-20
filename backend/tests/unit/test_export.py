@@ -136,7 +136,7 @@ def test_an_arabic_export_uses_arabic_labels_and_reads_right_to_left() -> None:
     assert "**الرسالة 1 · \u2068أنت\u2069:** \u2068How do your customers pay?\u2069" in text
     assert "\u2068SECRET-CASH-GAP: the content of cash-gap.\u2069" in text
     assert (
-        "| \u2068تمويل الفجوة.\u2069 | \u2068اكتُشف جزئيًا\u2069 | \u2068–\u2069 | \u2068–\u2069 |"
+        "| \u2068تمويل الفجوة.\u2069 | \u2068مكتشَف جزئيًا\u2069 | \u2068–\u2069 | \u2068–\u2069 |"
         in text
     )
 

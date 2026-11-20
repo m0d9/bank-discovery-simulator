@@ -14,13 +14,15 @@ interface BadgeProps {
   tone?: BadgeTone;
   /** A decorative icon; the text always carries the meaning. */
   icon?: ReactNode;
+  /** Keep the words on one line, for short labels in narrow table columns. */
+  nowrap?: boolean;
   children: ReactNode;
 }
 
-export function Badge({ tone = 'neutral', icon, children }: BadgeProps) {
+export function Badge({ tone = 'neutral', icon, nowrap = false, children }: BadgeProps) {
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-sm font-medium ${TONES[tone]}`}
+      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-sm font-medium ${TONES[tone]}${nowrap ? ' whitespace-nowrap' : ''}`}
     >
       {icon}
       {children}
