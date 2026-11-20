@@ -32,6 +32,10 @@ MAX_ITEMS = 4
 # Speaker labels in the transcript the model reads: `[t3] Student: …`.
 SPEAKERS = {"student": "Student", "client": "Client"}
 _LATIN = re.compile(r"[a-z]")
+# Quotation marks inside a suggested question or example: the page and the export add one pair.
+_DOUBLE_QUOTES = re.compile('["“”«»„]')
+_SINGLE_QUOTE_PAIR = re.compile(r"(?<!\w)['‘]([^'‘’]+)['’](?!\w)")
+_OUTER_QUOTES = "'‘’‚"
 
 
 @dataclass(frozen=True)
@@ -190,7 +194,8 @@ def check_report(
       unsuitable, or a turn that a `missed` item cites.
     - A `better_question` or `example` that names a product (its id, its English or Arabic
       name, or an alias) becomes None, and its item stays: those are the student's own
-      discovery questions, not pitches.
+      discovery questions, not pitches. Their quotation marks are removed first, because
+      the page and the export add one pair.
     - An unknown `need_id` or `product_id` becomes None. Ids are matched ignoring case.
     - Items without text are dropped, and each list keeps its first four items.
     - Every missed critical need without an entry gets one, first in `missed`: the point is
@@ -202,6 +207,7 @@ def check_report(
     cleared: list[Cleared] = []
 
     def question(text: str | None, section: str, field: str) -> str | None:
+        text = _unquote(text) if text else None
         if text and _names_a_product(text, names):
             cleared.append(Cleared(section=section, field=field, reason="names_a_product"))
             return None
@@ -266,6 +272,14 @@ def check_report(
         dropped=tuple(dropped),
         cleared=tuple(cleared),
     )
+
+
+def _unquote(text: str) -> str:
+    """The text without quotation marks. Double quotes and guillemets go wherever they are;
+    single quotes used as a pair are unwrapped, so an apostrophe, as in "don't", stays."""
+    text = _DOUBLE_QUOTES.sub("", text)
+    text = _SINGLE_QUOTE_PAIR.sub(r"\1", text)
+    return text.strip().strip(_OUTER_QUOTES).strip()
 
 
 def _product_names(products: Iterable[Product]) -> list[str]:

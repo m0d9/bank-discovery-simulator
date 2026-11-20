@@ -4,6 +4,8 @@ import json
 from datetime import datetime
 from typing import Any
 
+import pytest
+
 from app.coaching.analysis import analyse
 from app.coaching.coach import (
     COACH_MAX_TOKENS,
@@ -384,3 +386,36 @@ def test_discovery_questions_without_a_product_name_are_kept() -> None:
     model_items = [item for item in result.report.missed if item.point.startswith("Point")]
     assert [item.better_question for item in model_items] == questions
     assert result.cleared == ()
+
+
+@pytest.mark.parametrize(
+    ("example", "shown"),
+    [
+        # From the M5 appendix: an example nested inside quotes.
+        (
+            "Before suggesting credit, ask: 'Do you prefer Sharia-compliant products or "
+            "conventional ones?'",
+            "Before suggesting credit, ask: Do you prefer Sharia-compliant products or "
+            "conventional ones?",
+        ),
+        ('"How quickly do your customers pay you?"', "How quickly do your customers pay you?"),
+        ("“What matters to you in a bank?”", "What matters to you in a bank?"),
+        ("«هل تفضلين المنتجات المتوافقة مع الشريعة؟»", "هل تفضلين المنتجات المتوافقة مع الشريعة؟"),
+        (
+            "What's the hardest part? Don't your suppliers wait?",
+            "What's the hardest part? Don't your suppliers wait?",
+        ),
+        ("‘How do you pay staff?’", "How do you pay staff?"),
+    ],
+)
+def test_examples_and_questions_lose_their_own_quotation_marks(example: str, shown: str) -> None:
+    session = interview(*ALL_FOUND, recommend=[BETA])
+    reply = coach_reply(
+        missed=[missed_item(better_question=example)],
+        how_to_improve=[{"tip": "Ask early.", "example": example}],
+    )
+
+    report = check(session, reply).report
+
+    assert report.missed[0].better_question == shown
+    assert report.how_to_improve[0].example == shown
