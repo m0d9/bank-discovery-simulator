@@ -18,10 +18,11 @@ from app.content import store as store_module
 from app.llm import Role, llm_dep
 from app.llm.fake import FakeLLM
 from app.main import create_app
+from tests.coaching_factory import coach_reply
 from tests.conftest import SettingsFactory
 from tests.content_factory import CLIENT, SECRET_CASH_GAP, ContentDir, client_data
 from tests.interview_factory import gate_reply, real_quote
-from tests.no_leak import assert_no_leak, find_leaks
+from tests.no_leak import assert_no_leak, find_leaks, find_text_leaks
 
 NOURA = "noura-al-kuwari"
 SESSION = "/api/sessions/{session_id}"
@@ -40,6 +41,8 @@ class PublicCall:
     status: int = 200
     turns: int = 0
     unlocks: bool = False  # the call itself is a message that unlocks a fact
+    wrap_up: bool = False  # the session is wrapped up after the setup turns
+    reveals: bool = False  # the one response allowed to carry private content
     allowed_keys: frozenset[str] = field(default_factory=frozenset)
 
 
@@ -70,7 +73,14 @@ PUBLIC_CALLS: dict[tuple[str, str], PublicCall] = {
         turns=2,
     ),
     ("DELETE", SESSION): PublicCall(SESSION, status=204, turns=1),
+    # Feedback reveals the private profile: that's what it's for (see the test below).
+    ("POST", f"{SESSION}/feedback"): PublicCall(
+        f"{SESSION}/feedback?lang=en", turns=2, wrap_up=True, reveals=True
+    ),
+    # Before feedback, the export holds the transcript and the wrap-up only.
+    ("GET", f"{SESSION}/export"): PublicCall(f"{SESSION}/export", turns=2, wrap_up=True),
 }
+WRAPUP_BODY = PUBLIC_CALLS[("POST", f"{SESSION}/wrapup")].body
 
 # The order the scripted messages unlock Noura's facts in (each one's `requires` first).
 NOURA_UNLOCKS = ("late-payments", "sharia-only", "big-contract")
@@ -109,6 +119,11 @@ def _prepare(client: TestClient, fake: FakeLLM, call: PublicCall) -> str:
         assert sent.status_code == 200, sent.text
     if call.unlocks:
         _script_turn(fake, NOURA_UNLOCKS[call.turns])
+    if call.wrap_up:
+        wrapped = client.post(f"/api/sessions/{session_id}/wrapup", json=WRAPUP_BODY)
+        assert wrapped.status_code == 200, wrapped.text
+    if call.reveals:
+        fake.script(Role.COACH, coach_reply())
     return call.path.format(session_id=session_id)
 
 
@@ -125,7 +140,28 @@ def test_public_responses_carry_no_private_content(
     if call.status == 204:
         assert response.content == b""
         return
+    if call.reveals:
+        assert find_leaks(response.json(), real_registry), "feedback should reveal the profile"
+        return
+    if response.headers["content-type"].startswith("text/markdown"):
+        assert find_text_leaks(response.text, real_registry) == []
+        return
     assert_no_leak(response.json(), real_registry, allowed_keys=call.allowed_keys)
+
+
+def test_after_feedback_only_the_feedback_and_the_export_carry_private_content(
+    client: TestClient, fake_llm: FakeLLM, real_registry: ContentRegistry
+) -> None:
+    feedback_path = _prepare(client, fake_llm, PUBLIC_CALLS[("POST", f"{SESSION}/feedback")])
+    session_path = feedback_path.removesuffix("/feedback?lang=en")
+    feedback = client.post(feedback_path)
+    assert feedback.status_code == 200, feedback.text
+
+    assert_no_leak(client.get(session_path).json(), real_registry)
+    late_message = client.post(f"{session_path}/messages", json={"text": "One more thing?"})
+    assert late_message.status_code == 409
+    assert_no_leak(late_message.json(), real_registry)
+    assert find_text_leaks(client.get(f"{session_path}/export").text, real_registry) != []
 
 
 def test_the_helper_catches_private_keys_and_hidden_facts(real_registry: ContentRegistry) -> None:

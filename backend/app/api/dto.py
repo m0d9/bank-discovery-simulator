@@ -1,10 +1,12 @@
 """Data transfer objects: the only shapes API routes may return."""
 
+from datetime import datetime
 from typing import Annotated, Literal
 
 from pydantic import AfterValidator, BaseModel, Field
 
-from app.content import Category, Difficulty, Segment
+from app.coaching import DiscoveredBy, NeedStatus, Verdict
+from app.content import Category, Difficulty, FinancialKnowledge, Importance, Segment
 from app.simulation.models import (
     MAX_RECOMMENDATIONS,
     MIN_RECOMMENDATIONS,
@@ -193,6 +195,194 @@ class WrapUpDTO(BaseModel):
         Field(min_length=MIN_RECOMMENDATIONS, max_length=MAX_RECOMMENDATIONS),
         AfterValidator(unique_product_ids),
     ]
+
+
+class SubmittedWrapUpDTO(BaseModel):
+    """The wrap-up as the student submitted it."""
+
+    needs_summary: str
+    recommendations: list[RecommendationDTO]
+
+
+class FactUnlockDTO(BaseModel):
+    """One evidence fact of a need, and the student turn that unlocked it (null if it never
+    came out)."""
+
+    fact_id: str
+    unlocked_at_turn: int | None
+
+
+class NeedViaDTO(BaseModel):
+    """The student turn whose answer completed a need, and what the student said in it."""
+
+    turn: int
+    question: str
+
+
+class NeedResultDTO(BaseModel):
+    """`uncovered` when every evidence fact came out, `partial` when some did, `missed` when
+    none did. `via` is set only for an uncovered need."""
+
+    need_id: str
+    status: NeedStatus
+    facts: list[FactUnlockDTO]
+    via: NeedViaDTO | None
+
+
+class FactResultDTO(BaseModel):
+    """When a hidden fact came out, and whether a question or a product pitch brought it out."""
+
+    fact_id: str
+    importance: Importance
+    unlocked_at_turn: int | None
+    discovered_by: DiscoveredBy | None
+
+
+class VerdictReasonDTO(BaseModel):
+    """Why a product is unsuitable: for one need, or (`need_id` null) the referral note."""
+
+    need_id: str | None
+    reason: LocalizedTextDTO
+
+
+class ProductVerdictDTO(BaseModel):
+    """A recommended product against the answer key: `reasons` when it's unsuitable, `needs`
+    (the needs it meets) when it's suitable."""
+
+    product_id: str
+    verdict: Verdict
+    reasons: list[VerdictReasonDTO]
+    needs: list[str]
+
+
+class MissedOpportunityDTO(BaseModel):
+    """A suitable product the student didn't recommend, and the needs it would have met."""
+
+    product_id: str
+    needs: list[str]
+
+
+class FeedbackStatsDTO(BaseModel):
+    """Counts, never scores."""
+
+    student_turns: int
+    needs_uncovered: int
+    needs_total: int
+    critical_found: int
+    critical_total: int
+    first_unlock_turn: int | None
+
+
+class AnalysisDTO(BaseModel):
+    """What code works out about the interview, without a model. Always accurate."""
+
+    needs: list[NeedResultDTO]
+    facts: list[FactResultDTO]
+    products: list[ProductVerdictDTO]
+    missed_opportunities: list[MissedOpportunityDTO]
+    stats: FeedbackStatsDTO
+
+
+class WentWellDTO(BaseModel):
+    """Something the student did well, and the student turns that show it."""
+
+    point: str
+    evidence_turns: list[int]
+
+
+class MissedPointDTO(BaseModel):
+    """Something the student missed, with a question they could have asked."""
+
+    point: str
+    need_id: str | None
+    product_id: str | None
+    evidence_turns: list[int]
+    better_question: str | None
+
+
+class ImprovementDTO(BaseModel):
+    """A habit for the next interview, with an example."""
+
+    tip: str
+    example: str | None
+
+
+class CoachReportDTO(BaseModel):
+    """The AI coach's report, in the feedback's language."""
+
+    went_well: list[WentWellDTO]
+    missed: list[MissedPointDTO]
+    how_to_improve: list[ImprovementDTO]
+    summary_feedback: str
+
+
+class PersonaDTO(BaseModel):
+    """Who the AI client played. The content keeps these fields in English."""
+
+    age: int
+    occupation: LocalizedTextDTO
+    nationality: LocalizedTextDTO
+    family: LocalizedTextDTO | None
+    background: LocalizedTextDTO
+    personality: LocalizedTextDTO
+    speaking_style: LocalizedTextDTO
+    financial_knowledge: FinancialKnowledge
+
+
+class RevealedFactDTO(BaseModel):
+    """A hidden fact, revealed, and the student turn that unlocked it (null if it never did)."""
+
+    id: str
+    content: LocalizedTextDTO
+    importance: Importance
+    unlocked_at_turn: int | None
+
+
+class UnsuitableProductDTO(BaseModel):
+    """A product that doesn't meet a need, and why."""
+
+    id: str
+    reason: LocalizedTextDTO
+
+
+class RevealedNeedDTO(BaseModel):
+    """One part of the answer key, with how far the student uncovered it."""
+
+    id: str
+    description: LocalizedTextDTO
+    status: NeedStatus
+    suitable_products: list[str]
+    unsuitable_products: list[UnsuitableProductDTO]
+
+
+class RevealedClientDTO(BaseModel):
+    """The client's private profile, shown once the interview has its feedback."""
+
+    persona: PersonaDTO
+    open_facts: list[LocalizedTextDTO]
+    hidden_facts: list[RevealedFactDTO]
+    needs: list[RevealedNeedDTO]
+    no_catalogue_fit: bool
+    referral_note: LocalizedTextDTO | None
+
+
+class FeedbackDTO(BaseModel):
+    """Response of `POST /api/sessions/{session_id}/feedback`.
+
+    `analysis` is always present and accurate. `report` is the coach's, in `language`; it is
+    null, with `degraded` true, when the coach was unavailable. The only response that carries
+    the client's private profile (`revealed`).
+    """
+
+    session_id: str
+    language: Language
+    analysis: AnalysisDTO
+    report: CoachReportDTO | None
+    degraded: bool
+    models: SessionModelsDTO
+    generated_at: datetime
+    wrapup: SubmittedWrapUpDTO
+    revealed: RevealedClientDTO
 
 
 class ErrorDTO(BaseModel):
