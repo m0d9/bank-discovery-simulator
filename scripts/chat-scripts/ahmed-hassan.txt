@@ -1,0 +1,8 @@
+# Ahmed Hassan: the M6 acceptance run.
+#   make chat CLIENT=ahmed-hassan DEBUG=1 SCRIPT=scripts/chat-scripts/ahmed-hassan.txt
+# A generic question: nothing should unlock.
+How is work going at the moment?
+# Each fact's first example question, in dependency order: each should unlock its fact.
+Do you send money abroad regularly, for example to family?
+Do you have any existing loans or monthly repayments?
+Are you planning any big purchases in the next year?
