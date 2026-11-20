@@ -25,7 +25,7 @@ from app.llm.fake import FakeLLM
 from app.main import create_app
 from app.simulation import InterviewService
 from tests.conftest import SettingsFactory
-from tests.interview_factory import gate_reply
+from tests.interview_factory import gate_reply, real_quote
 
 NOURA = "noura-al-kuwari"
 NOURA_OPENING = (
@@ -82,7 +82,7 @@ def send(
     unlock: Sequence[str] = (),
     reply: str = "Some of them take months, honestly.",
 ) -> httpx.Response:
-    fake.script(Role.GATE, gate_reply(*unlock))
+    fake.script(Role.GATE, gate_reply(*(real_quote(fact_id) for fact_id in unlock)))
     fake.script(Role.CLIENT, reply)
     return api.post(f"/api/sessions/{session_id}/messages", json={"text": text})
 
@@ -302,7 +302,7 @@ def test_a_failed_client_reply_maps_to_its_code_and_saves_nothing(
     api: TestClient, fake_llm: FakeLLM, errors: list[Any], code: str
 ) -> None:
     session_id = start(api)
-    fake_llm.script(Role.GATE, gate_reply("late-payments"))
+    fake_llm.script(Role.GATE, gate_reply(real_quote("late-payments")))
     fake_llm.script(Role.CLIENT, *errors)
 
     response = api.post(f"/api/sessions/{session_id}/messages", json={"text": "How do they pay?"})

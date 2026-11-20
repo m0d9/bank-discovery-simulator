@@ -2,14 +2,16 @@
 
 The gate model sees fact ids and unlock conditions only, never a fact's content or signal
 (CLAUDE.md rule 4), and never the transcript. Its answer is only a suggestion: the rules here
-decide what actually unlocks.
+decide what actually unlocks. Each unlock must quote, as evidence, one of that fact's own
+`unlock_when` behaviours; an unlock whose quote doesn't match is rejected.
 """
 
 import json
 import logging
 import time
-from collections.abc import Collection, Sequence
-from dataclasses import dataclass
+from collections.abc import Collection, Mapping, Sequence
+from dataclasses import dataclass, field
+from types import MappingProxyType
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -25,6 +27,15 @@ NOTE_LIMIT = 200
 _IMPORTANCE_ORDER = {"critical": 0, "important": 1, "minor": 2}
 
 
+class GateUnlock(BaseModel):
+    """One fact the gate says the message earned, with its evidence."""
+
+    id: str
+    """The fact's id, from `eligible_facts`."""
+    behaviour: str
+    """The behaviour the message does, copied word for word from that fact's `unlock_when`."""
+
+
 class GateDecision(BaseModel):
     """The gate model's answer, before the rules are applied.
 
@@ -36,8 +47,8 @@ class GateDecision(BaseModel):
     note: str = Field(max_length=NOTE_LIMIT)
     """One short sentence: which `unlock_when` behaviour, if any, the message does. Required,
     so the model can't skip its reasoning."""
-    unlocked: list[str]
-    """Eligible fact ids the student's message earned."""
+    unlocked: list[GateUnlock]
+    """The eligible facts the student's message earned, each with its quoted behaviour."""
     products_mentioned: list[str]
     """Catalogue ids the student proposed, recommended or asked about."""
 
@@ -62,6 +73,22 @@ class GateOutcome:
     note: str
     failed: bool
     latency_ms: int
+    rejected: tuple[str, ...] = ()
+    """Eligible facts the gate unlocked with a behaviour that isn't in that fact's own
+    `unlock_when`, and that stayed locked."""
+    quotes: Mapping[str, str] = field(default_factory=lambda: MappingProxyType({}))
+    """The behaviour quoted for each fact the gate itself unlocked (not the pitch rule)."""
+
+
+@dataclass(frozen=True)
+class Enforced:
+    """The gate's suggestion after the rules."""
+
+    by_question: tuple[str, ...]
+    by_pitch: tuple[str, ...]
+    products: tuple[str, ...]
+    rejected: tuple[str, ...]
+    quotes: Mapping[str, str]
 
 
 def eligible_facts(client: Client, unlocked: Collection[str]) -> list[HiddenFact]:
@@ -104,24 +131,42 @@ def gate_messages(
     ]
 
 
+def quotes_its_fact(unlock: GateUnlock, fact: HiddenFact) -> bool:
+    """True if the quoted behaviour is one of the fact's own `unlock_when` entries, ignoring
+    case and surrounding whitespace."""
+    quoted = unlock.behaviour.strip().casefold()
+    return any(quoted == behaviour.strip().casefold() for behaviour in fact.unlock_when)
+
+
 def enforce(
     decision: GateDecision,
     eligible: Sequence[HiddenFact],
     product_ids: Collection[str],
     *,
     max_unlocks: int,
-) -> tuple[tuple[str, ...], tuple[str, ...], tuple[str, ...]]:
-    """Apply the rules to the gate's suggestion. Returns (by_question, by_pitch, products).
+) -> Enforced:
+    """Apply the rules to the gate's suggestion.
 
-    Only eligible facts and catalogue products count. The gate's own unlocks are capped,
-    keeping critical facts first, then important, then minor, then content order. A pitched
-    product also unlocks every eligible fact that reacts to it, beyond the cap: that is the
-    client reacting to the pitch, not the student earning a fact.
+    Only eligible facts and catalogue products count, and an unlock counts only if it quotes
+    one of that fact's own `unlock_when` behaviours: otherwise it's rejected. The gate's
+    unlocks are capped, keeping critical facts first, then important, then minor, then
+    content order. A pitched product also unlocks every eligible fact that reacts to it,
+    beyond the cap: that is the client reacting to the pitch, not the student earning a fact.
     """
+    facts = {fact.id: fact for fact in eligible}
     position = {fact.id: index for index, fact in enumerate(eligible)}
     rank = {fact.id: _IMPORTANCE_ORDER[fact.importance] for fact in eligible}
-    suggested = [fact_id for fact_id in dict.fromkeys(decision.unlocked) if fact_id in position]
-    by_question = sorted(suggested, key=lambda fact_id: (rank[fact_id], position[fact_id]))
+    verified: dict[str, str] = {}
+    misquoted: list[str] = []
+    for unlock in decision.unlocked:
+        fact = facts.get(unlock.id)
+        if fact is None:
+            continue  # not eligible: never unlockable this turn
+        if quotes_its_fact(unlock, fact):
+            verified.setdefault(fact.id, unlock.behaviour.strip())
+        else:
+            misquoted.append(fact.id)
+    by_question = sorted(verified, key=lambda fact_id: (rank[fact_id], position[fact_id]))
     by_question = by_question[:max_unlocks]
     products = tuple(
         product_id
@@ -133,7 +178,14 @@ def enforce(
         for fact in eligible
         if fact.id not in by_question and set(fact.unlock_on_product_pitch) & set(products)
     )
-    return tuple(by_question), by_pitch, products
+    unlocked = {*by_question, *by_pitch}
+    rejected = tuple(
+        fact_id
+        for fact_id in dict.fromkeys(misquoted)
+        if fact_id not in verified and fact_id not in unlocked
+    )
+    quotes = MappingProxyType({fact_id: verified[fact_id] for fact_id in by_question})
+    return Enforced(tuple(by_question), by_pitch, products, rejected, quotes)
 
 
 async def run_gate(
@@ -175,18 +227,20 @@ async def run_gate(
     except LLMError as exc:
         logger.warning("Gate failed; nothing unlocks this turn", extra={"code": exc.code})
         return GateOutcome(eligible_ids, (), (), (), "", True, _since(started))
-    by_question, by_pitch, products_mentioned = enforce(
+    enforced = enforce(
         decision, eligible, {product.id for product in products}, max_unlocks=max_unlocks
     )
-    chosen = {*by_question, *by_pitch}
+    chosen = {*enforced.by_question, *enforced.by_pitch}
     return GateOutcome(
         eligible=eligible_ids,
         unlocked=tuple(fact_id for fact_id in eligible_ids if fact_id in chosen),
-        by_pitch=by_pitch,
-        products_mentioned=products_mentioned,
+        by_pitch=enforced.by_pitch,
+        products_mentioned=enforced.products,
         note=decision.note,
         failed=False,
         latency_ms=_since(started),
+        rejected=enforced.rejected,
+        quotes=enforced.quotes,
     )
 
 

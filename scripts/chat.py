@@ -119,7 +119,9 @@ def debug_lines(result: TurnResult, session: Session) -> list[str]:
     """What the gate saw and decided this turn, with the latency per role (ids only)."""
     pitched = set(result.unlocked_by_pitch)
     unlocked_now = [
-        f"{fact_id} (product pitch)" if fact_id in pitched else fact_id
+        f"{fact_id} (product pitch)"
+        if fact_id in pitched
+        else f'{fact_id} ("{result.gate_quotes[fact_id]}")'
         for fact_id in result.unlocked_now
     ]
     so_far = [f"{fact_id} (t{n})" for fact_id, n in session.unlocked.items()]
@@ -131,6 +133,7 @@ def debug_lines(result: TurnResult, session: Session) -> list[str]:
     return [
         f"eligible: {_ids(result.eligible)}",
         f"unlocked this turn: {_ids(unlocked_now)}",
+        f"rejected (quote not in that fact's unlock_when): {_ids(result.gate_rejected)}",
         f"unlocked so far: {_ids(so_far)}",
         f"products mentioned: {_ids(result.products_mentioned)}",
         f"latency: gate {latency['gate']} ms · client {latency['client']} ms",

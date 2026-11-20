@@ -3,13 +3,13 @@ from collections.abc import Collection
 
 import pytest
 
-from app.content import Client
+from app.content import Client, load_registry
 from app.llm import InvalidOutput, ModelTimeout, Role
 from app.llm.fake import FakeLLM, Scripted
 from app.prompts import PROMPT_VERSION
 from app.simulation.disclosure import GateOutcome, eligible_facts, run_gate
 from tests.content_factory import ALPHA, BETA
-from tests.interview_factory import client_with, gate_reply, hidden_fact, registry
+from tests.interview_factory import REPO_CONTENT, client_with, gate_reply, hidden_fact, registry
 
 PRODUCTS = registry().list_products()
 
@@ -111,10 +111,11 @@ async def test_unknown_and_repeated_product_ids_are_dropped() -> None:
     [
         "not json at all",
         '{"unlocked": "cash-gap"}',
+        '{"note": "asks how they pay", "unlocked": ["cash-gap"], "products_mentioned": []}',
         InvalidOutput("unusable JSON after one retry"),
         ModelTimeout("slow"),
     ],
-    ids=["malformed", "wrong-shape", "invalid-output", "timeout"],
+    ids=["malformed", "wrong-shape", "unlock-without-evidence", "invalid-output", "timeout"],
 )
 async def test_a_failed_gate_unlocks_nothing_and_mentions_no_product(reply: Scripted) -> None:
     outcome = await gate(reply)
@@ -156,3 +157,66 @@ async def test_the_gate_gets_ids_conditions_and_the_catalogue_and_nothing_else()
     }
     for fact in CHAIN.hidden_facts:
         assert fact.content not in system.content + user.content
+
+
+async def test_an_unlock_quoting_its_own_behaviour_is_kept_ignoring_case_and_spaces() -> None:
+    outcome = await gate(gate_reply(("cash-gap", "  Asks About CASH-GAP ")))
+
+    assert outcome.unlocked == ("cash-gap",)
+    assert outcome.rejected == ()
+    assert outcome.quotes == {"cash-gap": "Asks About CASH-GAP"}
+
+
+async def test_an_unlock_quoting_another_facts_behaviour_is_rejected() -> None:
+    outcome = await gate(gate_reply(("pitch-reaction", "asks about cash-gap")))
+
+    assert outcome.unlocked == ()
+    assert outcome.rejected == ("pitch-reaction",)
+
+
+async def test_an_unlock_with_an_invented_behaviour_is_rejected() -> None:
+    outcome = await gate(gate_reply(("cash-gap", "asks how the business is going")))
+
+    assert outcome.unlocked == ()
+    assert outcome.rejected == ("cash-gap",)
+
+
+async def test_rejected_unlocks_do_not_use_up_the_cap() -> None:
+    client = client_with(hidden_fact("first"), hidden_fact("second"))
+
+    outcome = await gate(gate_reply(("first", "made up"), "second"), client=client, max_unlocks=1)
+
+    assert outcome.unlocked == ("second",)
+    assert outcome.rejected == ("first",)
+
+
+async def test_one_good_quote_is_enough_when_a_fact_is_listed_twice() -> None:
+    outcome = await gate(gate_reply(("cash-gap", "made up"), "cash-gap"))
+
+    assert outcome.unlocked == ("cash-gap",)
+    assert outcome.rejected == ()
+
+
+async def test_a_misquoted_fact_unlocked_by_a_pitch_is_not_reported_as_rejected() -> None:
+    outcome = await gate(gate_reply(("pitch-reaction", "made up"), products=[ALPHA]))
+
+    assert outcome.by_pitch == ("pitch-reaction",)
+    assert outcome.rejected == ()
+
+
+async def test_a_payment_follow_up_cannot_unlock_the_big_contract() -> None:
+    # The manual test: once late-payments was unlocked, "Has that ever made it hard to pay
+    # your staff?" unlocked big-contract, with a note about payment delays. Quoting one of
+    # late-payments' behaviours for big-contract is now rejected.
+    noura = load_registry(REPO_CONTENT).get_client("noura-al-kuwari")
+    late_payments = next(fact for fact in noura.hidden_facts if fact.id == "late-payments")
+
+    outcome = await gate(
+        gate_reply(("big-contract", late_payments.unlock_when[1])),
+        client=noura,
+        unlocked={"late-payments"},
+    )
+
+    assert outcome.eligible == ("sharia-only", "big-contract")
+    assert outcome.unlocked == ()
+    assert outcome.rejected == ("big-contract",)

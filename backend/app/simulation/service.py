@@ -46,6 +46,10 @@ class TurnResult:
     products_mentioned: tuple[str, ...]
     gate_failed: bool
     gate_note: str
+    gate_rejected: tuple[str, ...]
+    """Facts the gate unlocked with a quote that isn't in that fact's `unlock_when`."""
+    gate_quotes: Mapping[str, str]
+    """The behaviour the gate quoted for each fact it unlocked itself."""
     role_break: bool
     regenerated: bool
     latency_ms: Mapping[str, int]
@@ -190,6 +194,8 @@ class InterviewService:
                 products_mentioned=gate.products_mentioned,
                 gate_failed=gate.failed,
                 gate_note=gate.note,
+                gate_rejected=gate.rejected,
+                gate_quotes=gate.quotes,
                 role_break=reply.role_break,
                 regenerated=reply.regenerated,
                 latency_ms=MappingProxyType({"gate": gate.latency_ms, "client": reply.latency_ms}),
@@ -238,6 +244,7 @@ class InterviewService:
             "unlocked": list(result.unlocked_now),
             "products_mentioned": list(result.products_mentioned),
             "gate_failed": result.gate_failed,
+            "gate_rejected": list(result.gate_rejected),
             "role_break": result.role_break,
             "regenerated": result.regenerated,
             "latency_ms": dict(result.latency_ms),

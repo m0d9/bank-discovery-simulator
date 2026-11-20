@@ -8,7 +8,7 @@ from types import ModuleType
 from app.llm import Role
 from app.llm.fake import FakeLLM
 from tests.conftest import SettingsFactory
-from tests.interview_factory import gate_reply
+from tests.interview_factory import gate_reply, real_quote
 
 SCRIPT = Path(__file__).resolve().parents[3] / "scripts" / "chat.py"
 
@@ -30,7 +30,8 @@ def test_a_script_runs_the_interview_with_debug_lines(
         encoding="utf-8",
     )
     fake = FakeLLM()
-    fake.script(Role.GATE, gate_reply(), gate_reply("late-payments", note="asks how they pay"))
+    unlock = gate_reply(real_quote("late-payments"), note="asks how they pay")
+    fake.script(Role.GATE, gate_reply(), unlock)
     fake.script(Role.CLIENT, "A friend sent me.", "Some take three months.")
     out = io.StringIO()
 
@@ -46,7 +47,11 @@ def test_a_script_runs_the_interview_with_debug_lines(
     assert text.startswith("Noura Al-Kuwari: Hello. I don't have long")
     assert "You: What brings you in today?\nNoura Al-Kuwari: A friend sent me." in text
     assert "[debug] eligible: late-payments, sharia-only" in text
-    assert "[debug] unlocked this turn: late-payments" in text
+    assert (
+        '[debug] unlocked this turn: late-payments ("asks how or when her customers pay her")'
+        in text
+    )
+    assert "[debug] rejected (quote not in that fact's unlock_when): -" in text
     assert "[debug] unlocked so far: late-payments (t3)" in text
     assert "[debug] gate note: asks how they pay" in text
     assert "generic first" not in text  # comments are skipped

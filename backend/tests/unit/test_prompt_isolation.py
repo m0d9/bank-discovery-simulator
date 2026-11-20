@@ -28,6 +28,7 @@ from tests.interview_factory import (
     gate_reply,
     hidden_fact,
     make_service,
+    quote,
     registry,
 )
 
@@ -160,7 +161,9 @@ async def test_the_real_clients_keep_their_facts_out_of_every_prompt_until_unloc
     while len(order) < len(client.hidden_facts):
         order.append(eligible_facts(client, set(order))[0].id)
     steps: list[Step] = [(gate_reply(), [reply(1)])]
-    steps += [(gate_reply(fact_id), [reply(k)]) for k, fact_id in enumerate(order, start=2)]
+    steps += [
+        (gate_reply(quote(client, fact_id)), [reply(k)]) for k, fact_id in enumerate(order, start=2)
+    ]
 
     session = await interview(service, fake, client_id, steps)
 

@@ -20,7 +20,7 @@ from app.llm.fake import FakeLLM
 from app.main import create_app
 from tests.conftest import SettingsFactory
 from tests.content_factory import CLIENT, SECRET_CASH_GAP, ContentDir, client_data
-from tests.interview_factory import gate_reply
+from tests.interview_factory import gate_reply, real_quote
 from tests.no_leak import assert_no_leak, find_leaks
 
 NOURA = "noura-al-kuwari"
@@ -93,7 +93,7 @@ def test_every_api_route_is_checked_for_leaks(client: TestClient) -> None:
 
 
 def _script_turn(fake: FakeLLM, fact_id: str) -> None:
-    fake.script(Role.GATE, gate_reply(fact_id))
+    fake.script(Role.GATE, gate_reply(real_quote(fact_id)))
     fake.script(Role.CLIENT, "Let me think about how to put this.")
 
 

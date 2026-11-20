@@ -2,10 +2,12 @@
 
 from collections.abc import Sequence
 from datetime import UTC, datetime
+from functools import cache
+from pathlib import Path
 from typing import Any
 
 from app.config import Settings
-from app.content import Bank, Client, ContentRegistry, Product
+from app.content import Bank, Client, ContentRegistry, Product, load_registry
 from app.llm import LLMClient
 from app.simulation import InterviewService, SessionStore
 from app.simulation.models import Language, Session, SessionModels, Turn
@@ -14,6 +16,10 @@ from tests.content_factory import CLIENT, bank_data, client_data, deposit_data, 
 
 T0 = datetime(2026, 11, 20, 9, 0, tzinfo=UTC)
 OPENING = "Hello, I have a few minutes."
+REPO_CONTENT = Path(__file__).resolve().parents[2] / "content"
+
+# An unlock in a scripted gate reply: a fact id, or a (fact id, quoted behaviour) pair.
+Unlock = str | tuple[str, str]
 
 
 def registry(*clients: dict[str, Any]) -> ContentRegistry:
@@ -50,9 +56,39 @@ def make_session(
     )
 
 
-def gate_reply(*unlocked: str, products: Sequence[str] = (), note: str = "") -> dict[str, Any]:
-    """What the gate model answers, as FakeLLM serves it."""
-    return {"unlocked": list(unlocked), "products_mentioned": list(products), "note": note}
+def gate_reply(*unlocked: Unlock, products: Sequence[str] = (), note: str = "") -> dict[str, Any]:
+    """What the gate model answers, as FakeLLM serves it.
+
+    A plain fact id quotes `asks about <id>`, the behaviour `hidden_fact` gives every fact.
+    For other facts, pass the pair from `quote` or `real_quote`, or any pair to test a misquote.
+    """
+    pairs = [(item, f"asks about {item}") if isinstance(item, str) else item for item in unlocked]
+    return {
+        "note": note,
+        "unlocked": [{"id": fact_id, "behaviour": behaviour} for fact_id, behaviour in pairs],
+        "products_mentioned": list(products),
+    }
+
+
+def quote(client: Client, fact_id: str) -> tuple[str, str]:
+    """An unlock that quotes the fact's first `unlock_when`, as a correct gate would."""
+    fact = next(fact for fact in client.hidden_facts if fact.id == fact_id)
+    return fact_id, fact.unlock_when[0]
+
+
+@cache
+def _real_content() -> ContentRegistry:
+    return load_registry(REPO_CONTENT)
+
+
+def real_quote(fact_id: str) -> tuple[str, str]:
+    """`quote` for a fact of one of the repository's own clients, such as `late-payments`."""
+    client = next(
+        client
+        for client in _real_content().list_clients()
+        if any(fact.id == fact_id for fact in client.hidden_facts)
+    )
+    return quote(client, fact_id)
 
 
 def hidden_fact(

@@ -31,9 +31,12 @@ from tests.interview_factory import (
     gate_reply,
     hidden_fact,
     make_service,
+    quote,
     registry,
 )
 
+# The factory's default client: cash-gap is earned by "asks how customers pay".
+CASH_GAP = quote(registry().get_client(CLIENT), "cash-gap")
 WRAPUP = WrapUp(
     needs_summary="The client needs to bridge late customer payments.",
     recommendations=[Recommendation(product_id=ALPHA, reason="It bridges the gap.")],
@@ -118,7 +121,7 @@ async def test_a_turn_records_the_exchange_unlocks_and_product_mentions(
 ) -> None:
     session = await service.create_session(CLIENT, "en")
 
-    first = await say(service, fake, session.id, gate=gate_reply("cash-gap", products=[BETA]))
+    first = await say(service, fake, session.id, gate=gate_reply(CASH_GAP, products=[BETA]))
     second = await say(service, fake, session.id, "And then?", gate=gate_reply(products=[BETA]))
 
     assert [(t.n, t.role) for t in session.turns] == [
@@ -197,7 +200,7 @@ async def test_a_failed_client_reply_leaves_the_session_unchanged(
     session = await service.create_session(CLIENT, "en")
     await say(service, fake, session.id)
     before = session.model_dump()
-    fake.script(Role.GATE, gate_reply("cash-gap", products=[ALPHA]))
+    fake.script(Role.GATE, gate_reply(CASH_GAP, products=[ALPHA]))
     fake.script(Role.CLIENT, ModelTimeout("slow"))
 
     with pytest.raises(ModelTimeout):
@@ -206,7 +209,7 @@ async def test_a_failed_client_reply_leaves_the_session_unchanged(
     assert session.model_dump(exclude={"last_active_at"}) == {
         k: v for k, v in before.items() if k != "last_active_at"
     }
-    retried = await say(service, fake, session.id, "Resent later", gate=gate_reply("cash-gap"))
+    retried = await say(service, fake, session.id, "Resent later", gate=gate_reply(CASH_GAP))
     assert retried.student_turn.n == 3  # no gap or duplicate left by the failure
 
 
@@ -228,7 +231,7 @@ async def test_the_turn_event_has_ids_and_no_text_by_default(
     settings: Settings, service: InterviewService, fake: FakeLLM
 ) -> None:
     session = await service.create_session(CLIENT, "en")
-    await say(service, fake, session.id, gate=gate_reply("cash-gap", note="asks how they pay"))
+    await say(service, fake, session.id, gate=gate_reply(CASH_GAP, note="asks how they pay"))
 
     turn = read_events(settings)[-1]
     assert turn["event"] == "turn"
@@ -242,12 +245,25 @@ async def test_the_turn_event_has_ids_and_no_text_by_default(
         False,
         False,
     )
+    assert turn["gate_rejected"] == []
     assert set(turn["latency_ms"]) == {"gate", "client"}
     assert set(turn["models"]) == {"gate", "client"}
     assert set(turn["prompt_versions"]) == {"gate", "client_system", "client_reminder"}
     line = json.dumps(turn)
     for text in ("How do your customers pay you?", "They pay late", "asks how they pay"):
         assert text not in line
+
+
+async def test_a_misquoted_unlock_stays_locked_and_is_recorded_in_the_event(
+    settings: Settings, service: InterviewService, fake: FakeLLM
+) -> None:
+    session = await service.create_session(CLIENT, "en")
+
+    result = await say(service, fake, session.id, gate=gate_reply(("cash-gap", "asks about plans")))
+
+    assert result.unlocked_now == () and result.gate_rejected == ("cash-gap",)
+    assert session.unlocked == {}
+    assert read_events(settings)[-1]["gate_rejected"] == ["cash-gap"]
 
 
 async def test_the_turn_event_includes_the_texts_only_with_log_transcripts(
@@ -268,7 +284,7 @@ async def test_wrap_up_records_the_answer_and_ends_the_interview(
     settings: Settings, service: InterviewService, fake: FakeLLM
 ) -> None:
     session = await service.create_session(CLIENT, "en")
-    await say(service, fake, session.id, gate=gate_reply("cash-gap"))
+    await say(service, fake, session.id, gate=gate_reply(CASH_GAP))
 
     wrapped = await service.wrap_up(session.id, WRAPUP)
 
