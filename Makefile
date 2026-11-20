@@ -11,7 +11,7 @@ STRONG_COACH := gpt-oss:20b
 COACH ?=
 COACH_ENV := $(if $(strip $(COACH)),LLM_MODEL_COACH=$(COACH) LLM_MAX_RETRIES=4)
 
-.PHONY: help install hooks dev dev-strong-coach dev-backend dev-frontend chat test test-live lint typecheck fmt build docker-up validate-content content-schema openapi eval
+.PHONY: help install hooks dev dev-strong-coach dev-backend dev-frontend chat test test-live lint typecheck fmt build docker-up validate-content content-schema openapi eval eval-quick
 
 help: ## List targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-18s %s\n", $$1, $$2}'
@@ -47,16 +47,16 @@ test: ## Unit and API tests (no real model)
 test-live: ## Tests that need a real model endpoint
 	cd $(BACKEND) && uv run pytest -m live
 
-lint: ## ruff (backend/ and scripts/) + eslint
-	cd $(BACKEND) && uv run ruff check . ../scripts && uv run ruff format --check . ../scripts
+lint: ## ruff (backend/, scripts/ and evals/) + eslint
+	cd $(BACKEND) && uv run ruff check . ../scripts ../evals && uv run ruff format --check . ../scripts ../evals
 	cd $(FRONTEND) && npm run lint
 
-typecheck: ## mypy (strict, backend/app and scripts/) + tsc
+typecheck: ## mypy (strict, backend/app, scripts/ and evals/) + tsc
 	cd $(BACKEND) && uv run mypy
 	cd $(FRONTEND) && npm run typecheck
 
 fmt: ## Auto-format and auto-fix
-	cd $(BACKEND) && uv run ruff format . ../scripts && uv run ruff check --fix . ../scripts
+	cd $(BACKEND) && uv run ruff format . ../scripts ../evals && uv run ruff check --fix . ../scripts ../evals
 	cd $(FRONTEND) && npx eslint . --fix
 
 build: ## Build the frontend into frontend/dist
@@ -75,5 +75,14 @@ openapi: ## Write the API contract (openapi.json, error-codes.json) and the fron
 	@cd $(BACKEND) && uv run python -m app.api.openapi_export
 	@cd $(FRONTEND) && npm run --silent gen:api
 
-eval: ## Run the evaluation harness
-	@echo "eval: added in M7"
+EVAL := uv run --project $(BACKEND) python -m
+EVAL_QUICK_CLIENTS := noura-al-kuwari,khalid-al-marri
+
+eval: ## Evaluate the three model setups in evals/configs.yaml, then write docs/evaluation.md
+	$(EVAL) evals.run --config default
+	$(EVAL) evals.run --config strong-coach
+	$(EVAL) evals.run --config single-small
+	$(EVAL) evals.report
+
+eval-quick: ## A quick check: default, 2 clients, the strong and adversarial scripts
+	$(EVAL) evals.run --config default --clients $(EVAL_QUICK_CLIENTS) --scripts strong,adversarial
