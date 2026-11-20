@@ -4,7 +4,14 @@ from datetime import UTC, datetime
 
 import pytest
 from evals.configs import EvalConfigs, JudgeConfig, load_configs
-from evals.judge import JUDGE_PROMPT_VERSION, Judge, arabic_input, replies_input
+from evals.judge import (
+    JUDGE_PROMPT_VERSION,
+    Judge,
+    _ArabicLabels,
+    arabic_input,
+    combine_arabic,
+    replies_input,
+)
 from pydantic import ValidationError
 
 from app.coaching import Feedback, analyse
@@ -114,5 +121,42 @@ def test_arabic_texts_are_split_by_who_they_speak_to_and_backfilled_entries_left
     data = arabic_input(session, feedback)
 
     assert data["client"] == {"name": "نورة الكواري", "gender": "female"}
-    assert data["to_student"] == ["لم يأتِ السؤال عن الدفع.", "السؤال عن الخطط.", "ملخص جيد."]
-    assert data["to_client"] == ["كيف يدفع عملاؤك؟", "ما خططك؟"]
+    assert [item["text"] for item in data["to_student"]] == [
+        "لم يأتِ السؤال عن الدفع.",
+        "السؤال عن الخطط.",
+        "ملخص جيد.",
+    ]
+    assert data["to_client"] == [
+        {"id": 0, "text": "كيف يدفع عملاؤك؟"},
+        {"id": 1, "text": "ما خططك؟"},
+    ]
+
+
+@pytest.mark.parametrize(
+    ("addresses", "agreements", "verdict"),
+    [
+        (["neutral", "neutral"], ["none"], ("neutral", "no_reference")),
+        (["neutral", "masculine"], ["matches", "none"], ("masculine", "matches")),
+        (["feminine", "masculine"], ["matches", "mismatch"], ("mixed", "mixed")),
+        (["feminine"], ["mismatch"], ("feminine", "mismatch")),
+    ],
+)
+def test_the_labels_of_each_arabic_text_combine_into_one_verdict(
+    addresses: list[str], agreements: list[str], verdict: tuple[str, str]
+) -> None:
+    labels = _ArabicLabels.model_validate(
+        {
+            "student": [
+                {"id": i, "address": a, "evidence": "" if a == "neutral" else "اسأل"}
+                for i, a in enumerate(addresses)
+            ],
+            "client": [
+                {"id": i, "agreement": a, "evidence": "هل تفضل"} for i, a in enumerate(agreements)
+            ],
+        }
+    )
+
+    judged = combine_arabic(labels, len(addresses), len(agreements) + 1)
+
+    assert (judged.student_address, judged.client_agreement) == verdict
+    assert judged.note == "1 texts unlabelled"

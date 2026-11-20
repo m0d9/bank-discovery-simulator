@@ -88,12 +88,21 @@ class _Items(BaseModel):
     items: list[_Item]
 
 
-class _Arabic(BaseModel):
-    note: str
-    student_address: Literal["neutral", "masculine", "feminine", "mixed"]
-    student_examples: list[str]
-    client_agreement: Literal["matches", "mismatch", "mixed", "no_reference"]
-    client_examples: list[str]
+class _StudentLabel(BaseModel):
+    id: int
+    address: Literal["neutral", "masculine", "feminine"]
+    evidence: str
+
+
+class _ClientLabel(BaseModel):
+    id: int
+    agreement: Literal["matches", "mismatch", "none"]
+    evidence: str
+
+
+class _ArabicLabels(BaseModel):
+    student: list[_StudentLabel]
+    client: list[_ClientLabel]
 
 
 class Judge:
@@ -157,12 +166,13 @@ class Judge:
     async def arabic(
         self, session: Session, feedback: Feedback
     ) -> tuple[ArabicJudgement | None, str | None]:
-        """(d) for an Arabic report."""
+        """(d) for an Arabic report: each text labelled by the judge, combined here."""
+        data = arabic_input(session, feedback)
         try:
-            answer = await self._ask("judge_arabic", arabic_input(session, feedback), _Arabic)
+            answer = await self._ask("judge_arabic", data, _ArabicLabels)
         except LLMError as exc:
             return None, exc.code
-        return ArabicJudgement(**answer.model_dump()), None
+        return combine_arabic(answer, len(data["to_student"]), len(data["to_client"])), None
 
     async def _ask[T: BaseModel](self, name: str, data: object, schema: type[T]) -> T:
         messages = [
@@ -270,7 +280,7 @@ def grounding_input(
     }
 
 
-def arabic_input(session: Session, feedback: Feedback) -> dict[str, object]:
+def arabic_input(session: Session, feedback: Feedback) -> dict[str, Any]:
     """What the judge reads for (d): the coach's own texts, split by who they speak to."""
     report = feedback.report
     if report is None:
@@ -293,9 +303,33 @@ def arabic_input(session: Session, feedback: Feedback) -> dict[str, object]:
     card = session.client.card.name
     return {
         "client": {"name": card.ar or card.en, "gender": session.client.persona.gender},
-        "to_student": to_student,
-        "to_client": to_client,
+        "to_student": [{"id": index, "text": text} for index, text in enumerate(to_student)],
+        "to_client": [{"id": index, "text": text} for index, text in enumerate(to_client)],
     }
+
+
+def combine_arabic(labels: _ArabicLabels, students: int, clients: int) -> ArabicJudgement:
+    """One verdict for the report from the judge's label for each text.
+
+    The student: "mixed" if both genders appear, else the gender that appears, else
+    "neutral". The client: "mixed" if some questions match and some don't, else the one that
+    appears, else "no_reference". Labels for unknown ids are ignored, and texts left
+    unlabelled are counted in the note.
+    """
+    student = {label.id: label for label in labels.student if 0 <= label.id < students}
+    client = {label.id: label for label in labels.client if 0 <= label.id < clients}
+    genders = {label.address for label in student.values()} - {"neutral"}
+    address = "mixed" if len(genders) > 1 else next(iter(genders), "neutral")
+    found = {label.agreement for label in client.values()} - {"none"}
+    agreement = "mixed" if len(found) > 1 else next(iter(found), "no_reference")
+    unlabelled = students - len(student) + clients - len(client)
+    return ArabicJudgement(
+        student_address=address,
+        student_examples=[s.evidence for s in student.values() if s.address != "neutral"][:3],
+        client_agreement=agreement,
+        client_examples=[c.evidence for c in client.values() if c.agreement == "mismatch"][:3],
+        note=f"{unlabelled} texts unlabelled" if unlabelled else "",
+    )
 
 
 def _answer_key(client: Client, names: Mapping[str, LocalizedText]) -> dict[str, object]:
