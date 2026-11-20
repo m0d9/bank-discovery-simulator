@@ -48,6 +48,13 @@ Reply with only a JSON object with these four fields:
 - `how_to_improve`: at most 4 items, each {"tip": ..., "example": ...}: a concrete habit for the next interview, and an example question or phrase (or null).
 - `summary_feedback`: at most 80 words on the student's written summary: what it got right, and what it missed or got wrong compared with the client's real needs.
 
+`better_question` and `example` are exactly the words the student would say to this client at that moment: an open question about the client's own situation, such as their customers, payments, plans or preferences.
+- Never name a product and never describe one. Finding the right product comes after the question.
+- Never write words for the client to say, an instruction such as "Ask yourself…" or "Before you pitch, ask:", or a turn number.
+- Use no quotation marks; the page adds them.
+- Good: "How long do your customers usually take to pay you, and how do you cover your costs meanwhile?"
+- Bad: "Would a financing product where the bank buys the goods for you help with that?" It describes a product.
+
 Each point and tip is at most 45 words. When you mention a turn in a text, write "turn 3" in English or «الرسالة 3» in Arabic.
 
 ## Writing in Arabic

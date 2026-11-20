@@ -306,3 +306,81 @@ async def test_the_outcome_carries_the_drops() -> None:
 
     assert outcome.report is not None and outcome.report.went_well == []
     assert [drop.reason for drop in outcome.dropped] == ["no_student_turn"]
+
+
+NOURA_WEAK = (
+    ("Thanks for coming in. Could you tell me a bit about yourself?", [], []),
+    ("I'd suggest our Business Overdraft.", ["sharia-only"], ["sharia-only"]),
+)
+
+
+def noura_weak() -> Session:
+    return real_interview(
+        "noura-al-kuwari",
+        *NOURA_WEAK,
+        recommend=["business-overdraft"],
+        pitched={"business-overdraft": [3]},
+    )
+
+
+def test_questions_and_examples_that_name_a_product_are_cleared_and_their_items_kept() -> None:
+    # Phrasing from qwen's weak report in the M5 appendix.
+    murabaha = (
+        "We offer a Sharia-compliant Murabaha facility where we buy your stock and sell it to "
+        "you with a fixed profit. Would that interest-free structure work for you?"
+    )
+    collect = (
+        "To speed up payments from your corporate clients, we also have a Business Collect "
+        "Account with automatic invoice reminders. Would that be useful?"
+    )
+    reply = coach_reply(
+        missed=[
+            missed_item("You didn't offer a Sharia-compliant option.", better_question=murabaha)
+        ],
+        how_to_improve=[{"tip": "Suggest tools for slow payers.", "example": collect}],
+    )
+
+    result = check(noura_weak(), reply)
+
+    (missed,) = [item for item in result.report.missed if item.point.startswith("You didn't")]
+    assert missed.better_question is None
+    (tip,) = result.report.how_to_improve
+    assert (tip.tip, tip.example) == ("Suggest tools for slow payers.", None)
+    assert [(item.section, item.field, item.reason) for item in result.cleared] == [
+        ("missed", "better_question", "names_a_product"),
+        ("how_to_improve", "example", "names_a_product"),
+    ]
+
+
+def test_arabic_names_aliases_and_ids_are_caught_too() -> None:
+    questions = [
+        "هل يناسبك تمويل رأس المال العامل بالمرابحة؟",  # an alias inside a word
+        "ما رأيك في خصم الفواتير؟",  # the full Arabic name of the invoice advance
+        "Would murabaha-working-capital help?",  # an id
+    ]
+    reply = coach_reply(
+        missed=[missed_item(f"Point {i}.", better_question=q) for i, q in enumerate(questions)]
+    )
+
+    result = check(noura_weak(), reply, language="ar")
+
+    model_items = [item for item in result.report.missed if item.point.startswith("Point")]
+    assert [item.better_question for item in model_items] == [None, None, None]
+    assert len(result.cleared) == 3
+
+
+def test_discovery_questions_without_a_product_name_are_kept() -> None:
+    questions = [
+        "كم يستغرق عملاؤك عادةً حتى يسددوا فواتيرك؟",
+        "Do you have an overdraft today?",  # an everyday word, not the product's name
+        "How do you cover salaries while you wait to be paid?",
+    ]
+    reply = coach_reply(
+        missed=[missed_item(f"Point {i}.", better_question=q) for i, q in enumerate(questions)]
+    )
+
+    result = check(noura_weak(), reply)
+
+    model_items = [item for item in result.report.missed if item.point.startswith("Point")]
+    assert [item.better_question for item in model_items] == questions
+    assert result.cleared == ()

@@ -11,6 +11,7 @@ interview is over by then, which is why `FeedbackService` runs the coach only af
 
 import json
 import logging
+import re
 import time
 from collections.abc import Callable, Collection, Iterable, Sequence
 from dataclasses import dataclass
@@ -21,7 +22,7 @@ from app.coaching.report import CoachReport, Improvement, MissedPoint, WentWell
 from app.content import Client, LocalizedText, Need, Product
 from app.llm import ChatMessage, InvalidOutput, LLMClient, LLMError, Role
 from app.prompts import PROMPT_VERSION, render
-from app.simulation import Language, Session
+from app.simulation import Language, Session, normalise
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +31,7 @@ COACH_TEMPERATURE = 0.3
 MAX_ITEMS = 4
 # Speaker labels in the transcript the model reads: `[t3] Student: …`.
 SPEAKERS = {"student": "Student", "client": "Client"}
+_LATIN = re.compile(r"[a-z]")
 
 
 @dataclass(frozen=True)
@@ -43,6 +45,15 @@ class Dropped:
 
 
 @dataclass(frozen=True)
+class Cleared:
+    """A field that code set to null, keeping its item: `section.field`, and why."""
+
+    section: str
+    field: str
+    reason: str
+
+
+@dataclass(frozen=True)
 class Checked:
     """The report after the checks, and what the checks changed."""
 
@@ -50,6 +61,7 @@ class Checked:
     backfilled: tuple[str, ...]
     """Missed critical needs the model left out, added by code (need ids)."""
     dropped: tuple[Dropped, ...] = ()
+    cleared: tuple[Cleared, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -68,6 +80,8 @@ class CoachOutcome:
     generated_at: datetime
     dropped: tuple[Dropped, ...] = ()
     """Items that the checks removed (see `check_report`)."""
+    cleared: tuple[Cleared, ...] = ()
+    """Fields that the checks set to null (see `check_report`)."""
 
 
 def localized(text: LocalizedText, language: Language) -> str:
@@ -161,6 +175,7 @@ async def run_coach(
         error_code=None,
         generated_at=clock(),
         dropped=checked.dropped,
+        cleared=checked.cleared,
     )
 
 
@@ -173,6 +188,9 @@ def check_report(
     - Praise must be grounded. A `went_well` item is dropped, never rewritten, when it cites
       no student turn, or cites a turn where the student pitched a product that is
       unsuitable, or a turn that a `missed` item cites.
+    - A `better_question` or `example` that names a product (its id, its English or Arabic
+      name, or an alias) becomes None, and its item stays: those are the student's own
+      discovery questions, not pitches.
     - An unknown `need_id` or `product_id` becomes None. Ids are matched ignoring case.
     - Items without text are dropped, and each list keeps its first four items.
     - Every missed critical need without an entry gets one, first in `missed`: the point is
@@ -180,6 +198,15 @@ def check_report(
       first critical fact still locked. Those entries are never cut.
     """
     student_turns = {turn.n for turn in session.turns if turn.role == "student"}
+    names = _product_names(session.products.values())
+    cleared: list[Cleared] = []
+
+    def question(text: str | None, section: str, field: str) -> str | None:
+        if text and _names_a_product(text, names):
+            cleared.append(Cleared(section=section, field=field, reason="names_a_product"))
+            return None
+        return text or None
+
     need_ids = _by_folded(need.id for need in session.client.needs)
     product_ids = _by_folded(session.products)
 
@@ -192,7 +219,7 @@ def check_report(
             need_id=_known(item.need_id, need_ids),
             product_id=_known(item.product_id, product_ids),
             evidence_turns=turns(item.evidence_turns),
-            better_question=item.better_question or None,
+            better_question=question(item.better_question, "missed", "better_question"),
         )
         for item in report.missed
         if item.point
@@ -223,7 +250,7 @@ def check_report(
         else:
             dropped.append(Dropped(section="went_well", reason=reason, text=praise.point))
     how_to_improve = [
-        Improvement(tip=item.tip, example=item.example or None)
+        Improvement(tip=item.tip, example=question(item.example, "how_to_improve", "example"))
         for item in report.how_to_improve
         if item.tip
     ][:MAX_ITEMS]
@@ -237,7 +264,32 @@ def check_report(
         report=checked,
         backfilled=tuple(item.need_id for item in added if item.need_id is not None),
         dropped=tuple(dropped),
+        cleared=tuple(cleared),
     )
+
+
+def _product_names(products: Iterable[Product]) -> list[str]:
+    """Every way to name a product, normalised: its id, its names and its aliases."""
+    names = {
+        normalise(name)
+        for product in products
+        for name in (product.id, product.name.en, product.name.ar, *product.aliases)
+        if name
+    }
+    return sorted(names)
+
+
+def _names_a_product(text: str, names: Sequence[str]) -> bool:
+    """True if `text` contains one of `names`. Latin names match whole words only; Arabic names
+    match inside a word too, because prefixes such as «ال» and «ب» attach to it."""
+    folded = normalise(text)
+    for name in names:
+        if _LATIN.search(name):
+            if re.search(rf"(?<![a-z0-9]){re.escape(name)}(?![a-z0-9])", folded):
+                return True
+        elif name in folded:
+            return True
+    return False
 
 
 def _ungrounded(

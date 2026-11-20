@@ -59,7 +59,9 @@ _SPACES = re.compile(r"\s+")
 _ARABIC_PREFIXES = "وفبل"
 
 
-def _normalise(text: str) -> str:
+def normalise(text: str) -> str:
+    """Text folded for matching: NFKC, no Arabic diacritics or tatweel, one form of alef, one
+    space between words, and case-folded."""
     text = _ARABIC_MARKS.sub("", unicodedata.normalize("NFKC", text))
     return _SPACES.sub(" ", text.translate(_LETTER_FORMS)).casefold()
 
@@ -67,7 +69,7 @@ def _normalise(text: str) -> str:
 _ENGLISH_PATTERN = re.compile(r"\b(?:" + "|".join(map(re.escape, ENGLISH_BREAKS)) + r")s?\b")
 _ARABIC_PATTERN = re.compile(
     "|".join(
-        rf"(?<!\w)[{_ARABIC_PREFIXES}]?{re.escape(_normalise(phrase))}" for phrase in ARABIC_BREAKS
+        rf"(?<!\w)[{_ARABIC_PREFIXES}]?{re.escape(normalise(phrase))}" for phrase in ARABIC_BREAKS
     )
 )
 
@@ -79,7 +81,7 @@ def breaks_character(text: str) -> bool:
     airline"). Arabic phrases match at the start of a word, with or without a prefix such as
     و, after removing diacritics and unifying the forms of alef.
     """
-    normalised = _normalise(text)
+    normalised = normalise(text)
     return bool(_ENGLISH_PATTERN.search(normalised) or _ARABIC_PATTERN.search(normalised))
 
 

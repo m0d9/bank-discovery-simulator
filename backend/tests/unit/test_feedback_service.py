@@ -170,6 +170,7 @@ async def test_the_event_has_ids_counts_and_verdicts_but_no_text(
         "error": None,
         "backfilled": 1,
         "dropped": {},
+        "cleared": {},
         "cached": False,
         "json_retried": False,
         "needs_uncovered": 0,

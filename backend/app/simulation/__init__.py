@@ -4,7 +4,7 @@ Import from here. `InterviewService` is the single code path for the API, `scrip
 `evals/`; the sessions it works on live in a `SessionStore`.
 """
 
-from app.simulation.client_agent import FALLBACK_LINES, breaks_character
+from app.simulation.client_agent import FALLBACK_LINES, breaks_character, normalise
 from app.simulation.errors import (
     InterviewError,
     InvalidInput,
@@ -44,4 +44,5 @@ __all__ = [
     "TurnResult",
     "WrapUp",
     "breaks_character",
+    "normalise",
 ]
