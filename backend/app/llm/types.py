@@ -37,3 +37,6 @@ class LLMResult(BaseModel):
     attempts: int
     json_mode: JsonMode
     cached: bool = False
+    json_retried: bool = False
+    """`chat_json` only: the first reply was unusable JSON, so the call asked once more.
+    `attempts` can't tell this apart from retries after a timeout or a server error."""
