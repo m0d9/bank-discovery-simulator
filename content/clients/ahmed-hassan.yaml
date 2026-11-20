@@ -57,8 +57,9 @@ hidden_facts:
   - id: existing-loan
     content: >-
       He already has a personal loan at another bank that costs him QAR 8,000 a month, with
-      the last payment in 10 months. He knows that any new debt before then would push his
-      repayments past the limit of half his salary.
+      the last payment in 10 months. Banks cap all loan repayments together at half his
+      salary, QAR 9,000 a month, so until then he has only about QAR 1,000 a month left for
+      any new repayments.
     unlock_when:
       - asks whether he has any existing loans, debts or monthly repayments
       - asks how much of his salary already goes to loan repayments
