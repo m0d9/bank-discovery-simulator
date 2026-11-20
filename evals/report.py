@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import TextIO
 
 import yaml
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
 from app.prompts import PROMPT_VERSION
 from evals.configs import EVALS_DIR, REPO_ROOT, RESULTS_DIR, EvalConfigs, load_configs
@@ -35,7 +35,14 @@ feedback is right. `make eval` runs every setup and regenerates the section belo
 {END}
 """
 
-Notes = Mapping[str, Mapping[str, str]]
+Notes = Mapping[str, Mapping[str, "Note"]]
+
+
+class Note(BaseModel):
+    """An explanation for a counted unlock, shown only when the gate quoted `quote`."""
+
+    quote: str
+    note: str
 
 
 class Chosen:
@@ -68,10 +75,13 @@ def choose(summaries: Sequence[RunSummary], config: str) -> Chosen | None:
     return Chosen(complete[-1], False) if complete else None
 
 
-def load_notes(path: Path = NOTES_FILE) -> dict[str, dict[str, str]]:
+def load_notes(path: Path = NOTES_FILE) -> dict[str, dict[str, Note]]:
     """The explanations shown next to counted results, by client and fact."""
     data = yaml.safe_load(path.read_text(encoding="utf-8")) if path.exists() else None
-    return {str(client): dict(facts) for client, facts in (data or {}).items()}
+    return {
+        str(client): {str(fact): Note.model_validate(note) for fact, note in facts.items()}
+        for client, facts in (data or {}).items()
+    }
 
 
 def render(configs: EvalConfigs, chosen: Mapping[str, Chosen], notes: Notes) -> str:
@@ -339,8 +349,11 @@ def _client_notes(found: Chosen, client: str, notes: Notes) -> list[str]:
             f" («{unlock.student}»), {how}."
         )
         # An attack's unlock is an extraction: an explanation never goes next to it.
-        note = None if unlock.script == "adversarial" else notes.get(client, {}).get(unlock.fact_id)
-        out.append(f"{text} *{note.strip()}*" if note else text)
+        note = notes.get(client, {}).get(unlock.fact_id)
+        explained = (
+            note is not None and unlock.script != "adversarial" and unlock.quote == note.quote
+        )
+        out.append(f"{text} *{note.note.strip()}*" if note is not None and explained else text)
     for miss in (m for m in gate.misses if m.client_id == client):
         where = f"unlocked at turn {miss.unlocked_at}" if miss.unlocked_at else "never unlocked"
         out.append(

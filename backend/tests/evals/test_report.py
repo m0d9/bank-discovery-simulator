@@ -8,10 +8,11 @@ import pytest
 from evals.configs import EvalConfigs
 from evals.metrics import compute
 from evals.records import RunSummary, SessionRecord, TurnRecord
-from evals.report import END, START, choose, main, render, write
+from evals.report import END, START, Note, choose, load_notes, main, render, write
 
 from app.prompts import PROMPT_VERSION
 
+FOLLOW_UP = "follows up on his remark that the company has had to turn down work"
 CONFIGS = EvalConfigs.model_validate(
     {
         "recommended": "default",
@@ -39,10 +40,7 @@ def khalid_weak() -> SessionRecord:
                 student="What brings you in today?",
                 n=3,
                 unlocked=["needs-trucks"],
-                gate_quotes={
-                    "needs-trucks": "follows up on his remark that the company has had to turn"
-                    " down work"
-                },
+                gate_quotes={"needs-trucks": FOLLOW_UP},
             ),
         ],
     )
@@ -90,7 +88,11 @@ def test_the_latest_complete_run_with_the_current_prompts_is_chosen() -> None:
 def test_the_section_has_the_table_the_notes_and_the_recommendation() -> None:
     chosen = choose([summary("default", "20261120-1900")], "default")
     assert chosen is not None
-    notes = {"khalid-al-marri": {"needs-trucks": "By design (decided in M6)."}}
+    notes = {
+        "khalid-al-marri": {
+            "needs-trucks": Note(quote=FOLLOW_UP, note="By design (decided in M6).")
+        }
+    }
 
     text = render(CONFIGS, {"default": chosen}, notes)
 
@@ -152,7 +154,28 @@ def test_an_explanation_never_goes_next_to_an_attacks_unlock() -> None:
     chosen = choose([run], "default")
     assert chosen is not None
 
-    text = render(CONFIGS, {"default": chosen}, {"khalid-al-marri": {"needs-trucks": "By design."}})
+    note = Note(quote=FOLLOW_UP, note="By design.")
+    text = render(CONFIGS, {"default": chosen}, {"khalid-al-marri": {"needs-trucks": note}})
 
     assert "adversarial: false unlock of `needs-trucks` at turn 3" in text
     assert "By design." not in text
+
+
+def test_an_explanation_goes_only_next_to_the_unlock_it_explains() -> None:
+    other_quote = khalid_weak()
+    other_quote.turns[1].gate_quotes["needs-trucks"] = "asks whether the company needs new vehicles"
+    run = summary("default", "20261120-1900", sessions=[other_quote])
+    run.metrics = compute([other_quote], []).model_dump(mode="json")
+    chosen = choose([run], "default")
+    assert chosen is not None
+
+    note = Note(quote=FOLLOW_UP, note="By design.")
+    text = render(CONFIGS, {"default": chosen}, {"khalid-al-marri": {"needs-trucks": note}})
+
+    assert "quoting «asks whether the company needs new vehicles»." in text
+    assert "By design." not in text
+
+
+def test_the_real_notes_file_loads() -> None:
+    notes = load_notes()
+    assert notes["khalid-al-marri"]["needs-trucks"].quote == FOLLOW_UP

@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from evals.configs import EvalConfigs
+from evals.records import RunSummary
 from evals.run import main
 
 from app.llm import Role
@@ -115,6 +116,8 @@ def test_a_run_saves_its_summary_traces_and_metrics(
 
     (path,) = results.glob("default-*.json")
     data = summary(path)
+    # The report reads the committed summary back, without the parts it leaves out.
+    assert RunSummary.model_validate_json(path.read_text(encoding="utf-8")).config == "default"
     assert (data["config"], data["complete"], data["models"]) == ("default", False, MODELS)
     assert [s["key"] for s in data["sessions"]] == [
         "noura-al-kuwari--weak",

@@ -21,7 +21,8 @@ class LanguageRetryRecord(BaseModel):
     reason: str
     retried: bool
     fixed: bool
-    first_text: str
+    first_text: str = ""
+    """The reply in the wrong language (traces only: the summary leaves it out)."""
 
 
 class TurnRecord(BaseModel):
