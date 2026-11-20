@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from app.content import ContentRegistry, LocalizedText, load_registry
+from app.content import Client, ContentRegistry, LocalizedText, load_registry
 from app.content.__main__ import render_schemas, validate
 
 REPO_CONTENT = Path(__file__).resolve().parents[3] / "content"
@@ -51,14 +51,27 @@ def test_the_catalogue_and_clients_are_the_ones_the_brief_fixes(registry: Conten
 
 
 def student_facing_text(registry: ContentRegistry) -> Iterator[tuple[str, LocalizedText]]:
-    """Every field students read, as (where, text): the bank, client cards and products."""
+    """Every field students read, as (where, text): the bank, client cards, the answer key's
+    texts in the feedback, and products."""
     for field in ("name", "tagline", "disclaimer"):
         yield f"bank.{field}", getattr(registry.bank, field)
     for client in registry.list_clients():
         for field in ("name", "headline", "opening_line"):
             yield f"{client.id}.card.{field}", getattr(client.card, field)
+        yield from answer_key_text(client)
     for product in registry.list_products():
         yield from product_text(product.id, registry)
+
+
+def answer_key_text(client: Client) -> Iterator[tuple[str, LocalizedText]]:
+    """What the feedback shows from the answer key: need descriptions, the reasons products
+    are unsuitable, and the referral note."""
+    for need in client.needs:
+        yield f"{client.id}.needs.{need.id}.description", need.description
+        for entry in need.unsuitable_products:
+            yield f"{client.id}.needs.{need.id}.unsuitable.{entry.id}", entry.reason
+    if client.referral_note is not None:
+        yield f"{client.id}.referral_note", client.referral_note
 
 
 def product_text(product_id: str, registry: ContentRegistry) -> Iterator[tuple[str, LocalizedText]]:
