@@ -9,6 +9,7 @@ from app.coaching.coach import (
     COACH_MAX_TOKENS,
     COACH_TEMPERATURE,
     MAX_ITEMS,
+    Checked,
     CoachOutcome,
     check_report,
     run_coach,
@@ -26,6 +27,7 @@ from tests.coaching_factory import (
     coach_reply,
     interview,
     missed_item,
+    real_interview,
 )
 from tests.content_factory import ALPHA, BETA
 from tests.interview_factory import OPENING, T0
@@ -37,11 +39,16 @@ def clock() -> datetime:
     return T0
 
 
+def check(session: Session, reply: dict[str, Any], language: Language = "en") -> Checked:
+    report = CoachReport.model_validate(reply)
+    return check_report(report, session=session, analysis=analyse(session), language=language)
+
+
 def checked(
     session: Session, reply: dict[str, Any], language: Language = "en"
 ) -> tuple[CoachReport, tuple[str, ...]]:
-    report = CoachReport.model_validate(reply)
-    return check_report(report, session=session, analysis=analyse(session), language=language)
+    result = check(session, reply, language)
+    return result.report, result.backfilled
 
 
 async def coach(
@@ -128,7 +135,7 @@ def test_turns_that_are_not_the_students_are_dropped_and_unknown_ids_become_null
 def test_each_list_keeps_four_items_and_items_without_text_are_dropped() -> None:
     session = interview(*ALL_FOUND, recommend=[BETA])
     reply = coach_reply(
-        went_well=[{"point": f"Point {i}.", "evidence_turns": []} for i in range(6)],
+        went_well=[{"point": f"Point {i}.", "evidence_turns": [1]} for i in range(6)],
         missed=[missed_item("   "), *(missed_item(f"Missed {i}.") for i in range(5))],
         how_to_improve=[{"tip": "", "example": None}, {"tip": "Ask more.", "example": "  "}],
     )
@@ -205,3 +212,97 @@ async def test_any_model_error_degrades_the_feedback() -> None:
 
     assert (outcome.report, outcome.degraded) == (None, True)
     assert (outcome.error_code, outcome.json_retried) == ("MODEL_TIMEOUT", False)
+
+
+def test_praise_that_cites_no_student_turn_is_dropped() -> None:
+    # qwen's weak run in the M5 report: praise for something the student never did.
+    session = interview(*ALL_FOUND, recommend=[BETA])
+    reply = coach_reply(
+        went_well=[
+            {
+                "point": "You built rapport quickly by acknowledging her busy schedule and "
+                "showing genuine interest in her business growth.",
+                "evidence_turns": [],
+            },
+            {"point": "You asked how her customers pay.", "evidence_turns": [1]},
+        ]
+    )
+
+    result = check(session, reply)
+
+    assert [item.point for item in result.report.went_well] == ["You asked how her customers pay."]
+    assert [(drop.section, drop.reason) for drop in result.dropped] == [
+        ("went_well", "no_student_turn")
+    ]
+    assert result.dropped[0].text.startswith("You built rapport quickly")
+
+
+def test_praise_for_the_pitch_of_an_unsuitable_product_is_dropped() -> None:
+    # The Arabic UI run in the M5 report: praise citing turn 7, the overdraft pitch.
+    session = real_interview(
+        "noura-al-kuwari",
+        ("شكرًا على حضورك. هل يمكنك أن تحدثيني قليلًا عن شركتك؟", [], []),
+        ("كم يستغرق عملاؤك عادةً حتى يسددوا فواتيرك؟", ["late-payments"], []),
+        ("هل لديك عقود كبيرة أو خطط للتوسع في الفترة القادمة؟", ["big-contract"], []),
+        ("أقترح عليك السحب على المكشوف للأعمال.", ["sharia-only"], ["sharia-only"]),
+        recommend=["business-overdraft", "murabaha-working-capital"],
+        pitched={"business-overdraft": [7]},
+    )
+    reply = coach_reply(
+        went_well=[
+            {
+                "point": "أنت طرحت أسئلة ممتازة حول تدفق السيولة والعقود الكبيرة، مما ساعدك على "
+                "كشف احتياجاتها المالية الأساسية.",
+                "evidence_turns": [3, 5],
+            },
+            {
+                "point": "لقد استمعت جيدًا إلى رد العميل وأخذت بعين الاعتبار طلبها بالتأكد من "
+                "توافق المنتج مع الشريعة قبل الإجابة.",
+                "evidence_turns": [7],
+            },
+        ]
+    )
+
+    result = check(session, reply, language="ar")
+
+    assert [item.evidence_turns for item in result.report.went_well] == [[3, 5]]
+    assert [(drop.section, drop.reason) for drop in result.dropped] == [
+        ("went_well", "cites_unsuitable_pitch")
+    ]
+
+
+def test_praise_for_a_turn_that_the_missed_section_cites_is_dropped() -> None:
+    session = interview(*ALL_FOUND, recommend=[BETA])
+    reply = coach_reply(
+        went_well=[
+            {"point": "A good question about her plans.", "evidence_turns": [5]},
+            {"point": "You asked how her customers pay.", "evidence_turns": [1]},
+        ],
+        missed=[missed_item("The plans question came too late.", evidence_turns=[5])],
+    )
+
+    result = check(session, reply)
+
+    assert [item.point for item in result.report.went_well] == ["You asked how her customers pay."]
+    assert [drop.reason for drop in result.dropped] == ["cites_missed_turn"]
+
+
+def test_dropped_praise_leaves_room_for_grounded_praise() -> None:
+    session = interview(*ALL_FOUND, recommend=[BETA])
+    ungrounded = [{"point": f"Ungrounded {i}.", "evidence_turns": []} for i in range(2)]
+    grounded = [{"point": f"Point {i}.", "evidence_turns": [1]} for i in range(MAX_ITEMS)]
+
+    result = check(session, coach_reply(went_well=[*ungrounded, *grounded]))
+
+    assert [item.point for item in result.report.went_well] == [g["point"] for g in grounded]
+    assert len(result.dropped) == 2
+
+
+async def test_the_outcome_carries_the_drops() -> None:
+    session = interview(*ALL_FOUND, recommend=[BETA])
+    reply = coach_reply(went_well=[{"point": "Lovely rapport.", "evidence_turns": []}])
+
+    outcome, _ = await coach(session, reply)
+
+    assert outcome.report is not None and outcome.report.went_well == []
+    assert [drop.reason for drop in outcome.dropped] == ["no_student_turn"]

@@ -33,7 +33,11 @@ def get_feedback_service(
 ) -> FeedbackService:
     """FastAPI dependency: the feedback service for this request (it holds no state)."""
     return FeedbackService(
-        store=store, llm=llm, events=event_logger_for(settings.DATA_DIR), cache=cache
+        store=store,
+        llm=llm,
+        settings=settings,
+        events=event_logger_for(settings.DATA_DIR),
+        cache=cache,
     )
 
 

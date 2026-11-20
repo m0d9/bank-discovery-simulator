@@ -1,12 +1,18 @@
 """Builders for coaching tests: a client with two needs, finished interviews, coach replies."""
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import Any
 
-from app.content import Client
+from app.content import Client, load_registry
 from app.simulation import Recommendation, Session, Turn, WrapUp
 from tests.content_factory import ALPHA, BETA
-from tests.interview_factory import T0, client_data_with, hidden_fact, make_session
+from tests.interview_factory import (
+    REPO_CONTENT,
+    T0,
+    client_data_with,
+    hidden_fact,
+    make_session,
+)
 
 NOT_IN_KEY = "gamma-card"
 """A product id that the test client's answer key doesn't mention."""
@@ -83,6 +89,24 @@ def interview(*steps: Step, recommend: Sequence[str], session_id: str = "s1") ->
     that need the status set it)."""
     session = make_session(session_id, client=Client.model_validate(coaching_client_data()))
     add_steps(session, steps)
+    session.wrapup = wrap_up(*recommend)
+    return session
+
+
+def real_interview(
+    client_id: str,
+    *steps: Step,
+    recommend: Sequence[str],
+    pitched: Mapping[str, Sequence[int]] | None = None,
+) -> Session:
+    """A wrapped-up session with one of the repository's own clients and the real catalogue.
+    `pitched` maps product ids to the student turns that proposed them."""
+    content = load_registry(REPO_CONTENT)
+    session = make_session(client=content.get_client(client_id))
+    session.bank = content.bank
+    session.products = {product.id: product for product in content.list_products()}
+    add_steps(session, steps)
+    session.products_mentioned = {pid: list(turns) for pid, turns in (pitched or {}).items()}
     session.wrapup = wrap_up(*recommend)
     return session
 

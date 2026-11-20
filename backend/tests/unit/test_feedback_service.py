@@ -16,6 +16,7 @@ from app.llm.fake import FakeLLM
 from app.simulation import InvalidState, Session, SessionNotFound, SessionStatus, SessionStore
 from app.telemetry.events import EventLogger
 from tests.coaching_factory import ASK_PAYMENTS, coach_reply, interview, missed_item
+from tests.conftest import SettingsFactory
 from tests.content_factory import ALPHA, BETA
 from tests.interview_factory import T0
 
@@ -40,6 +41,7 @@ def service(settings: Settings, store: SessionStore, fake: FakeLLM) -> FeedbackS
     return FeedbackService(
         store=store,
         llm=fake,
+        settings=settings,
         events=EventLogger(settings.DATA_DIR / "events.jsonl"),
         cache=CoachCache(),
     )
@@ -167,6 +169,7 @@ async def test_the_event_has_ids_counts_and_verdicts_but_no_text(
         "degraded": False,
         "error": None,
         "backfilled": 1,
+        "dropped": {},
         "cached": False,
         "json_retried": False,
         "needs_uncovered": 0,
@@ -243,3 +246,51 @@ async def test_the_cache_keeps_its_most_recently_used_entries() -> None:
     # "b" was the least recently used when "c" arrived, so it ran twice.
     assert runs == ["a", "b", "c", "b"]
     assert len(cache) == 2
+
+
+UNGROUNDED = coach_reply(
+    went_well=[{"point": "You acknowledged her busy schedule.", "evidence_turns": []}]
+)
+
+
+async def test_dropped_praise_is_logged_once_with_ids_and_no_text(
+    service: FeedbackService, store: SessionStore, fake: FakeLLM, settings: Settings
+) -> None:
+    session = wrapped(store)
+    fake.script(Role.COACH, UNGROUNDED)
+
+    await service.feedback(session.id, "en")
+    await service.feedback(session.id, "en")  # a cache hit: the coach didn't run again
+
+    drops = [event for event in events(settings) if event["event"] == "coach_item_dropped"]
+    assert [{key: drop[key] for key in drop if key != "ts"} for drop in drops] == [
+        {
+            "event": "coach_item_dropped",
+            "session_id": session.id,
+            "client_id": session.client_id,
+            "section": "went_well",
+            "reason": "no_student_turn",
+        }
+    ]
+    generated = [event for event in events(settings) if event["event"] == "feedback_generated"]
+    assert [event["dropped"] for event in generated] == [{"went_well": 1}, {"went_well": 1}]
+
+
+async def test_dropped_praise_text_is_logged_only_with_log_transcripts(
+    settings_factory: SettingsFactory, store: SessionStore, fake: FakeLLM
+) -> None:
+    settings = settings_factory(LOG_TRANSCRIPTS=True)
+    service = FeedbackService(
+        store=store,
+        llm=fake,
+        settings=settings,
+        events=EventLogger(settings.DATA_DIR / "events.jsonl"),
+        cache=CoachCache(),
+    )
+    session = wrapped(store)
+    fake.script(Role.COACH, UNGROUNDED)
+
+    await service.feedback(session.id, "en")
+
+    (drop,) = [event for event in events(settings) if event["event"] == "coach_item_dropped"]
+    assert drop["text"] == "You acknowledged her busy schedule."

@@ -4,6 +4,7 @@ evals/."""
 import hashlib
 import json
 import time
+from collections import Counter
 from dataclasses import dataclass
 
 from app.coaching.analysis import analyse
@@ -11,6 +12,7 @@ from app.coaching.cache import CoachCache
 from app.coaching.coach import CoachOutcome, run_coach
 from app.coaching.export import export_filename, export_markdown
 from app.coaching.feedback import Feedback, latest_feedback
+from app.config import Settings
 from app.llm import LLMClient
 from app.prompts import PROMPT_VERSION
 from app.simulation import InvalidState, Language, Session, SessionStatus, SessionStore
@@ -52,10 +54,17 @@ class FeedbackService:
     """
 
     def __init__(
-        self, *, store: SessionStore, llm: LLMClient, events: EventLogger, cache: CoachCache
+        self,
+        *,
+        store: SessionStore,
+        llm: LLMClient,
+        settings: Settings,
+        events: EventLogger,
+        cache: CoachCache,
     ) -> None:
         self._store = store
         self._llm = llm
+        self._settings = settings
         self._events = events
         self._cache = cache
 
@@ -109,6 +118,18 @@ class FeedbackService:
         latency_ms: int,
     ) -> None:
         stats = feedback.analysis.stats
+        if not reused:
+            # Only when the coach really ran: a cache hit reuses the same checked report.
+            for drop in outcome.dropped:
+                fields: dict[str, object] = {
+                    "session_id": session.id,
+                    "client_id": session.client_id,
+                    "section": drop.section,
+                    "reason": drop.reason,
+                }
+                if self._settings.LOG_TRANSCRIPTS:
+                    fields["text"] = drop.text
+                await self._events.emit("coach_item_dropped", **fields)
         await self._events.emit(
             "feedback_generated",
             session_id=session.id,
@@ -117,6 +138,7 @@ class FeedbackService:
             degraded=feedback.degraded,
             error=outcome.error_code,
             backfilled=len(outcome.backfilled),
+            dropped=dict(Counter(drop.section for drop in outcome.dropped)),
             cached=reused,
             json_retried=outcome.json_retried,
             latency_ms=latency_ms,

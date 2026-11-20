@@ -23,7 +23,7 @@ REPORT = coach_reply(
             "You never asked about her banking preferences.",
             need_id="bridge-cash-gap",
             product_id=OVERDRAFT,
-            evidence_turns=[1],
+            evidence_turns=[],
             better_question="Is Islamic banking important to you?",
         )
     ],

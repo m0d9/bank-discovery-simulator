@@ -53,7 +53,9 @@ async def interview_then_feedback(
         events=events,
         content=load_registry(settings.CONTENT_DIR),
     )
-    feedback = FeedbackService(store=store, llm=llm, events=events, cache=CoachCache())
+    feedback = FeedbackService(
+        store=store, llm=llm, settings=settings, events=events, cache=CoachCache()
+    )
     session = await interview.create_session(NOURA, "en")
     for message in messages:
         await interview.student_message(session.id, message)

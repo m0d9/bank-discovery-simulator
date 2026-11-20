@@ -12,11 +12,11 @@ interview is over by then, which is why `FeedbackService` runs the coach only af
 import json
 import logging
 import time
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Collection, Iterable, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 
-from app.coaching.analysis import Analysis, missed_critical_needs
+from app.coaching.analysis import Analysis, missed_critical_needs, product_verdict
 from app.coaching.report import CoachReport, Improvement, MissedPoint, WentWell
 from app.content import Client, LocalizedText, Need, Product
 from app.llm import ChatMessage, InvalidOutput, LLMClient, LLMError, Role
@@ -33,6 +33,26 @@ SPEAKERS = {"student": "Student", "client": "Client"}
 
 
 @dataclass(frozen=True)
+class Dropped:
+    """An item that code removed from the coach's report, and why. Telemetry records `text`
+    only with LOG_TRANSCRIPTS."""
+
+    section: str
+    reason: str
+    text: str
+
+
+@dataclass(frozen=True)
+class Checked:
+    """The report after the checks, and what the checks changed."""
+
+    report: CoachReport
+    backfilled: tuple[str, ...]
+    """Missed critical needs the model left out, added by code (need ids)."""
+    dropped: tuple[Dropped, ...] = ()
+
+
+@dataclass(frozen=True)
 class CoachOutcome:
     """One run of the coach. `report` is None when `degraded`."""
 
@@ -46,6 +66,8 @@ class CoachOutcome:
     """The model's first reply was unusable JSON, so it was asked once more."""
     error_code: str | None
     generated_at: datetime
+    dropped: tuple[Dropped, ...] = ()
+    """Items that the checks removed (see `check_report`)."""
 
 
 def localized(text: LocalizedText, language: Language) -> str:
@@ -129,26 +151,28 @@ async def run_coach(
             error_code=exc.code,
             generated_at=clock(),
         )
-    checked, backfilled = check_report(
-        report, session=session, analysis=analysis, language=language
-    )
+    checked = check_report(report, session=session, analysis=analysis, language=language)
     return CoachOutcome(
-        report=checked,
+        report=checked.report,
         degraded=False,
-        backfilled=backfilled,
+        backfilled=checked.backfilled,
         latency_ms=_since(started),
         json_retried=result.json_retried,
         error_code=None,
         generated_at=clock(),
+        dropped=checked.dropped,
     )
 
 
 def check_report(
     report: CoachReport, *, session: Session, analysis: Analysis, language: Language
-) -> tuple[CoachReport, tuple[str, ...]]:
-    """The report as the student may see it, and the ids of the needs added to it.
+) -> Checked:
+    """The report as the student may see it, and what the checks changed.
 
     - Evidence turns that aren't the student's own turns are dropped.
+    - Praise must be grounded. A `went_well` item is dropped, never rewritten, when it cites
+      no student turn, or cites a turn where the student pitched a product that is
+      unsuitable, or a turn that a `missed` item cites.
     - An unknown `need_id` or `product_id` becomes None. Ids are matched ignoring case.
     - Items without text are dropped, and each list keeps its first four items.
     - Every missed critical need without an entry gets one, first in `missed`: the point is
@@ -162,11 +186,6 @@ def check_report(
     def turns(values: Sequence[int]) -> list[int]:
         return sorted({n for n in values if n in student_turns})
 
-    went_well = [
-        WentWell(point=item.point, evidence_turns=turns(item.evidence_turns))
-        for item in report.went_well
-        if item.point
-    ][:MAX_ITEMS]
     missed = [
         MissedPoint(
             point=item.point,
@@ -185,18 +204,53 @@ def check_report(
         if need.id not in covered
     ]
     missed = [*added, *missed][: max(MAX_ITEMS, len(added))]
+    unsuitable_pitches = {
+        n
+        for product_id, pitched in session.products_mentioned.items()
+        if product_verdict(session.client, product_id).verdict == "unsuitable"
+        for n in pitched
+    }
+    missed_turns = {n for item in missed for n in item.evidence_turns}
+    went_well: list[WentWell] = []
+    dropped: list[Dropped] = []
+    for praise in report.went_well:
+        if not praise.point:
+            continue
+        cited = turns(praise.evidence_turns)
+        reason = _ungrounded(cited, unsuitable_pitches, missed_turns)
+        if reason is None:
+            went_well.append(WentWell(point=praise.point, evidence_turns=cited))
+        else:
+            dropped.append(Dropped(section="went_well", reason=reason, text=praise.point))
     how_to_improve = [
         Improvement(tip=item.tip, example=item.example or None)
         for item in report.how_to_improve
         if item.tip
     ][:MAX_ITEMS]
     checked = CoachReport(
-        went_well=went_well,
+        went_well=went_well[:MAX_ITEMS],
         missed=missed,
         how_to_improve=how_to_improve,
         summary_feedback=report.summary_feedback,
     )
-    return checked, tuple(item.need_id for item in added if item.need_id is not None)
+    return Checked(
+        report=checked,
+        backfilled=tuple(item.need_id for item in added if item.need_id is not None),
+        dropped=tuple(dropped),
+    )
+
+
+def _ungrounded(
+    cited: Sequence[int], unsuitable_pitches: Collection[int], missed_turns: Collection[int]
+) -> str | None:
+    """Why a `went_well` item isn't grounded in the student's turns, if it isn't."""
+    if not cited:
+        return "no_student_turn"
+    if any(n in unsuitable_pitches for n in cited):
+        return "cites_unsuitable_pitch"
+    if any(n in missed_turns for n in cited):
+        return "cites_missed_turn"
+    return None
 
 
 def _backfill(need: Need, client: Client, analysis: Analysis, language: Language) -> MissedPoint:
