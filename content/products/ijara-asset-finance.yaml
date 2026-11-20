@@ -4,6 +4,7 @@ schema_version: 1
 name:
   en: Ijara Asset Finance
   ar: تمويل الأصول بالإجارة
+aliases: [Ijara, إجارة]
 summary:
   en: Lease-to-own finance for vehicles and equipment. The bank buys the asset and leases it to you until it becomes yours.
   ar: تمويل بنظام الإجارة المنتهية بالتمليك للمركبات والمعدات، إذ يشتري البنك الأصل ويؤجره لك حتى تنتقل ملكيته إليك.

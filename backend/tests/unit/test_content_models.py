@@ -115,3 +115,9 @@ def test_a_persona_needs_a_grammatical_gender(gender: str | None) -> None:
         Client.model_validate(data)
 
     assert error_locs(caught.value) == [("persona", "gender")]
+
+
+def test_a_product_may_list_aliases() -> None:
+    assert Product.model_validate(product_data()).aliases == []
+    product = Product.model_validate(product_data(aliases=[" Alpha ", "ألفا"]))
+    assert product.aliases == ["Alpha", "ألفا"]

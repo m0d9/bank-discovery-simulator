@@ -90,6 +90,11 @@ class Product(_Strict):
     """Lowercase words joined by hyphens. Must equal the file name without `.yaml`."""
     schema_version: Literal[1]
     name: LocalizedText
+    aliases: list[Text] = Field(default_factory=list)
+    """Other names that identify this product unmistakably, in any language, such as "Murabaha"
+    or «مرابحة». The coach's suggested questions must not name a product; these are checked
+    along with the full names. Leave out words that are also everyday terms, such as
+    "overdraft"."""
     summary: LocalizedText
     """One or two sentences describing the product."""
     segments: list[Segment] = Field(min_length=1)
