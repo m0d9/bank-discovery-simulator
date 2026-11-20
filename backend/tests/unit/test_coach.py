@@ -419,3 +419,30 @@ def test_examples_and_questions_lose_their_own_quotation_marks(example: str, sho
 
     assert report.missed[0].better_question == shown
     assert report.how_to_improve[0].example == shown
+
+
+def test_latin_words_in_an_arabic_report_are_counted_not_rejected() -> None:
+    session = interview(*ALL_FOUND, recommend=[BETA])
+    reply = coach_reply(
+        went_well=[{"point": "سألتَ عن طريقة السداد مبكرًا.", "evidence_turns": [1]}],
+        how_to_improve=[
+            {"tip": "السؤال عن التفضيلات قبل اقتراح أي منتج في قطاع SME.", "example": None}
+        ],
+        summary="ملخصك دقيق.",
+    )
+
+    arabic = check(session, reply, language="ar")
+    english = check(session, reply, language="en")
+
+    assert arabic.mixed_script == 1
+    assert arabic.report.how_to_improve[0].tip.endswith("قطاع SME.")  # kept as written
+    assert english.mixed_script == 0
+
+
+async def test_the_coach_reads_the_clients_grammatical_gender() -> None:
+    session = interview(ASK_PAYMENTS, recommend=[ALPHA])
+
+    _, fake = await coach(session, coach_reply(), language="ar")
+
+    data = json.loads(fake.calls_for(Role.COACH)[0].messages[1].content)
+    assert data["client"]["persona"]["gender"] == "female"

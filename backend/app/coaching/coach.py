@@ -36,6 +36,7 @@ _LATIN = re.compile(r"[a-z]")
 _DOUBLE_QUOTES = re.compile('["“”«»„]')
 _SINGLE_QUOTE_PAIR = re.compile(r"(?<!\w)['‘]([^'‘’]+)['’](?!\w)")
 _OUTER_QUOTES = "'‘’‚"
+_LATIN_WORD = re.compile(r"[A-Za-z]{2,}")
 
 
 @dataclass(frozen=True)
@@ -66,6 +67,8 @@ class Checked:
     """Missed critical needs the model left out, added by code (need ids)."""
     dropped: tuple[Dropped, ...] = ()
     cleared: tuple[Cleared, ...] = ()
+    mixed_script: int = 0
+    """In an Arabic report, the text fields that contain a Latin word (counted, not rejected)."""
 
 
 @dataclass(frozen=True)
@@ -86,6 +89,8 @@ class CoachOutcome:
     """Items that the checks removed (see `check_report`)."""
     cleared: tuple[Cleared, ...] = ()
     """Fields that the checks set to null (see `check_report`)."""
+    mixed_script: int = 0
+    """Arabic text fields that contain a Latin word."""
 
 
 def localized(text: LocalizedText, language: Language) -> str:
@@ -180,6 +185,7 @@ async def run_coach(
         generated_at=clock(),
         dropped=checked.dropped,
         cleared=checked.cleared,
+        mixed_script=checked.mixed_script,
     )
 
 
@@ -271,7 +277,19 @@ def check_report(
         backfilled=tuple(item.need_id for item in added if item.need_id is not None),
         dropped=tuple(dropped),
         cleared=tuple(cleared),
+        mixed_script=_mixed_script(checked) if language == "ar" else 0,
     )
+
+
+def _mixed_script(report: CoachReport) -> int:
+    """How many text fields of an Arabic report contain a Latin word."""
+    texts = [
+        report.summary_feedback,
+        *(item.point for item in report.went_well),
+        *(text for item in report.missed for text in (item.point, item.better_question)),
+        *(text for item in report.how_to_improve for text in (item.tip, item.example)),
+    ]
+    return sum(1 for text in texts if text and _LATIN_WORD.search(text))
 
 
 def _unquote(text: str) -> str:

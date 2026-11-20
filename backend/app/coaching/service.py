@@ -140,6 +140,7 @@ class FeedbackService:
             backfilled=len(outcome.backfilled),
             dropped=dict(Counter(drop.section for drop in outcome.dropped)),
             cleared=dict(Counter(f"{item.section}.{item.field}" for item in outcome.cleared)),
+            mixed_script=outcome.mixed_script,
             cached=reused,
             json_retried=outcome.json_retried,
             latency_ms=latency_ms,
