@@ -1,0 +1,59 @@
+# yaml-language-server: $schema=../schema/product.schema.json
+# ---------------------------------------------------------------------------------------
+# PRODUCT TEMPLATE
+# Copy this file to content/products/<id>.yaml, where <id> is the id below, then replace
+# every value. Lines that start with # are comments: the app ignores them.
+# Students see every field except client_view. Every text has English (en) and Arabic (ar).
+# ---------------------------------------------------------------------------------------
+
+# A short name for the product: lowercase words joined by hyphens. It must match the file
+# name, and it is how client files refer to the product.
+id: mudaraba-savings-account
+# Always 1. It tells the app which version of this format the file uses.
+schema_version: 1
+# The product's name.
+name:
+  en: Mudaraba Savings Account
+  ar: حساب التوفير بالمضاربة
+# Optional: other names that identify this product unmistakably, in any language. The
+# coach's suggested questions must not name a product, and these words are checked as
+# well as the full names. Leave out everyday words, such as "savings".
+aliases: [Mudaraba, مضاربة]
+# One or two sentences describing the product.
+summary:
+  en: A Sharia-compliant savings account. The bank invests your balance and shares the profit with you.
+  ar: حساب توفير متوافق مع الشريعة، يستثمر فيه البنك رصيدك ويتقاسم معك الربح.
+# Who can have it: retail (individuals), sme (small and medium businesses), or both.
+segments: [retail]
+# financing, deposit, account or transfer.
+category: deposit
+# true for Islamic products. In Arabic they speak of ربح (profit) or أجرة (rent), never فائدة.
+sharia_compliant: true
+# true for conventional products that charge or pay interest (فائدة). Never true together
+# with sharia_compliant.
+interest_based: false
+# What the product offers. At least two lines.
+features:
+  - en: Withdraw at any time
+    ar: يمكنك السحب في أي وقت
+  - en: Profit paid every 3 months
+    ar: يُصرف الربح كل 3 أشهر
+# Its conditions and drawbacks. At least two lines.
+limitations:
+  - en: Profit depends on the bank's investment results and isn't guaranteed
+    ar: يعتمد الربح على نتائج استثمارات البنك، وهو غير مضمون
+  - en: Lower expected profit than a term deposit
+    ar: ربح متوقع أقل من الوديعة لأجل
+# Who qualifies. At least one line.
+eligibility:
+  - en: Individuals living in Qatar with a valid Qatar ID
+    ar: الأفراد المقيمون في قطر ممن يحملون بطاقة شخصية قطرية سارية
+# Fees and rates. The figures are made up, so mark them "(fictional)" in English (the
+# validator checks this) and "(أرقام افتراضية)" in Arabic. Write numbers with Western
+# digits, and amounts with "ريال قطري".
+pricing:
+  en: Expected profit of 1.5% a year, paid every 3 months, with no monthly fee (fictional)
+  ar: ربح سنوي متوقع بنسبة 1.5% يُصرف كل 3 أشهر، دون رسوم شهرية (أرقام افتراضية)
+# One plain-English line describing the product as a customer would understand it. This is
+# all the AI client is told about the product, and students never see it.
+client_view: An Islamic savings account you can take money out of at any time, where the bank shares a small profit with you every three months, though it isn't guaranteed.
