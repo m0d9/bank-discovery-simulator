@@ -17,6 +17,7 @@ card:
 
 persona:
   age: 38
+  gender: female
   occupation: Owner and managing director of a catering company
   nationality: Qatari
   family: Married, with three children

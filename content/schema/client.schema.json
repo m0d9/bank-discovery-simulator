@@ -236,6 +236,15 @@
           "title": "Age",
           "type": "integer"
         },
+        "gender": {
+          "description": "Grammatical gender, so that Arabic text about and to the client agrees with it.",
+          "enum": [
+            "female",
+            "male"
+          ],
+          "title": "Gender",
+          "type": "string"
+        },
         "occupation": {
           "minLength": 1,
           "title": "Occupation",
@@ -287,6 +296,7 @@
       },
       "required": [
         "age",
+        "gender",
         "occupation",
         "nationality",
         "background",

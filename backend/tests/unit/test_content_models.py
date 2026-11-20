@@ -101,3 +101,17 @@ def test_valid_models_fill_their_defaults() -> None:
     assert client.hidden_facts[0].unlock_on_product_pitch == []
     assert client.hidden_facts[0].requires == []
     assert Product.model_validate(product_data()).name == LocalizedText(en="Alpha Loan")
+
+
+@pytest.mark.parametrize("gender", [None, "other", "Female"])
+def test_a_persona_needs_a_grammatical_gender(gender: str | None) -> None:
+    data = client_data()
+    if gender is None:
+        del data["persona"]["gender"]
+    else:
+        data["persona"]["gender"] = gender
+
+    with pytest.raises(ValidationError) as caught:
+        Client.model_validate(data)
+
+    assert error_locs(caught.value) == [("persona", "gender")]

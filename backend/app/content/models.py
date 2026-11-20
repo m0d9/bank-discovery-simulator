@@ -31,6 +31,7 @@ Category = Literal["financing", "deposit", "account", "transfer"]
 Difficulty = Literal["easy", "medium", "hard"]
 Importance = Literal["critical", "important", "minor"]
 FinancialKnowledge = Literal["low", "medium", "high"]
+Gender = Literal["female", "male"]
 
 
 class _Strict(BaseModel):
@@ -140,6 +141,8 @@ class Persona(_Strict):
     """Private: who the AI client plays. English only, because it's an input to the model."""
 
     age: int
+    gender: Gender
+    """Grammatical gender, so that Arabic text about and to the client agrees with it."""
     occupation: Text
     nationality: Text
     family: Text | None = None

@@ -80,6 +80,7 @@ def client_data(client_id: str = CLIENT, **overrides: Any) -> dict[str, Any]:
         },
         "persona": {
             "age": 40,
+            "gender": "female",
             "occupation": "Company owner",
             "nationality": "Qatari",
             "background": "Runs a small company in Doha.",

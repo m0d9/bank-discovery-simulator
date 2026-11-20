@@ -17,6 +17,7 @@ card:
 
 persona:
   age: 41
+  gender: male
   occupation: Founder and managing director of an IT support company
   nationality: Indian
   family: Married, with two children
