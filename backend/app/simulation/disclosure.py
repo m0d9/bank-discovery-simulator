@@ -105,14 +105,24 @@ def gate_messages(
     client_reply: str,
     student_message: str,
     eligible: Sequence[HiddenFact],
+    others: Sequence[tuple[HiddenFact, str]],
     products: Sequence[Product],
 ) -> list[ChatMessage]:
-    """The gate's instructions, then its input as JSON: ids and conditions, no content."""
+    """The gate's instructions, then its input as JSON: ids and conditions, no content.
+
+    `others` are the client's other facts with their status ("already unlocked" or "not
+    available yet"). They let the gate see that a message is about a topic it can't unlock
+    now, instead of stretching an eligible fact's behaviour to fit.
+    """
     data = {
         "client_reply": client_reply,
         "student_message": student_message,
         "eligible_facts": [
             {"id": fact.id, "unlock_when": list(fact.unlock_when)} for fact in eligible
+        ],
+        "other_facts": [
+            {"id": fact.id, "unlock_when": list(fact.unlock_when), "status": status}
+            for fact, status in others
         ],
         "catalogue": [
             {
@@ -207,10 +217,16 @@ async def run_gate(
     """
     eligible = eligible_facts(client, unlocked)
     eligible_ids = tuple(fact.id for fact in eligible)
+    others = [
+        (fact, "already unlocked" if fact.id in unlocked else "not available yet")
+        for fact in client.hidden_facts
+        if fact.id not in eligible_ids
+    ]
     messages = gate_messages(
         client_reply=client_reply,
         student_message=student_message,
         eligible=eligible,
+        others=others,
         products=products,
     )
     started = time.perf_counter()

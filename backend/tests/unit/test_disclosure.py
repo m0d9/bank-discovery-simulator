@@ -143,10 +143,19 @@ async def test_the_gate_gets_ids_conditions_and_the_catalogue_and_nothing_else()
     system, user = call.messages
     assert (system.role, user.role) == ("system", "user")
     data = json.loads(user.content)
-    assert set(data) == {"client_reply", "student_message", "eligible_facts", "catalogue"}
+    assert set(data) == {
+        "client_reply",
+        "student_message",
+        "eligible_facts",
+        "other_facts",
+        "catalogue",
+    }
     assert data["eligible_facts"] == [
         {"id": "cash-gap", "unlock_when": ["asks about cash-gap"]},
         {"id": "pitch-reaction", "unlock_when": ["asks about pitch-reaction"]},
+    ]
+    assert data["other_facts"] == [
+        {"id": "expansion", "unlock_when": ["asks about expansion"], "status": "not available yet"}
     ]
     assert data["catalogue"][0] == {
         "id": ALPHA,
@@ -220,3 +229,20 @@ async def test_a_payment_follow_up_cannot_unlock_the_big_contract() -> None:
     assert outcome.eligible == ("sharia-only", "big-contract")
     assert outcome.unlocked == ()
     assert outcome.rejected == ("big-contract",)
+
+
+async def test_the_gate_sees_unlocked_and_later_facts_by_condition_only() -> None:
+    fake = FakeLLM()
+    await gate(gate_reply(), llm=fake, unlocked={"cash-gap"})
+
+    data = json.loads(fake.calls_for(Role.GATE)[0].messages[1].content)
+    assert [fact["id"] for fact in data["eligible_facts"]] == ["expansion", "pitch-reaction"]
+    assert data["other_facts"] == [
+        {"id": "cash-gap", "unlock_when": ["asks about cash-gap"], "status": "already unlocked"}
+    ]
+
+
+async def test_an_unlock_of_an_other_fact_is_dropped() -> None:
+    outcome = await gate(gate_reply("cash-gap"), unlocked={"cash-gap"})
+
+    assert outcome.unlocked == () and outcome.rejected == ()
