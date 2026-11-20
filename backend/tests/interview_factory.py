@@ -4,8 +4,12 @@ from collections.abc import Sequence
 from datetime import UTC, datetime
 from typing import Any
 
+from app.config import Settings
 from app.content import Bank, Client, ContentRegistry, Product
+from app.llm import LLMClient
+from app.simulation import InterviewService, SessionStore
 from app.simulation.models import Language, Session, SessionModels, Turn
+from app.telemetry.events import EventLogger
 from tests.content_factory import CLIENT, bank_data, client_data, deposit_data, product_data
 
 T0 = datetime(2026, 11, 20, 9, 0, tzinfo=UTC)
@@ -76,6 +80,28 @@ def hidden_fact(
 
 def client_with(*facts: dict[str, Any]) -> Client:
     """The factory's test client, with these hidden facts instead of its own."""
+    return Client.model_validate(client_data_with(*facts))
+
+
+def client_data_with(*facts: dict[str, Any]) -> dict[str, Any]:
+    """The factory's test client data, with these hidden facts instead of its own."""
     data = client_data(hidden_facts=list(facts))
     data["needs"][0]["evidence_facts"] = [facts[0]["id"]]
-    return Client.model_validate(data)
+    return data
+
+
+def make_service(
+    settings: Settings,
+    llm: LLMClient,
+    content: ContentRegistry | None = None,
+    *,
+    store: SessionStore | None = None,
+) -> InterviewService:
+    """An InterviewService writing its events to `DATA_DIR/events.jsonl` (a temp folder)."""
+    return InterviewService(
+        store=store if store is not None else SessionStore.from_settings(settings),
+        llm=llm,
+        settings=settings,
+        events=EventLogger(settings.DATA_DIR / "events.jsonl"),
+        content=content if content is not None else registry(),
+    )
