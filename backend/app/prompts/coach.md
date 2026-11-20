@@ -74,4 +74,5 @@ When `output_language` is "ar":
 - Write «تفضيلها للمنتجات المتوافقة مع الشريعة» (or «تفضيله…» for a male client), never «تفضيلات الشريعة».
 - Use each product's Arabic name from the catalogue, and the Arabic need descriptions and reasons from the profile.
 - Interest is «فائدة»: interest-based products charge «فائدة», and a conventional loan is «قرض». Sharia-compliant products pay or charge «ربح» or «أجرة», never «فائدة».
+- Describe an interest-based product as «قائم على الفائدة», never as «فاسد», «حرام» or «ربوي».
 - Keep `need_id` and `product_id` exactly as they are, in English.
