@@ -46,7 +46,7 @@ hidden_facts:
     signal: Things have been a bit stressful with money lately.
     unlock_when:
       - asks how or when her customers pay her
-      - asks about cash flow, late payments or money worries
+      - asks about cash flow, late payments, or difficulty covering salaries or suppliers
       - follows up on her remark that money has been stressful
     importance: critical
     example_questions:

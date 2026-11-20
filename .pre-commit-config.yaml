@@ -13,9 +13,9 @@ repos:
     hooks:
       - id: ruff-check
         args: [--fix]
-        files: ^backend/
+        files: ^(backend|scripts)/
       - id: ruff-format
-        files: ^backend/
+        files: ^(backend|scripts)/
 
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.30.1

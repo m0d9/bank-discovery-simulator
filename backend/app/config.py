@@ -55,6 +55,14 @@ class Settings(BaseSettings):
     ALLOW_MODEL_SWITCH: bool = False
     LOG_TRANSCRIPTS: bool = False
 
+    # Interview sessions live in memory only; a restart clears them.
+    SESSION_TTL_MINUTES: int = Field(default=120, ge=1)
+    MAX_SESSIONS: int = Field(default=200, ge=1)
+    MAX_STUDENT_TURNS: int = Field(default=30, ge=1)
+    MAX_MESSAGE_CHARS: int = Field(default=1000, ge=1)
+    CLIENT_HISTORY_TURNS: int = Field(default=12, ge=1)
+    MAX_UNLOCKS_PER_TURN: int = Field(default=2, ge=1)
+
 
 @lru_cache
 def get_settings() -> Settings:

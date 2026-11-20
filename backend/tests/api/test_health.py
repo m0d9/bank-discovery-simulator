@@ -48,6 +48,7 @@ def test_ok_when_every_role_model_is_available(health_client: HealthClient) -> N
         "coach": {"name": "big:20b", "available": True},
     }
     assert body["hint"] is None
+    assert body["hint_code"] is None
 
 
 def test_degraded_when_a_role_model_is_missing(health_client: HealthClient) -> None:
@@ -60,6 +61,7 @@ def test_degraded_when_a_role_model_is_missing(health_client: HealthClient) -> N
     assert body["models"]["coach"] == {"name": "big:20b", "available": False}
     assert body["models"]["gate"]["available"] is True
     assert body["hint"] == "Model big:20b not found. Run: ollama pull big:20b"
+    assert body["hint_code"] == "MODEL_MISSING"
 
 
 def test_degraded_hint_names_each_missing_model_once(health_client: HealthClient) -> None:
@@ -90,6 +92,7 @@ def test_down_when_the_endpoint_is_unreachable(
     assert body["status"] == "down"
     assert body["endpoint"] == {"reachable": False, "host": "llm.test"}
     assert body["hint"] == "Cannot reach the model endpoint at llm.test. Is Ollama running?"
+    assert body["hint_code"] == "ENDPOINT_UNREACHABLE"
     assert not any(m["available"] for m in body["models"].values())
 
 
@@ -103,6 +106,19 @@ def test_down_with_a_key_hint_when_the_endpoint_rejects_the_key(
     assert body["status"] == "down"
     assert body["endpoint"]["reachable"] is True
     assert "LLM_API_KEY" in body["hint"]
+    assert body["hint_code"] == "ENDPOINT_AUTH"
+
+
+def test_down_with_an_error_code_when_the_endpoint_fails_otherwise(
+    health_client: HealthClient,
+) -> None:
+    llm = FakeLLM(list_models_error=ModelUnavailable("HTTP 500", reason="server_error"))
+
+    body = health_client(llm).get("/api/health").json()
+
+    assert body["status"] == "down"
+    assert "LLM_BASE_URL" in body["hint"]
+    assert body["hint_code"] == "ENDPOINT_ERROR"
 
 
 def test_shows_only_the_host_never_credentials_path_or_key(

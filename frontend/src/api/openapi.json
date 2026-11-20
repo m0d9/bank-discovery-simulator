@@ -1,0 +1,1139 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Bank Client Discovery Simulator",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/health": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Health",
+        "description": "Report the app version, the model endpoint, each role's model and the content status.\n\nAlways HTTP 200: the body says whether the models can be used. The model check is cached\nfor 30 seconds; the content status is checked on every call, so a broken file shows up\nas soon as the store notices it.",
+        "operationId": "health_api_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthDTO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/bank": {
+      "get": {
+        "tags": [
+          "content"
+        ],
+        "summary": "Bank",
+        "description": "The fictional bank's name, tagline, disclaimer and currency.",
+        "operationId": "bank_api_bank_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BankDTO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/clients": {
+      "get": {
+        "tags": [
+          "content"
+        ],
+        "summary": "Clients",
+        "description": "Every client's public card, easiest first.",
+        "operationId": "clients_api_clients_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ClientCardDTO"
+                  },
+                  "type": "array",
+                  "title": "Response Clients Api Clients Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/products": {
+      "get": {
+        "tags": [
+          "content"
+        ],
+        "summary": "Products",
+        "description": "The product catalogue, by id.",
+        "operationId": "products_api_products_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ProductDTO"
+                  },
+                  "type": "array",
+                  "title": "Response Products Api Products Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sessions": {
+      "post": {
+        "tags": [
+          "sessions"
+        ],
+        "summary": "Create Session",
+        "description": "Start an interview with a client. The opening line comes from the content.",
+        "operationId": "create_session_api_sessions_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSessionDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionCreatedDTO"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "UNKNOWN_CLIENT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDTO"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "INVALID_INPUT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDTO"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "INTERNAL_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDTO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sessions/{session_id}": {
+      "get": {
+        "tags": [
+          "sessions"
+        ],
+        "summary": "Get Session",
+        "description": "The session's card, status, transcript and counters (for a page refresh).",
+        "operationId": "get_session_api_sessions__session_id__get",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionPublicDTO"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "SESSION_NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDTO"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "INVALID_INPUT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDTO"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "INTERNAL_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDTO"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "sessions"
+        ],
+        "summary": "Delete Session",
+        "description": "Delete the session and its transcript.",
+        "operationId": "delete_session_api_sessions__session_id__delete",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "SESSION_NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDTO"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "SESSION_BUSY",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDTO"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "INVALID_INPUT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDTO"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "INTERNAL_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDTO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sessions/{session_id}/messages": {
+      "post": {
+        "tags": [
+          "sessions"
+        ],
+        "summary": "Send Message",
+        "description": "Send the student's message and get the client's reply.\n\nIf a model fails, nothing is saved, so the same message can simply be sent again.",
+        "operationId": "send_message_api_sessions__session_id__messages_post",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StudentMessageDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResultDTO"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "SESSION_NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDTO"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "SESSION_BUSY, TURN_LIMIT, INVALID_STATE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDTO"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "INVALID_INPUT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDTO"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDTO"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "INTERNAL_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDTO"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "INVALID_OUTPUT, LLM_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDTO"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "MODEL_UNAVAILABLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDTO"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "MODEL_TIMEOUT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDTO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sessions/{session_id}/wrapup": {
+      "post": {
+        "tags": [
+          "sessions"
+        ],
+        "summary": "Wrap Up",
+        "description": "End the interview with the student's summary and 1–3 product recommendations.",
+        "operationId": "wrap_up_api_sessions__session_id__wrapup_post",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WrapUpDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionPublicDTO"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "SESSION_NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDTO"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "SESSION_BUSY, INVALID_STATE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDTO"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "INVALID_INPUT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDTO"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "INTERNAL_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDTO"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "BankDTO": {
+        "properties": {
+          "name": {
+            "$ref": "#/components/schemas/LocalizedTextDTO"
+          },
+          "tagline": {
+            "$ref": "#/components/schemas/LocalizedTextDTO"
+          },
+          "disclaimer": {
+            "$ref": "#/components/schemas/LocalizedTextDTO"
+          },
+          "currency": {
+            "type": "string",
+            "const": "QAR",
+            "title": "Currency"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "tagline",
+          "disclaimer",
+          "currency"
+        ],
+        "title": "BankDTO",
+        "description": "Response of `GET /api/bank`: the fictional bank."
+      },
+      "ClientCardDTO": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "segment": {
+            "type": "string",
+            "enum": [
+              "retail",
+              "sme"
+            ],
+            "title": "Segment"
+          },
+          "difficulty": {
+            "type": "string",
+            "enum": [
+              "easy",
+              "medium",
+              "hard"
+            ],
+            "title": "Difficulty"
+          },
+          "name": {
+            "$ref": "#/components/schemas/LocalizedTextDTO"
+          },
+          "headline": {
+            "$ref": "#/components/schemas/LocalizedTextDTO"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "segment",
+          "difficulty",
+          "name",
+          "headline"
+        ],
+        "title": "ClientCardDTO",
+        "description": "A client's public card: all a student sees before starting the interview."
+      },
+      "ContentStatusDTO": {
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "title": "Ok"
+          },
+          "errors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Errors"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ok",
+          "errors"
+        ],
+        "title": "ContentStatusDTO",
+        "description": "Whether the content files are valid. While they aren't, the last good version is served\nand `errors` lists each problem with its file and field."
+      },
+      "CreateSessionDTO": {
+        "properties": {
+          "client_id": {
+            "type": "string",
+            "title": "Client Id"
+          },
+          "language": {
+            "type": "string",
+            "enum": [
+              "en",
+              "ar"
+            ],
+            "title": "Language"
+          }
+        },
+        "type": "object",
+        "required": [
+          "client_id",
+          "language"
+        ],
+        "title": "CreateSessionDTO",
+        "description": "Request body of `POST /api/sessions`."
+      },
+      "EndpointDTO": {
+        "properties": {
+          "reachable": {
+            "type": "boolean",
+            "title": "Reachable"
+          },
+          "host": {
+            "type": "string",
+            "title": "Host"
+          }
+        },
+        "type": "object",
+        "required": [
+          "reachable",
+          "host"
+        ],
+        "title": "EndpointDTO",
+        "description": "The model endpoint: its host only (never the URL or key), and whether it answered."
+      },
+      "ErrorDTO": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "message_key": {
+            "type": "string",
+            "title": "Message Key"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "message_key",
+          "detail"
+        ],
+        "title": "ErrorDTO",
+        "description": "What went wrong. `message_key` is `errors.<code>`, for the UI to translate; `detail` is\nEnglish for developers, and never contains message text."
+      },
+      "ErrorEnvelopeDTO": {
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/ErrorDTO"
+          }
+        },
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "title": "ErrorEnvelopeDTO",
+        "description": "Every error response: `{\"error\": {\"code\", \"message_key\", \"detail\"}}`."
+      },
+      "HealthDTO": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "degraded",
+              "down"
+            ],
+            "title": "Status"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "endpoint": {
+            "$ref": "#/components/schemas/EndpointDTO"
+          },
+          "models": {
+            "$ref": "#/components/schemas/ModelsDTO"
+          },
+          "hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hint"
+          },
+          "hint_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "ENDPOINT_UNREACHABLE",
+                  "ENDPOINT_AUTH",
+                  "ENDPOINT_ERROR",
+                  "MODEL_MISSING"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hint Code"
+          },
+          "content": {
+            "$ref": "#/components/schemas/ContentStatusDTO"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "version",
+          "endpoint",
+          "models",
+          "hint",
+          "hint_code",
+          "content"
+        ],
+        "title": "HealthDTO",
+        "description": "Response of `GET /api/health`.\n\n`down`: the endpoint can't be used. `degraded`: a role's model is missing. `hint` says\nwhat to do about either, in English for whoever runs the app; `hint_code` names the same\nproblem for the UI to translate (`health.<CODE>`). `content` reports the content files\nseparately."
+      },
+      "LocalizedTextDTO": {
+        "properties": {
+          "en": {
+            "type": "string",
+            "title": "En"
+          },
+          "ar": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ar"
+          }
+        },
+        "type": "object",
+        "required": [
+          "en",
+          "ar"
+        ],
+        "title": "LocalizedTextDTO",
+        "description": "Text in English, and in Arabic when the content provides it (`null` otherwise)."
+      },
+      "MessageResultDTO": {
+        "properties": {
+          "student_turn": {
+            "$ref": "#/components/schemas/TurnDTO"
+          },
+          "client_turn": {
+            "$ref": "#/components/schemas/TurnDTO"
+          },
+          "student_turns_used": {
+            "type": "integer",
+            "title": "Student Turns Used"
+          },
+          "max_student_turns": {
+            "type": "integer",
+            "title": "Max Student Turns"
+          }
+        },
+        "type": "object",
+        "required": [
+          "student_turn",
+          "client_turn",
+          "student_turns_used",
+          "max_student_turns"
+        ],
+        "title": "MessageResultDTO",
+        "description": "Response of `POST /api/sessions/{session_id}/messages`: the exchange and the counters."
+      },
+      "ModelStatusDTO": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "available": {
+            "type": "boolean",
+            "title": "Available"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "available"
+        ],
+        "title": "ModelStatusDTO",
+        "description": "One role's model and whether the endpoint offers it."
+      },
+      "ModelsDTO": {
+        "properties": {
+          "gate": {
+            "$ref": "#/components/schemas/ModelStatusDTO"
+          },
+          "client": {
+            "$ref": "#/components/schemas/ModelStatusDTO"
+          },
+          "coach": {
+            "$ref": "#/components/schemas/ModelStatusDTO"
+          }
+        },
+        "type": "object",
+        "required": [
+          "gate",
+          "client",
+          "coach"
+        ],
+        "title": "ModelsDTO",
+        "description": "The model each role uses."
+      },
+      "ProductDTO": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "$ref": "#/components/schemas/LocalizedTextDTO"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/LocalizedTextDTO"
+          },
+          "segments": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "retail",
+                "sme"
+              ]
+            },
+            "type": "array",
+            "title": "Segments"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "financing",
+              "deposit",
+              "account",
+              "transfer"
+            ],
+            "title": "Category"
+          },
+          "sharia_compliant": {
+            "type": "boolean",
+            "title": "Sharia Compliant"
+          },
+          "interest_based": {
+            "type": "boolean",
+            "title": "Interest Based"
+          },
+          "features": {
+            "items": {
+              "$ref": "#/components/schemas/LocalizedTextDTO"
+            },
+            "type": "array",
+            "title": "Features"
+          },
+          "limitations": {
+            "items": {
+              "$ref": "#/components/schemas/LocalizedTextDTO"
+            },
+            "type": "array",
+            "title": "Limitations"
+          },
+          "eligibility": {
+            "items": {
+              "$ref": "#/components/schemas/LocalizedTextDTO"
+            },
+            "type": "array",
+            "title": "Eligibility"
+          },
+          "pricing": {
+            "$ref": "#/components/schemas/LocalizedTextDTO"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "summary",
+          "segments",
+          "category",
+          "sharia_compliant",
+          "interest_based",
+          "features",
+          "limitations",
+          "eligibility",
+          "pricing"
+        ],
+        "title": "ProductDTO",
+        "description": "A product as students see it in the catalogue."
+      },
+      "RecommendationDTO": {
+        "properties": {
+          "product_id": {
+            "type": "string",
+            "title": "Product Id"
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 5,
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "product_id",
+          "reason"
+        ],
+        "title": "RecommendationDTO",
+        "description": "One recommended product and why."
+      },
+      "SessionCreatedDTO": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "client": {
+            "$ref": "#/components/schemas/ClientCardDTO"
+          },
+          "opening_line": {
+            "$ref": "#/components/schemas/LocalizedTextDTO"
+          },
+          "max_student_turns": {
+            "type": "integer",
+            "title": "Max Student Turns"
+          },
+          "max_message_chars": {
+            "type": "integer",
+            "title": "Max Message Chars"
+          },
+          "models": {
+            "$ref": "#/components/schemas/SessionModelsDTO"
+          }
+        },
+        "type": "object",
+        "required": [
+          "session_id",
+          "client",
+          "opening_line",
+          "max_student_turns",
+          "max_message_chars",
+          "models"
+        ],
+        "title": "SessionCreatedDTO",
+        "description": "Response of `POST /api/sessions`."
+      },
+      "SessionModelsDTO": {
+        "properties": {
+          "gate": {
+            "type": "string",
+            "title": "Gate"
+          },
+          "client": {
+            "type": "string",
+            "title": "Client"
+          },
+          "coach": {
+            "type": "string",
+            "title": "Coach"
+          }
+        },
+        "type": "object",
+        "required": [
+          "gate",
+          "client",
+          "coach"
+        ],
+        "title": "SessionModelsDTO",
+        "description": "The model each role uses in a session, fixed when the session is created."
+      },
+      "SessionPublicDTO": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "client": {
+            "$ref": "#/components/schemas/ClientCardDTO"
+          },
+          "status": {
+            "$ref": "#/components/schemas/SessionStatus"
+          },
+          "language": {
+            "type": "string",
+            "enum": [
+              "en",
+              "ar"
+            ],
+            "title": "Language"
+          },
+          "turns": {
+            "items": {
+              "$ref": "#/components/schemas/TurnDTO"
+            },
+            "type": "array",
+            "title": "Turns"
+          },
+          "student_turns_used": {
+            "type": "integer",
+            "title": "Student Turns Used"
+          },
+          "max_student_turns": {
+            "type": "integer",
+            "title": "Max Student Turns"
+          },
+          "max_message_chars": {
+            "type": "integer",
+            "title": "Max Message Chars"
+          },
+          "models": {
+            "$ref": "#/components/schemas/SessionModelsDTO"
+          }
+        },
+        "type": "object",
+        "required": [
+          "session_id",
+          "client",
+          "status",
+          "language",
+          "turns",
+          "student_turns_used",
+          "max_student_turns",
+          "max_message_chars",
+          "models"
+        ],
+        "title": "SessionPublicDTO",
+        "description": "A session as the student may see it: the card, the transcript and the counters."
+      },
+      "SessionStatus": {
+        "type": "string",
+        "enum": [
+          "interviewing",
+          "wrapped_up",
+          "feedback_ready"
+        ],
+        "title": "SessionStatus",
+        "description": "Where a session is in the flow: interview, then wrap-up, then feedback (M5)."
+      },
+      "StudentMessageDTO": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "StudentMessageDTO",
+        "description": "Request body of `POST /api/sessions/{session_id}/messages`.\n\nThe length limit (`max_message_chars`) is checked after control characters are removed."
+      },
+      "TurnDTO": {
+        "properties": {
+          "n": {
+            "type": "integer",
+            "title": "N"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "student",
+              "client"
+            ],
+            "title": "Role"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "n",
+          "role",
+          "text"
+        ],
+        "title": "TurnDTO",
+        "description": "One message in the transcript. It never says which facts a message unlocked."
+      },
+      "WrapUpDTO": {
+        "properties": {
+          "needs_summary": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 30,
+            "title": "Needs Summary"
+          },
+          "recommendations": {
+            "items": {
+              "$ref": "#/components/schemas/RecommendationDTO"
+            },
+            "type": "array",
+            "maxItems": 3,
+            "minItems": 1,
+            "title": "Recommendations"
+          }
+        },
+        "type": "object",
+        "required": [
+          "needs_summary",
+          "recommendations"
+        ],
+        "title": "WrapUpDTO",
+        "description": "Request body of `POST /api/sessions/{session_id}/wrapup`."
+      }
+    }
+  }
+}

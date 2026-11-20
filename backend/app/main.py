@@ -1,16 +1,20 @@
 """FastAPI application factory: API under `/api`, built SPA everywhere else."""
 
 import logging
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import APIRouter, FastAPI, HTTPException
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
+from app.api.errors import error_response, register_error_handlers
 from app.api.router import api_router
 from app.config import Settings, get_settings
 from app.content import ContentStore, ContentValidationError
 from app.logging_setup import configure_logging
+from app.simulation import SessionStore
 
 logger = logging.getLogger(__name__)
 
@@ -25,16 +29,7 @@ def _api_not_found_router() -> APIRouter:
         include_in_schema=False,
     )
     async def api_not_found(path: str) -> JSONResponse:
-        return JSONResponse(
-            status_code=404,
-            content={
-                "error": {
-                    "code": "NOT_FOUND",
-                    "message_key": "errors.NOT_FOUND",
-                    "detail": f"/api/{path}",
-                }
-            },
-        )
+        return error_response("NOT_FOUND", f"/api/{path}")
 
     return router
 
@@ -93,14 +88,26 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or get_settings()
     configure_logging(secrets=[settings.LLM_API_KEY.get_secret_value()])
     content_store = _open_content(settings.CONTENT_DIR)
+    session_store = SessionStore.from_settings(settings)
+
+    @asynccontextmanager
+    async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+        session_store.start_cleanup()
+        try:
+            yield
+        finally:
+            await session_store.stop_cleanup()
 
     app = FastAPI(
         title="Bank Client Discovery Simulator",
         docs_url="/api/docs",
         redoc_url=None,
         openapi_url="/api/openapi.json",
+        lifespan=lifespan,
     )
     app.state.content_store = content_store
+    app.state.session_store = session_store
+    register_error_handlers(app)
     if injected is not None:
         # Routes read settings through Depends(get_settings); make them see the injected ones.
         app.dependency_overrides[get_settings] = lambda: injected

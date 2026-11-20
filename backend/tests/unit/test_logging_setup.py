@@ -10,7 +10,13 @@ import pytest
 from app.llm.errors import ModelUnavailable
 from app.llm.roles import Role
 from app.llm.types import ChatMessage
-from app.logging_setup import REDACTED, JsonFormatter, RedactSecretsFilter, configure_logging
+from app.logging_setup import (
+    QUIET_LOGGERS,
+    REDACTED,
+    JsonFormatter,
+    RedactSecretsFilter,
+    configure_logging,
+)
 from tests.conftest import TEST_API_KEY
 from tests.mock_endpoint import MockEndpoint, completion, error
 from tests.unit.conftest import LLMFactory
@@ -70,15 +76,43 @@ def test_without_secrets_records_are_untouched() -> None:
 
 
 @contextmanager
-def json_logs_to_stderr(level: int, secrets: list[str]) -> Iterator[None]:
+def json_logs_to_stderr(
+    level: int, secrets: list[str], *, http_level: int | None = None
+) -> Iterator[None]:
+    """Configure logging for one test, optionally overriding the HTTP libraries' level."""
     root = logging.getLogger()
+    quiet = [logging.getLogger(name) for name in QUIET_LOGGERS]
     saved_handlers, saved_level = root.handlers[:], root.level
+    saved_quiet = [logger.level for logger in quiet]
     configure_logging(level, secrets=secrets)
+    if http_level is not None:
+        for logger in quiet:
+            logger.setLevel(http_level)
     try:
         yield
     finally:
         root.handlers[:] = saved_handlers
         root.setLevel(saved_level)
+        for logger, saved in zip(quiet, saved_quiet, strict=True):
+            logger.setLevel(saved)
+
+
+def test_the_http_libraries_log_only_warnings_and_errors(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    with json_logs_to_stderr(logging.INFO, []):
+        for name in QUIET_LOGGERS:
+            logging.getLogger(name).info("HTTP Request: POST /v1/chat/completions")
+            logging.getLogger(name).warning("retrying after an error")
+        logging.getLogger("app.test").info("app info still shows")
+
+    lines = [json.loads(line) for line in capsys.readouterr().err.splitlines()]
+    assert [(line["logger"], line["level"]) for line in lines] == [
+        ("httpx", "WARNING"),
+        ("httpx2", "WARNING"),
+        ("openai", "WARNING"),
+        ("app.test", "INFO"),
+    ]
 
 
 async def test_api_key_never_reaches_the_log_output(
@@ -88,8 +122,9 @@ async def test_api_key_never_reaches_the_log_output(
     endpoint.queue(completion("hi"), error(401, f"Incorrect API key provided: {TEST_API_KEY}"))
     log = logging.getLogger("app.test")
 
-    # DEBUG on purpose: the SDK and the HTTP stack log request details at that level.
-    with json_logs_to_stderr(logging.DEBUG, [TEST_API_KEY]):
+    # DEBUG on purpose, the HTTP libraries included (the app keeps them at WARNING): the SDK
+    # and the HTTP stack log request details at that level.
+    with json_logs_to_stderr(logging.DEBUG, [TEST_API_KEY], http_level=logging.DEBUG):
         llm = make_llm()
         await llm.chat(Role.CLIENT, messages, max_tokens=5, temperature=0)
         with pytest.raises(ModelUnavailable):
