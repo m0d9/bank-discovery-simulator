@@ -98,6 +98,8 @@ needs:
     unsuitable_products:
       - id: business-overdraft
         reason: Interest-based.
+      - id: invoice-advance
+        reason: Interest-based; conflicts with her Sharia preference.
 
 coach_notes:
   key_questions:
