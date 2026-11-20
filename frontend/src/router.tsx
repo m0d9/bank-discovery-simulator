@@ -5,6 +5,7 @@ import { RouteError } from './components/RouteError';
 import { ClientSelectPage } from './pages/ClientSelectPage';
 import { InterviewPage } from './pages/InterviewPage';
 import { NotFound } from './pages/NotFound';
+import { WrapUpPage } from './pages/WrapUpPage';
 
 /** Gives a session page its id, and a fresh state for each session (keyed by the id). */
 function SessionRoute({ page: Page }: { page: ComponentType<{ sessionId: string }> }) {
@@ -19,6 +20,7 @@ export const routes: RouteObject[] = [
     children: [
       { index: true, element: <ClientSelectPage /> },
       { path: 'interview/:sessionId', element: <SessionRoute page={InterviewPage} /> },
+      { path: 'wrapup/:sessionId', element: <SessionRoute page={WrapUpPage} /> },
       { path: '*', element: <NotFound /> },
     ],
   },

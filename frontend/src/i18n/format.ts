@@ -26,3 +26,8 @@ export function countChars(text: string): number {
   // Code points, like Python's len(): an emoji made of several code points counts as several.
   return Array.from(cleaned).length;
 }
+
+/** The length the server checks for the wrap-up fields: trimmed, in code points. */
+export function trimmedLength(text: string): number {
+  return Array.from(text.trim()).length;
+}
