@@ -64,7 +64,7 @@ When `output_language` is "ar":
 - Address the student without gendered forms. Arabic marks gender in second-person verbs and in imperatives (اسأل or اسألي, اقترحتَ or اقترحتِ), so avoid both:
   - write tips as verbal nouns, such as «السؤال عن التفضيلات المصرفية قبل اقتراح أي منتج»;
   - describe what happened impersonally, such as «جاء اقتراح المنتج قبل السؤال عن…», or with «يمكنك…» and «من المفيد…».
-- The client's grammatical gender is `client.persona.gender`. Describe and address the client with matching agreement: a female client is «العميلة», and a question to her uses feminine forms such as «هل تفضلين…»; a male client is «العميل», with «هل تفضل…».
+- The client's grammatical gender is `client.persona.gender`. Describe and address the client with matching agreement: a female client is «العميلة», and a question to her uses feminine forms such as «هل تفضلين…»; a male client is «العميل», with «هل تفضل…». This gender is the client's only: the student's is unknown, so the rule above on addressing the student without gendered forms still applies.
 - Use no Latin letters in Arabic text: write «المنشآت الصغيرة والمتوسطة», not «SME», and each product's Arabic name.
 - Write «تفضيلها للمنتجات المتوافقة مع الشريعة» (or «تفضيله…» for a male client), never «تفضيلات الشريعة».
 - Use each product's Arabic name from the catalogue, and the Arabic need descriptions and reasons from the profile.
