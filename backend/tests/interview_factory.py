@@ -49,3 +49,33 @@ def make_session(
 def gate_reply(*unlocked: str, products: Sequence[str] = (), note: str = "") -> dict[str, Any]:
     """What the gate model answers, as FakeLLM serves it."""
     return {"unlocked": list(unlocked), "products_mentioned": list(products), "note": note}
+
+
+def hidden_fact(
+    fact_id: str,
+    *,
+    importance: str = "critical",
+    requires: Sequence[str] = (),
+    pitch: Sequence[str] = (),
+    signal: str | None = None,
+) -> dict[str, Any]:
+    """A hidden fact whose content and signal are marker text that leak tests search for."""
+    data: dict[str, Any] = {
+        "id": fact_id,
+        "content": f"SECRET-{fact_id.upper()}: the content of {fact_id}.",
+        "unlock_when": [f"asks about {fact_id}"],
+        "unlock_on_product_pitch": list(pitch),
+        "requires": list(requires),
+        "importance": importance,
+        "example_questions": [f"Tell me about {fact_id}?"],
+    }
+    if signal is not None:
+        data["signal"] = signal
+    return data
+
+
+def client_with(*facts: dict[str, Any]) -> Client:
+    """The factory's test client, with these hidden facts instead of its own."""
+    data = client_data(hidden_facts=list(facts))
+    data["needs"][0]["evidence_facts"] = [facts[0]["id"]]
+    return Client.model_validate(data)
