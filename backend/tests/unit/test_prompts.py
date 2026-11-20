@@ -6,7 +6,7 @@ import pytest
 from app.prompts import PROMPT_VERSION, render
 from app.prompts.loader import PROMPTS_DIR
 
-TEMPLATES = {"gate", "client_system", "client_reminder"}
+TEMPLATES = {"gate", "client_system", "client_reminder", "coach"}
 
 
 def test_every_template_is_loaded_with_an_eight_character_version() -> None:

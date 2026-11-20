@@ -1,8 +1,5 @@
 """The deterministic analysis: needs, facts, product verdicts, missed opportunities, counts."""
 
-from collections.abc import Sequence
-from typing import Any
-
 import pytest
 
 from app.coaching.analysis import (
@@ -15,68 +12,9 @@ from app.coaching.analysis import (
     product_verdict,
 )
 from app.content import Client, LocalizedText
-from app.simulation import Recommendation, Session, Turn, WrapUp
+from tests.coaching_factory import NOT_IN_KEY, coaching_client_data, interview
 from tests.content_factory import ALPHA, BETA
-from tests.interview_factory import T0, client_data_with, hidden_fact, make_session
-
-NOT_IN_KEY = "gamma-card"
-
-
-def client_data(**overrides: Any) -> dict[str, Any]:
-    """Two needs. ALPHA is unsuitable for `fund-gap` but suitable for `grow`; BETA suits both.
-
-    `sharia` also unlocks when the student pitches ALPHA, as a reaction to the pitch.
-    """
-    data = client_data_with(
-        hidden_fact("cash-gap"),
-        hidden_fact("sharia", pitch=[ALPHA]),
-        hidden_fact("expansion", importance="important", requires=["cash-gap"]),
-    )
-    data["needs"] = [
-        {
-            "id": "fund-gap",
-            "description": {"en": "Fund the gap.", "ar": "تمويل الفجوة."},
-            "evidence_facts": ["cash-gap", "sharia"],
-            "suitable_products": [BETA],
-            "unsuitable_products": [{"id": ALPHA, "reason": "Interest-based."}],
-        },
-        {
-            "id": "grow",
-            "description": "Grow the business.",
-            "evidence_facts": ["expansion"],
-            "suitable_products": [ALPHA, BETA],
-            "unsuitable_products": [],
-        },
-    ]
-    data.update(overrides)
-    return data
-
-
-def interview(
-    *steps: tuple[str, Sequence[str], Sequence[str]], recommend: Sequence[str]
-) -> Session:
-    """A wrapped-up session: each step is a student message, the facts it unlocked, and the
-    part of those that a product pitch unlocked. Every message gets a client reply."""
-    session = make_session(client=Client.model_validate(client_data()))
-    for text, unlocked, by_pitch in steps:
-        n = session.turns[-1].n + 1
-        session.turns.append(
-            Turn(
-                n=n,
-                role="student",
-                text=text,
-                ts=T0,
-                unlocked=list(unlocked),
-                unlocked_by_pitch=list(by_pitch),
-            )
-        )
-        session.turns.append(Turn(n=n + 1, role="client", text="I see.", ts=T0))
-        session.unlocked.update(dict.fromkeys(unlocked, n))
-    session.wrapup = WrapUp(
-        needs_summary="The client needs to bridge late payments and grow.",
-        recommendations=[Recommendation(product_id=pid, reason="It fits.") for pid in recommend],
-    )
-    return session
+from tests.interview_factory import make_session
 
 
 def test_every_need_found_is_uncovered_via_the_turn_that_completed_it() -> None:
@@ -170,7 +108,7 @@ def test_verdict_precedence_unsuitable_then_suitable_then_not_in_key() -> None:
 
 def test_without_a_catalogue_fit_every_product_is_unsuitable_because_of_the_referral() -> None:
     note = {"en": "Refer him to trade finance.", "ar": "إحالته إلى قسم تمويل التجارة."}
-    data = client_data(no_catalogue_fit=True, referral_note=note)
+    data = coaching_client_data(no_catalogue_fit=True, referral_note=note)
     for need in data["needs"]:
         need["suitable_products"], need["unsuitable_products"] = [], []
     session = interview(("How do your customers pay?", ["cash-gap"], []), recommend=[BETA])
@@ -225,7 +163,7 @@ def test_missed_critical_needs_include_partly_uncovered_ones() -> None:
 
 
 def test_the_analysis_needs_a_wrap_up() -> None:
-    session = make_session(client=Client.model_validate(client_data()))
+    session = make_session(client=Client.model_validate(coaching_client_data()))
 
     with pytest.raises(ValueError, match="no wrap-up"):
         analyse(session)
