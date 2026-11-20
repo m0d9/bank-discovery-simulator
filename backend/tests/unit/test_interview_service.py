@@ -141,6 +141,22 @@ async def test_a_turn_records_the_exchange_unlocks_and_product_mentions(
     assert gate_input["student_message"] == "And then?"
 
 
+async def test_a_turn_records_which_unlocks_came_from_a_product_pitch(
+    settings: Settings, fake: FakeLLM
+) -> None:
+    client = client_data_with(
+        hidden_fact("asked-fact"), hidden_fact("pitch-reaction", importance="minor", pitch=[ALPHA])
+    )
+    service = make_service(settings, fake, registry(client))
+    session = await service.create_session(CLIENT, "en")
+
+    result = await say(service, fake, session.id, gate=gate_reply("asked-fact", products=[ALPHA]))
+
+    assert result.student_turn.unlocked == ["asked-fact", "pitch-reaction"]
+    assert result.student_turn.unlocked_by_pitch == ["pitch-reaction"]
+    assert result.client_turn.unlocked_by_pitch == []
+
+
 async def test_the_client_sees_only_the_last_history_turns(
     settings_factory: SettingsFactory, fake: FakeLLM
 ) -> None:

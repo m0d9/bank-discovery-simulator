@@ -161,6 +161,7 @@ class InterviewService:
                 text=message,
                 ts=self._store.now(),
                 unlocked=list(gate.unlocked),
+                unlocked_by_pitch=list(gate.by_pitch),
             )
             unlocked_after = {*session.unlocked, *gate.unlocked}
             # The client knows only the products the student has brought up: knowing the rest,

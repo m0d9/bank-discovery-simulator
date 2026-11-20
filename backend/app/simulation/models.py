@@ -53,6 +53,9 @@ class Turn(BaseModel):
     ts: datetime
     unlocked: list[str] = Field(default_factory=list)
     """Hidden fact ids this student message unlocked (always empty on client turns)."""
+    unlocked_by_pitch: list[str] = Field(default_factory=list)
+    """The part of `unlocked` that the product-pitch rule unlocked: the client reacting to a
+    product the student proposed, rather than the student asking about the fact."""
 
 
 class _HasProductId(Protocol):
