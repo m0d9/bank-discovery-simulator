@@ -1,0 +1,4 @@
+# Lint and format scripts/ with the backend's ruff settings. `app` is the backend package,
+# so its imports sort as first-party, as they do inside backend/.
+extend = "../backend/pyproject.toml"
+src = ["../backend"]
