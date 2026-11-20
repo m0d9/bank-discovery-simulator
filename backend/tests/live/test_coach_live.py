@@ -16,14 +16,15 @@ from app.telemetry.events import event_logger_for
 pytestmark = pytest.mark.live
 
 NOURA = "noura-al-kuwari"
-# M7's weak script: generic questions, then a pitch of an unsuitable product.
+# M7's weak script: generic questions, then a pitch of an unsuitable product. The pitch is M3's
+# wording: one that adds "for when cash is short" made the gate unlock `late-payments` too.
 WEAK = (
     "Thanks for coming in. Could you tell me a bit about yourself?",
     "How is business going at the moment?",
     "What brings you in today?",
     "Is there anything else I should know?",
-    "I'd suggest our Business Overdraft: a flexible credit limit on your business account for "
-    "when cash is short.",
+    "I'd suggest our Business Overdraft: a flexible credit limit on your business account, "
+    "and you only pay interest on what you use.",
     "So would that work for you?",
 )
 # M7's strong script: each fact's first example question, in dependency order, then a pitch.
