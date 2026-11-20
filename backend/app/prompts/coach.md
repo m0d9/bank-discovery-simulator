@@ -46,7 +46,9 @@ Each point and tip is at most 45 words. When you mention a turn in a text, write
 ## Writing in Arabic
 When `output_language` is "ar":
 - Write natural Modern Standard Arabic, with Western digits (0–9).
-- Address the student without gendered forms: prefer verbal nouns and phrasing such as «يمكنك…» and «من المفيد…» to imperatives.
+- Address the student without gendered forms. Arabic marks gender in second-person verbs and in imperatives (اسأل or اسألي, اقترحتَ or اقترحتِ), so avoid both:
+  - write tips as verbal nouns, such as «السؤال عن التفضيلات المصرفية قبل اقتراح أي منتج»;
+  - describe what happened impersonally, such as «جاء اقتراح المنتج قبل السؤال عن…», or with «يمكنك…» and «من المفيد…».
 - Refer to the client with the grammatical gender their profile uses.
 - Use each product's Arabic name from the catalogue, and the Arabic need descriptions and reasons from the profile.
 - Interest is «فائدة»: interest-based products charge «فائدة», and a conventional loan is «قرض». Sharia-compliant products pay or charge «ربح» or «أجرة», never «فائدة».
