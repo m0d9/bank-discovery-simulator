@@ -15,7 +15,10 @@ EVENTS_FILE = "events.jsonl"
 
 
 class EventLogger:
-    """Write telemetry events as JSON lines. Callers must never pass message text."""
+    """Write telemetry events as JSON lines.
+
+    Callers pass student or client message text only when `LOG_TRANSCRIPTS` is on.
+    """
 
     def __init__(self, path: Path) -> None:
         self.path = path
