@@ -82,6 +82,7 @@ def test_the_real_content_is_served(client: TestClient) -> None:
         "rajesh-menon",
         "ahmed-hassan",
         "noura-al-kuwari",
+        "khalid-al-marri",
     ]
     assert len(client.get("/api/products").json()) == 8
 
