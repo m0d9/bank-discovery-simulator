@@ -44,7 +44,7 @@ export function ClientCard({ client, starting, busy, onStart }: ClientCardProps)
         onClick={() => {
           if (!busy) onStart(client);
         }}
-        className={`${primaryButton} mt-auto self-start`}
+        className={`${primaryButton} mt-auto w-full`}
       >
         {starting ? t('select.starting') : t('select.start', { name })}
       </button>

@@ -53,7 +53,7 @@ export function ClientSelectPage() {
           (clients.data.length === 0 ? (
             <p className="text-ink-muted">{t('select.empty')}</p>
           ) : (
-            <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <ul className="grid gap-6 md:grid-cols-2">
               {clients.data.map((client) => (
                 <li key={client.id}>
                   <ClientCard
