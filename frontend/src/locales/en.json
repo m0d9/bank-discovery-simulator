@@ -8,6 +8,7 @@
     "retry": "Try again",
     "startAgain": "Start again",
     "home": "Go to the client list",
+    "transcript": "Interview transcript",
     "models": "Models in this session",
     "modelRole": {
       "client": "AI client",
@@ -79,7 +80,6 @@
     "title": "Wrap up your interview with {{name}}",
     "titleShort": "Wrap-up",
     "intro": "Summarise the client's needs, then recommend the products that fit them and say why.",
-    "transcript": "Interview transcript",
     "summaryLabel": "Summarise the client's needs",
     "lengthHint_one": "Use between {{min}} and {{value}} character.",
     "lengthHint_other": "Use between {{min}} and {{value}} characters.",
@@ -104,8 +104,101 @@
   "feedback": {
     "title": "Feedback",
     "titleWithName": "Feedback on your interview with {{name}}",
-    "placeholder": "Your wrap-up has been submitted. Feedback from the AI coach will appear here in the next version of the app.",
-    "another": "Interview another client"
+    "loading": "The coach is reviewing your interview. The first review can take up to a minute.",
+    "ready": "Your feedback is ready.",
+    "degraded": {
+      "title": "The AI coach isn't available right now",
+      "body": "The discovery map and the verdicts on your recommendations below are still accurate: they come from the answer key, not from the AI. You can ask the coach again.",
+      "retry": "Ask the coach again",
+      "retrying": "Asking the coach again…"
+    },
+    "turn": "Turn {{n}}",
+    "listSeparator": ", ",
+    "map": {
+      "title": "Discovery map",
+      "need": "Need",
+      "status": "Status",
+      "turn": "Found at",
+      "notFound": "Not found",
+      "byPitch": "In reaction to a product you proposed.",
+      "needs": "Needs found by your questions",
+      "afterPitch": "+{{n}} after a pitch",
+      "critical": "Critical facts found",
+      "questions": "Your questions",
+      "firstFind": "First discovery",
+      "outOf": "{{found}} of {{total}}",
+      "none": "None"
+    },
+    "status": {
+      "uncovered": "Uncovered",
+      "revealed_by_pitch": "After a pitch",
+      "partial": "Partly uncovered",
+      "missed": "Missed"
+    },
+    "recommendations": {
+      "title": "Your recommendations",
+      "verdict": {
+        "suitable": "Suitable",
+        "unsuitable": "Not suitable",
+        "not_in_key": "Not in the answer key"
+      },
+      "meets": "Meets:",
+      "notInKey": "This client's answer key doesn't mention this product.",
+      "ruledOut": "The client had already said something that rules this out ({{turn}}).",
+      "yourReason": "Your reason:",
+      "missedTitle": "Suitable products you didn't recommend"
+    },
+    "coach": {
+      "wentWell": "What went well",
+      "missed": "What was missed",
+      "improve": "How to improve",
+      "summary": "About your summary",
+      "yourSummary": "Your summary",
+      "evidence": "Evidence:",
+      "betterQuestion": "A question you could have asked:",
+      "example": "For example:",
+      "empty": "The coach has nothing to add here.",
+      "note": "The AI coach wrote these notes and can make mistakes. The discovery map and the verdicts below come from the answer key."
+    },
+    "profile": {
+      "title": "Behind the scenes: the full client profile",
+      "englishOnly": "Parts of the profile are available in English only.",
+      "persona": "Persona",
+      "age": "Age",
+      "occupation": "Occupation",
+      "nationality": "Nationality",
+      "family": "Family",
+      "background": "Background",
+      "personality": "Personality",
+      "speakingStyle": "Speaking style",
+      "financialKnowledge": "Financial knowledge",
+      "knowledge": {
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High"
+      },
+      "openFacts": "What the client shares freely",
+      "hiddenFacts": "Hidden facts",
+      "importance": {
+        "critical": "Critical",
+        "important": "Important",
+        "minor": "Minor"
+      },
+      "foundAt": "Found at:",
+      "byPitch": "in reaction to a product you proposed",
+      "notFound": "Not found",
+      "needs": "Needs (the answer key)",
+      "suitable": "Suitable products:",
+      "unsuitable": "Unsuitable products:",
+      "none": "None",
+      "referral": "Referral"
+    },
+    "actions": {
+      "tryAgain": "Try again with this client",
+      "starting": "Starting the interview…",
+      "another": "Choose another client",
+      "download": "Download transcript (.md)"
+    }
   },
   "errors": {
     "GENERIC": "Something went wrong. Please try again.",

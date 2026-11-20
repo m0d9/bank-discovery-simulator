@@ -495,10 +495,217 @@
           }
         }
       }
+    },
+    "/api/sessions/{session_id}/feedback": {
+      "post": {
+        "tags": [
+          "feedback"
+        ],
+        "summary": "Create Feedback",
+        "description": "The analysis and the AI coach's report, once the interview is wrapped up.\n\nThe first call can take a minute while the coach writes. Calling again with the same\nlanguage returns the same report at once. If the coach is unavailable, `report` is null\nand `degraded` true: the analysis is still accurate, and calling again retries the coach.",
+        "operationId": "create_feedback_api_sessions__session_id__feedback_post",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "lang",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "en",
+                "ar"
+              ],
+              "type": "string",
+              "description": "The language of the coach's report.",
+              "title": "Lang"
+            },
+            "description": "The language of the coach's report."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackDTO"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "SESSION_NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDTO"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "INVALID_STATE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDTO"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "INVALID_INPUT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDTO"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "INTERNAL_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDTO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sessions/{session_id}/export": {
+      "get": {
+        "tags": [
+          "feedback"
+        ],
+        "summary": "Export Session",
+        "description": "Download the session: the transcript and the wrap-up, plus, once feedback exists, the\nanalysis, the coach's feedback and the client's full profile.",
+        "operationId": "export_session_api_sessions__session_id__export_get",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "const": "md",
+              "type": "string",
+              "default": "md",
+              "title": "Format"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The session as a Markdown file, sent as an attachment.",
+            "content": {
+              "text/markdown": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "SESSION_NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDTO"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "INVALID_INPUT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDTO"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "INTERNAL_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDTO"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "AnalysisDTO": {
+        "properties": {
+          "needs": {
+            "items": {
+              "$ref": "#/components/schemas/NeedResultDTO"
+            },
+            "type": "array",
+            "title": "Needs"
+          },
+          "facts": {
+            "items": {
+              "$ref": "#/components/schemas/FactResultDTO"
+            },
+            "type": "array",
+            "title": "Facts"
+          },
+          "products": {
+            "items": {
+              "$ref": "#/components/schemas/ProductVerdictDTO"
+            },
+            "type": "array",
+            "title": "Products"
+          },
+          "missed_opportunities": {
+            "items": {
+              "$ref": "#/components/schemas/MissedOpportunityDTO"
+            },
+            "type": "array",
+            "title": "Missed Opportunities"
+          },
+          "stats": {
+            "$ref": "#/components/schemas/FeedbackStatsDTO"
+          }
+        },
+        "type": "object",
+        "required": [
+          "needs",
+          "facts",
+          "products",
+          "missed_opportunities",
+          "stats"
+        ],
+        "title": "AnalysisDTO",
+        "description": "What code works out about the interview, without a model. Always accurate."
+      },
       "BankDTO": {
         "properties": {
           "name": {
@@ -566,6 +773,44 @@
         ],
         "title": "ClientCardDTO",
         "description": "A client's public card: all a student sees before starting the interview."
+      },
+      "CoachReportDTO": {
+        "properties": {
+          "went_well": {
+            "items": {
+              "$ref": "#/components/schemas/WentWellDTO"
+            },
+            "type": "array",
+            "title": "Went Well"
+          },
+          "missed": {
+            "items": {
+              "$ref": "#/components/schemas/MissedPointDTO"
+            },
+            "type": "array",
+            "title": "Missed"
+          },
+          "how_to_improve": {
+            "items": {
+              "$ref": "#/components/schemas/ImprovementDTO"
+            },
+            "type": "array",
+            "title": "How To Improve"
+          },
+          "summary_feedback": {
+            "type": "string",
+            "title": "Summary Feedback"
+          }
+        },
+        "type": "object",
+        "required": [
+          "went_well",
+          "missed",
+          "how_to_improve",
+          "summary_feedback"
+        ],
+        "title": "CoachReportDTO",
+        "description": "The AI coach's report, in the feedback's language."
       },
       "ContentStatusDTO": {
         "properties": {
@@ -675,6 +920,196 @@
         "title": "ErrorEnvelopeDTO",
         "description": "Every error response: `{\"error\": {\"code\", \"message_key\", \"detail\"}}`."
       },
+      "FactResultDTO": {
+        "properties": {
+          "fact_id": {
+            "type": "string",
+            "title": "Fact Id"
+          },
+          "importance": {
+            "type": "string",
+            "enum": [
+              "critical",
+              "important",
+              "minor"
+            ],
+            "title": "Importance"
+          },
+          "unlocked_at_turn": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unlocked At Turn"
+          },
+          "discovered_by": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "question",
+                  "product_pitch"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Discovered By"
+          }
+        },
+        "type": "object",
+        "required": [
+          "fact_id",
+          "importance",
+          "unlocked_at_turn",
+          "discovered_by"
+        ],
+        "title": "FactResultDTO",
+        "description": "When a hidden fact came out, and whether a question or a product pitch brought it out."
+      },
+      "FactUnlockDTO": {
+        "properties": {
+          "fact_id": {
+            "type": "string",
+            "title": "Fact Id"
+          },
+          "unlocked_at_turn": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unlocked At Turn"
+          }
+        },
+        "type": "object",
+        "required": [
+          "fact_id",
+          "unlocked_at_turn"
+        ],
+        "title": "FactUnlockDTO",
+        "description": "One evidence fact of a need, and the student turn that unlocked it (null if it never\ncame out)."
+      },
+      "FeedbackDTO": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "language": {
+            "type": "string",
+            "enum": [
+              "en",
+              "ar"
+            ],
+            "title": "Language"
+          },
+          "analysis": {
+            "$ref": "#/components/schemas/AnalysisDTO"
+          },
+          "report": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CoachReportDTO"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "degraded": {
+            "type": "boolean",
+            "title": "Degraded"
+          },
+          "models": {
+            "$ref": "#/components/schemas/SessionModelsDTO"
+          },
+          "generated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Generated At"
+          },
+          "wrapup": {
+            "$ref": "#/components/schemas/SubmittedWrapUpDTO"
+          },
+          "revealed": {
+            "$ref": "#/components/schemas/RevealedClientDTO"
+          }
+        },
+        "type": "object",
+        "required": [
+          "session_id",
+          "language",
+          "analysis",
+          "report",
+          "degraded",
+          "models",
+          "generated_at",
+          "wrapup",
+          "revealed"
+        ],
+        "title": "FeedbackDTO",
+        "description": "Response of `POST /api/sessions/{session_id}/feedback`.\n\n`analysis` is always present and accurate. `report` is the coach's, in `language`; it is\nnull, with `degraded` true, when the coach was unavailable. The only response that carries\nthe client's private profile (`revealed`)."
+      },
+      "FeedbackStatsDTO": {
+        "properties": {
+          "student_turns": {
+            "type": "integer",
+            "title": "Student Turns"
+          },
+          "needs_uncovered": {
+            "type": "integer",
+            "title": "Needs Uncovered"
+          },
+          "needs_after_pitch": {
+            "type": "integer",
+            "title": "Needs After Pitch"
+          },
+          "needs_total": {
+            "type": "integer",
+            "title": "Needs Total"
+          },
+          "critical_found": {
+            "type": "integer",
+            "title": "Critical Found"
+          },
+          "critical_total": {
+            "type": "integer",
+            "title": "Critical Total"
+          },
+          "first_unlock_turn": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Unlock Turn"
+          }
+        },
+        "type": "object",
+        "required": [
+          "student_turns",
+          "needs_uncovered",
+          "needs_after_pitch",
+          "needs_total",
+          "critical_found",
+          "critical_total",
+          "first_unlock_turn"
+        ],
+        "title": "FeedbackStatsDTO",
+        "description": "Counts, never scores."
+      },
       "HealthDTO": {
         "properties": {
           "status": {
@@ -741,6 +1176,32 @@
         "title": "HealthDTO",
         "description": "Response of `GET /api/health`.\n\n`down`: the endpoint can't be used. `degraded`: a role's model is missing. `hint` says\nwhat to do about either, in English for whoever runs the app; `hint_code` names the same\nproblem for the UI to translate (`health.<CODE>`). `content` reports the content files\nseparately."
       },
+      "ImprovementDTO": {
+        "properties": {
+          "tip": {
+            "type": "string",
+            "title": "Tip"
+          },
+          "example": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Example"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tip",
+          "example"
+        ],
+        "title": "ImprovementDTO",
+        "description": "A habit for the next interview, with an example."
+      },
       "LocalizedTextDTO": {
         "properties": {
           "en": {
@@ -794,6 +1255,86 @@
         "title": "MessageResultDTO",
         "description": "Response of `POST /api/sessions/{session_id}/messages`: the exchange and the counters."
       },
+      "MissedOpportunityDTO": {
+        "properties": {
+          "product_id": {
+            "type": "string",
+            "title": "Product Id"
+          },
+          "needs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Needs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "product_id",
+          "needs"
+        ],
+        "title": "MissedOpportunityDTO",
+        "description": "A suitable product the student didn't recommend, and the needs it would have met."
+      },
+      "MissedPointDTO": {
+        "properties": {
+          "point": {
+            "type": "string",
+            "title": "Point"
+          },
+          "need_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Need Id"
+          },
+          "product_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Id"
+          },
+          "evidence_turns": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Evidence Turns"
+          },
+          "better_question": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Better Question"
+          }
+        },
+        "type": "object",
+        "required": [
+          "point",
+          "need_id",
+          "product_id",
+          "evidence_turns",
+          "better_question"
+        ],
+        "title": "MissedPointDTO",
+        "description": "Something the student missed, with a question they could have asked."
+      },
       "ModelStatusDTO": {
         "properties": {
           "name": {
@@ -833,6 +1374,124 @@
         ],
         "title": "ModelsDTO",
         "description": "The model each role uses."
+      },
+      "NeedResultDTO": {
+        "properties": {
+          "need_id": {
+            "type": "string",
+            "title": "Need Id"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "uncovered",
+              "revealed_by_pitch",
+              "partial",
+              "missed"
+            ],
+            "title": "Status"
+          },
+          "facts": {
+            "items": {
+              "$ref": "#/components/schemas/FactUnlockDTO"
+            },
+            "type": "array",
+            "title": "Facts"
+          },
+          "via": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NeedViaDTO"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "need_id",
+          "status",
+          "facts",
+          "via"
+        ],
+        "title": "NeedResultDTO",
+        "description": "`uncovered` when the student's questions brought out every evidence fact;\n`revealed_by_pitch` when every fact came out, but at least one only in reaction to a product\nthe student pitched; `partial` when some did; `missed` when none did. `via` is set when every\nfact came out."
+      },
+      "NeedViaDTO": {
+        "properties": {
+          "turn": {
+            "type": "integer",
+            "title": "Turn"
+          },
+          "question": {
+            "type": "string",
+            "title": "Question"
+          }
+        },
+        "type": "object",
+        "required": [
+          "turn",
+          "question"
+        ],
+        "title": "NeedViaDTO",
+        "description": "The student turn whose answer completed a need, and what the student said in it."
+      },
+      "PersonaDTO": {
+        "properties": {
+          "age": {
+            "type": "integer",
+            "title": "Age"
+          },
+          "occupation": {
+            "$ref": "#/components/schemas/LocalizedTextDTO"
+          },
+          "nationality": {
+            "$ref": "#/components/schemas/LocalizedTextDTO"
+          },
+          "family": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LocalizedTextDTO"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "background": {
+            "$ref": "#/components/schemas/LocalizedTextDTO"
+          },
+          "personality": {
+            "$ref": "#/components/schemas/LocalizedTextDTO"
+          },
+          "speaking_style": {
+            "$ref": "#/components/schemas/LocalizedTextDTO"
+          },
+          "financial_knowledge": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ],
+            "title": "Financial Knowledge"
+          }
+        },
+        "type": "object",
+        "required": [
+          "age",
+          "occupation",
+          "nationality",
+          "family",
+          "background",
+          "personality",
+          "speaking_style",
+          "financial_knowledge"
+        ],
+        "title": "PersonaDTO",
+        "description": "Who the AI client played. The content keeps these fields in English."
       },
       "ProductDTO": {
         "properties": {
@@ -917,6 +1576,70 @@
         "title": "ProductDTO",
         "description": "A product as students see it in the catalogue."
       },
+      "ProductVerdictDTO": {
+        "properties": {
+          "product_id": {
+            "type": "string",
+            "title": "Product Id"
+          },
+          "verdict": {
+            "type": "string",
+            "enum": [
+              "suitable",
+              "unsuitable",
+              "not_in_key"
+            ],
+            "title": "Verdict"
+          },
+          "reasons": {
+            "items": {
+              "$ref": "#/components/schemas/VerdictReasonDTO"
+            },
+            "type": "array",
+            "title": "Reasons"
+          },
+          "needs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Needs"
+          },
+          "ruled_out_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ruled Out At"
+          },
+          "pitched_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pitched At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "product_id",
+          "verdict",
+          "reasons",
+          "needs",
+          "ruled_out_at",
+          "pitched_at"
+        ],
+        "title": "ProductVerdictDTO",
+        "description": "A recommended product against the answer key: `reasons` when it's unsuitable, `needs`\n(the needs it meets) when it's suitable."
+      },
       "RecommendationDTO": {
         "properties": {
           "product_id": {
@@ -937,6 +1660,144 @@
         ],
         "title": "RecommendationDTO",
         "description": "One recommended product and why."
+      },
+      "RevealedClientDTO": {
+        "properties": {
+          "persona": {
+            "$ref": "#/components/schemas/PersonaDTO"
+          },
+          "open_facts": {
+            "items": {
+              "$ref": "#/components/schemas/LocalizedTextDTO"
+            },
+            "type": "array",
+            "title": "Open Facts"
+          },
+          "hidden_facts": {
+            "items": {
+              "$ref": "#/components/schemas/RevealedFactDTO"
+            },
+            "type": "array",
+            "title": "Hidden Facts"
+          },
+          "needs": {
+            "items": {
+              "$ref": "#/components/schemas/RevealedNeedDTO"
+            },
+            "type": "array",
+            "title": "Needs"
+          },
+          "no_catalogue_fit": {
+            "type": "boolean",
+            "title": "No Catalogue Fit"
+          },
+          "referral_note": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LocalizedTextDTO"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "persona",
+          "open_facts",
+          "hidden_facts",
+          "needs",
+          "no_catalogue_fit",
+          "referral_note"
+        ],
+        "title": "RevealedClientDTO",
+        "description": "The client's private profile, shown once the interview has its feedback."
+      },
+      "RevealedFactDTO": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "content": {
+            "$ref": "#/components/schemas/LocalizedTextDTO"
+          },
+          "importance": {
+            "type": "string",
+            "enum": [
+              "critical",
+              "important",
+              "minor"
+            ],
+            "title": "Importance"
+          },
+          "unlocked_at_turn": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unlocked At Turn"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "content",
+          "importance",
+          "unlocked_at_turn"
+        ],
+        "title": "RevealedFactDTO",
+        "description": "A hidden fact, revealed, and the student turn that unlocked it (null if it never did)."
+      },
+      "RevealedNeedDTO": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "description": {
+            "$ref": "#/components/schemas/LocalizedTextDTO"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "uncovered",
+              "revealed_by_pitch",
+              "partial",
+              "missed"
+            ],
+            "title": "Status"
+          },
+          "suitable_products": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Suitable Products"
+          },
+          "unsuitable_products": {
+            "items": {
+              "$ref": "#/components/schemas/UnsuitableProductDTO"
+            },
+            "type": "array",
+            "title": "Unsuitable Products"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "description",
+          "status",
+          "suitable_products",
+          "unsuitable_products"
+        ],
+        "title": "RevealedNeedDTO",
+        "description": "One part of the answer key, with how far the student uncovered it."
       },
       "SessionCreatedDTO": {
         "properties": {
@@ -1080,6 +1941,28 @@
         "title": "StudentMessageDTO",
         "description": "Request body of `POST /api/sessions/{session_id}/messages`.\n\nThe length limit (`max_message_chars`) is checked after control characters are removed."
       },
+      "SubmittedWrapUpDTO": {
+        "properties": {
+          "needs_summary": {
+            "type": "string",
+            "title": "Needs Summary"
+          },
+          "recommendations": {
+            "items": {
+              "$ref": "#/components/schemas/RecommendationDTO"
+            },
+            "type": "array",
+            "title": "Recommendations"
+          }
+        },
+        "type": "object",
+        "required": [
+          "needs_summary",
+          "recommendations"
+        ],
+        "title": "SubmittedWrapUpDTO",
+        "description": "The wrap-up as the student submitted it."
+      },
       "TurnDTO": {
         "properties": {
           "n": {
@@ -1107,6 +1990,71 @@
         ],
         "title": "TurnDTO",
         "description": "One message in the transcript. It never says which facts a message unlocked."
+      },
+      "UnsuitableProductDTO": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "reason": {
+            "$ref": "#/components/schemas/LocalizedTextDTO"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "reason"
+        ],
+        "title": "UnsuitableProductDTO",
+        "description": "A product that doesn't meet a need, and why."
+      },
+      "VerdictReasonDTO": {
+        "properties": {
+          "need_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Need Id"
+          },
+          "reason": {
+            "$ref": "#/components/schemas/LocalizedTextDTO"
+          }
+        },
+        "type": "object",
+        "required": [
+          "need_id",
+          "reason"
+        ],
+        "title": "VerdictReasonDTO",
+        "description": "Why a product is unsuitable: for one need, or (`need_id` null) the referral note."
+      },
+      "WentWellDTO": {
+        "properties": {
+          "point": {
+            "type": "string",
+            "title": "Point"
+          },
+          "evidence_turns": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Evidence Turns"
+          }
+        },
+        "type": "object",
+        "required": [
+          "point",
+          "evidence_turns"
+        ],
+        "title": "WentWellDTO",
+        "description": "Something the student did well, and the student turns that show it."
       },
       "WrapUpDTO": {
         "properties": {

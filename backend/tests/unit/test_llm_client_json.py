@@ -108,6 +108,7 @@ async def test_both_parameters_rejected_takes_three_attempts(
 
     assert value == EXPECTED
     assert (result.json_mode, result.attempts) == ("prompt", 3)
+    assert result.json_retried is False  # dropped parameters, not a second try at the JSON
     last = endpoint.chat_bodies[2]
     assert "reasoning_effort" not in last
     assert "response_format" not in last
@@ -121,7 +122,7 @@ async def test_invalid_json_then_valid_json_succeeds_in_two_attempts(
     value, result = await gate(make_llm())
 
     assert value == EXPECTED
-    assert result.attempts == 2
+    assert (result.attempts, result.json_retried) == (2, True)
     first, retry = endpoint.chat_bodies
     assert retry["messages"][:-1] == first["messages"]
     nudge = retry["messages"][-1]
@@ -173,7 +174,7 @@ async def test_empty_reply_cut_off_is_retried_with_max_tokens_doubled(
     value, result = await gate(make_llm(), max_tokens=300)
 
     assert value == EXPECTED
-    assert result.attempts == 2
+    assert (result.attempts, result.json_retried) == (2, True)
     first, retry = endpoint.chat_bodies
     assert [first["max_tokens"], retry["max_tokens"]] == [300, 600]
     assert retry["messages"] == first["messages"]  # more room, not a nudge

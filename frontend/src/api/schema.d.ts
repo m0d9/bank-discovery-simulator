@@ -174,10 +174,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/sessions/{session_id}/feedback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Feedback
+         * @description The analysis and the AI coach's report, once the interview is wrapped up.
+         *
+         *     The first call can take a minute while the coach writes. Calling again with the same
+         *     language returns the same report at once. If the coach is unavailable, `report` is null
+         *     and `degraded` true: the analysis is still accurate, and calling again retries the coach.
+         */
+        post: operations["create_feedback_api_sessions__session_id__feedback_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sessions/{session_id}/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export Session
+         * @description Download the session: the transcript and the wrap-up, plus, once feedback exists, the
+         *     analysis, the coach's feedback and the client's full profile.
+         */
+        get: operations["export_session_api_sessions__session_id__export_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * AnalysisDTO
+         * @description What code works out about the interview, without a model. Always accurate.
+         */
+        AnalysisDTO: {
+            /** Needs */
+            needs: components["schemas"]["NeedResultDTO"][];
+            /** Facts */
+            facts: components["schemas"]["FactResultDTO"][];
+            /** Products */
+            products: components["schemas"]["ProductVerdictDTO"][];
+            /** Missed Opportunities */
+            missed_opportunities: components["schemas"]["MissedOpportunityDTO"][];
+            stats: components["schemas"]["FeedbackStatsDTO"];
+        };
         /**
          * BankDTO
          * @description Response of `GET /api/bank`: the fictional bank.
@@ -211,6 +271,20 @@ export interface components {
             difficulty: "easy" | "medium" | "hard";
             name: components["schemas"]["LocalizedTextDTO"];
             headline: components["schemas"]["LocalizedTextDTO"];
+        };
+        /**
+         * CoachReportDTO
+         * @description The AI coach's report, in the feedback's language.
+         */
+        CoachReportDTO: {
+            /** Went Well */
+            went_well: components["schemas"]["WentWellDTO"][];
+            /** Missed */
+            missed: components["schemas"]["MissedPointDTO"][];
+            /** How To Improve */
+            how_to_improve: components["schemas"]["ImprovementDTO"][];
+            /** Summary Feedback */
+            summary_feedback: string;
         };
         /**
          * ContentStatusDTO
@@ -267,6 +341,83 @@ export interface components {
             error: components["schemas"]["ErrorDTO"];
         };
         /**
+         * FactResultDTO
+         * @description When a hidden fact came out, and whether a question or a product pitch brought it out.
+         */
+        FactResultDTO: {
+            /** Fact Id */
+            fact_id: string;
+            /**
+             * Importance
+             * @enum {string}
+             */
+            importance: "critical" | "important" | "minor";
+            /** Unlocked At Turn */
+            unlocked_at_turn: number | null;
+            /** Discovered By */
+            discovered_by: ("question" | "product_pitch") | null;
+        };
+        /**
+         * FactUnlockDTO
+         * @description One evidence fact of a need, and the student turn that unlocked it (null if it never
+         *     came out).
+         */
+        FactUnlockDTO: {
+            /** Fact Id */
+            fact_id: string;
+            /** Unlocked At Turn */
+            unlocked_at_turn: number | null;
+        };
+        /**
+         * FeedbackDTO
+         * @description Response of `POST /api/sessions/{session_id}/feedback`.
+         *
+         *     `analysis` is always present and accurate. `report` is the coach's, in `language`; it is
+         *     null, with `degraded` true, when the coach was unavailable. The only response that carries
+         *     the client's private profile (`revealed`).
+         */
+        FeedbackDTO: {
+            /** Session Id */
+            session_id: string;
+            /**
+             * Language
+             * @enum {string}
+             */
+            language: "en" | "ar";
+            analysis: components["schemas"]["AnalysisDTO"];
+            report: components["schemas"]["CoachReportDTO"] | null;
+            /** Degraded */
+            degraded: boolean;
+            models: components["schemas"]["SessionModelsDTO"];
+            /**
+             * Generated At
+             * Format: date-time
+             */
+            generated_at: string;
+            wrapup: components["schemas"]["SubmittedWrapUpDTO"];
+            revealed: components["schemas"]["RevealedClientDTO"];
+        };
+        /**
+         * FeedbackStatsDTO
+         * @description Counts, never scores.
+         */
+        FeedbackStatsDTO: {
+            /** Student Turns */
+            student_turns: number;
+            /** Needs Uncovered */
+            needs_uncovered: number;
+            /** Needs After Pitch */
+            needs_after_pitch: number;
+            /** Needs Total */
+            needs_total: number;
+            /** Critical Found */
+            critical_found: number;
+            /** Critical Total */
+            critical_total: number;
+            /** First Unlock Turn */
+            first_unlock_turn: number | null;
+        };
+        /**
          * HealthDTO
          * @description Response of `GET /api/health`.
          *
@@ -292,6 +443,16 @@ export interface components {
             content: components["schemas"]["ContentStatusDTO"];
         };
         /**
+         * ImprovementDTO
+         * @description A habit for the next interview, with an example.
+         */
+        ImprovementDTO: {
+            /** Tip */
+            tip: string;
+            /** Example */
+            example: string | null;
+        };
+        /**
          * LocalizedTextDTO
          * @description Text in English, and in Arabic when the content provides it (`null` otherwise).
          */
@@ -314,6 +475,32 @@ export interface components {
             max_student_turns: number;
         };
         /**
+         * MissedOpportunityDTO
+         * @description A suitable product the student didn't recommend, and the needs it would have met.
+         */
+        MissedOpportunityDTO: {
+            /** Product Id */
+            product_id: string;
+            /** Needs */
+            needs: string[];
+        };
+        /**
+         * MissedPointDTO
+         * @description Something the student missed, with a question they could have asked.
+         */
+        MissedPointDTO: {
+            /** Point */
+            point: string;
+            /** Need Id */
+            need_id: string | null;
+            /** Product Id */
+            product_id: string | null;
+            /** Evidence Turns */
+            evidence_turns: number[];
+            /** Better Question */
+            better_question: string | null;
+        };
+        /**
          * ModelStatusDTO
          * @description One role's model and whether the endpoint offers it.
          */
@@ -331,6 +518,54 @@ export interface components {
             gate: components["schemas"]["ModelStatusDTO"];
             client: components["schemas"]["ModelStatusDTO"];
             coach: components["schemas"]["ModelStatusDTO"];
+        };
+        /**
+         * NeedResultDTO
+         * @description `uncovered` when the student's questions brought out every evidence fact;
+         *     `revealed_by_pitch` when every fact came out, but at least one only in reaction to a product
+         *     the student pitched; `partial` when some did; `missed` when none did. `via` is set when every
+         *     fact came out.
+         */
+        NeedResultDTO: {
+            /** Need Id */
+            need_id: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "uncovered" | "revealed_by_pitch" | "partial" | "missed";
+            /** Facts */
+            facts: components["schemas"]["FactUnlockDTO"][];
+            via: components["schemas"]["NeedViaDTO"] | null;
+        };
+        /**
+         * NeedViaDTO
+         * @description The student turn whose answer completed a need, and what the student said in it.
+         */
+        NeedViaDTO: {
+            /** Turn */
+            turn: number;
+            /** Question */
+            question: string;
+        };
+        /**
+         * PersonaDTO
+         * @description Who the AI client played. The content keeps these fields in English.
+         */
+        PersonaDTO: {
+            /** Age */
+            age: number;
+            occupation: components["schemas"]["LocalizedTextDTO"];
+            nationality: components["schemas"]["LocalizedTextDTO"];
+            family: components["schemas"]["LocalizedTextDTO"] | null;
+            background: components["schemas"]["LocalizedTextDTO"];
+            personality: components["schemas"]["LocalizedTextDTO"];
+            speaking_style: components["schemas"]["LocalizedTextDTO"];
+            /**
+             * Financial Knowledge
+             * @enum {string}
+             */
+            financial_knowledge: "low" | "medium" | "high";
         };
         /**
          * ProductDTO
@@ -361,6 +596,28 @@ export interface components {
             pricing: components["schemas"]["LocalizedTextDTO"];
         };
         /**
+         * ProductVerdictDTO
+         * @description A recommended product against the answer key: `reasons` when it's unsuitable, `needs`
+         *     (the needs it meets) when it's suitable.
+         */
+        ProductVerdictDTO: {
+            /** Product Id */
+            product_id: string;
+            /**
+             * Verdict
+             * @enum {string}
+             */
+            verdict: "suitable" | "unsuitable" | "not_in_key";
+            /** Reasons */
+            reasons: components["schemas"]["VerdictReasonDTO"][];
+            /** Needs */
+            needs: string[];
+            /** Ruled Out At */
+            ruled_out_at: number | null;
+            /** Pitched At */
+            pitched_at: number | null;
+        };
+        /**
          * RecommendationDTO
          * @description One recommended product and why.
          */
@@ -369,6 +626,56 @@ export interface components {
             product_id: string;
             /** Reason */
             reason: string;
+        };
+        /**
+         * RevealedClientDTO
+         * @description The client's private profile, shown once the interview has its feedback.
+         */
+        RevealedClientDTO: {
+            persona: components["schemas"]["PersonaDTO"];
+            /** Open Facts */
+            open_facts: components["schemas"]["LocalizedTextDTO"][];
+            /** Hidden Facts */
+            hidden_facts: components["schemas"]["RevealedFactDTO"][];
+            /** Needs */
+            needs: components["schemas"]["RevealedNeedDTO"][];
+            /** No Catalogue Fit */
+            no_catalogue_fit: boolean;
+            referral_note: components["schemas"]["LocalizedTextDTO"] | null;
+        };
+        /**
+         * RevealedFactDTO
+         * @description A hidden fact, revealed, and the student turn that unlocked it (null if it never did).
+         */
+        RevealedFactDTO: {
+            /** Id */
+            id: string;
+            content: components["schemas"]["LocalizedTextDTO"];
+            /**
+             * Importance
+             * @enum {string}
+             */
+            importance: "critical" | "important" | "minor";
+            /** Unlocked At Turn */
+            unlocked_at_turn: number | null;
+        };
+        /**
+         * RevealedNeedDTO
+         * @description One part of the answer key, with how far the student uncovered it.
+         */
+        RevealedNeedDTO: {
+            /** Id */
+            id: string;
+            description: components["schemas"]["LocalizedTextDTO"];
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "uncovered" | "revealed_by_pitch" | "partial" | "missed";
+            /** Suitable Products */
+            suitable_products: string[];
+            /** Unsuitable Products */
+            unsuitable_products: components["schemas"]["UnsuitableProductDTO"][];
         };
         /**
          * SessionCreatedDTO
@@ -438,6 +745,16 @@ export interface components {
             text: string;
         };
         /**
+         * SubmittedWrapUpDTO
+         * @description The wrap-up as the student submitted it.
+         */
+        SubmittedWrapUpDTO: {
+            /** Needs Summary */
+            needs_summary: string;
+            /** Recommendations */
+            recommendations: components["schemas"]["RecommendationDTO"][];
+        };
+        /**
          * TurnDTO
          * @description One message in the transcript. It never says which facts a message unlocked.
          */
@@ -451,6 +768,34 @@ export interface components {
             role: "student" | "client";
             /** Text */
             text: string;
+        };
+        /**
+         * UnsuitableProductDTO
+         * @description A product that doesn't meet a need, and why.
+         */
+        UnsuitableProductDTO: {
+            /** Id */
+            id: string;
+            reason: components["schemas"]["LocalizedTextDTO"];
+        };
+        /**
+         * VerdictReasonDTO
+         * @description Why a product is unsuitable: for one need, or (`need_id` null) the referral note.
+         */
+        VerdictReasonDTO: {
+            /** Need Id */
+            need_id: string | null;
+            reason: components["schemas"]["LocalizedTextDTO"];
+        };
+        /**
+         * WentWellDTO
+         * @description Something the student did well, and the student turns that show it.
+         */
+        WentWellDTO: {
+            /** Point */
+            point: string;
+            /** Evidence Turns */
+            evidence_turns: number[];
         };
         /**
          * WrapUpDTO
@@ -840,6 +1185,118 @@ export interface operations {
             };
             /** @description SESSION_BUSY, INVALID_STATE */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelopeDTO"];
+                };
+            };
+            /** @description INVALID_INPUT */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelopeDTO"];
+                };
+            };
+            /** @description INTERNAL_ERROR */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelopeDTO"];
+                };
+            };
+        };
+    };
+    create_feedback_api_sessions__session_id__feedback_post: {
+        parameters: {
+            query: {
+                /** @description The language of the coach's report. */
+                lang: "en" | "ar";
+            };
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeedbackDTO"];
+                };
+            };
+            /** @description SESSION_NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelopeDTO"];
+                };
+            };
+            /** @description INVALID_STATE */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelopeDTO"];
+                };
+            };
+            /** @description INVALID_INPUT */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelopeDTO"];
+                };
+            };
+            /** @description INTERNAL_ERROR */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelopeDTO"];
+                };
+            };
+        };
+    };
+    export_session_api_sessions__session_id__export_get: {
+        parameters: {
+            query?: {
+                format?: "md";
+            };
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The session as a Markdown file, sent as an attachment. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/markdown": string;
+                };
+            };
+            /** @description SESSION_NOT_FOUND */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

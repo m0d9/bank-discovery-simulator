@@ -4,6 +4,7 @@ schema_version: 1
 name:
   en: Wakala Term Deposit
   ar: وديعة الوكالة لأجل
+aliases: [Wakala, وديعة الوكالة]
 summary:
   en: A Sharia-compliant term deposit. The bank invests your money as your agent and pays you an expected profit.
   ar: وديعة لأجل متوافقة مع أحكام الشريعة، يستثمر فيها البنك أموالك بصفته وكيلًا عنك، وتحصل على ربح متوقع.

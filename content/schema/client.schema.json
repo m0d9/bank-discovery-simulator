@@ -189,9 +189,8 @@
           "type": "string"
         },
         "description": {
-          "minLength": 1,
-          "title": "Description",
-          "type": "string"
+          "$ref": "#/$defs/LocalizedText",
+          "description": "Shown to the student with the feedback. Arabic is optional."
         },
         "evidence_facts": {
           "description": "Hidden fact ids that reveal this need. The student uncovers it by unlocking all of them.",
@@ -236,6 +235,15 @@
         "age": {
           "title": "Age",
           "type": "integer"
+        },
+        "gender": {
+          "description": "Grammatical gender, so that Arabic text about and to the client agrees with it.",
+          "enum": [
+            "female",
+            "male"
+          ],
+          "title": "Gender",
+          "type": "string"
         },
         "occupation": {
           "minLength": 1,
@@ -288,6 +296,7 @@
       },
       "required": [
         "age",
+        "gender",
         "occupation",
         "nationality",
         "background",
@@ -308,9 +317,8 @@
           "type": "string"
         },
         "reason": {
-          "minLength": 1,
-          "title": "Reason",
-          "type": "string"
+          "$ref": "#/$defs/LocalizedText",
+          "description": "Shown to the student with the feedback. Arabic is optional."
         }
       },
       "required": [
@@ -395,16 +403,14 @@
     "referral_note": {
       "anyOf": [
         {
-          "minLength": 1,
-          "type": "string"
+          "$ref": "#/$defs/LocalizedText"
         },
         {
           "type": "null"
         }
       ],
       "default": null,
-      "description": "Where to refer the client. Required when `no_catalogue_fit` is true.",
-      "title": "Referral Note"
+      "description": "Where to refer the client. Required when `no_catalogue_fit` is true. Arabic is optional."
     },
     "coach_notes": {
       "$ref": "#/$defs/CoachNotes"

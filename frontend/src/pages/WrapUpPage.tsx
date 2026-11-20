@@ -4,13 +4,12 @@ import { Link, Navigate, useNavigate } from 'react-router';
 import type { ApiError } from '../api/client';
 import type { Product } from '../api/types';
 import { useSessionModels } from '../components/AppShell';
-import { ChatLog } from '../components/ChatLog';
 import { ErrorBanner } from '../components/ErrorBanner';
 import { ErrorSummary, type FieldError } from '../components/ErrorSummary';
-import { ChevronDownIcon } from '../components/icons';
 import { PageHeading } from '../components/PageHeading';
 import { ProductBadges } from '../components/ProductBadges';
 import { SessionLost } from '../components/SessionLost';
+import { TranscriptDetails } from '../components/TranscriptDetails';
 import { card, primaryButton, secondaryButton } from '../components/styles';
 import { currentLanguage } from '../i18n';
 import { errorMessage } from '../i18n/errors';
@@ -157,21 +156,9 @@ export function WrapUpPage({ sessionId }: { sessionId: string }) {
         </div>
       )}
 
-      <details className={`${card} group mt-6`}>
-        <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 px-5 py-3 font-semibold text-ink [&::-webkit-details-marker]:hidden">
-          {t('wrapup.transcript')}
-          <ChevronDownIcon className="size-5 group-open:rotate-180" />
-        </summary>
-        <div className="border-t border-line p-4 sm:p-5">
-          <ChatLog
-            messages={session.turns}
-            live={false}
-            speakerLabel={(role) =>
-              role === 'student' ? t('interview.youSaid') : t('interview.clientSaid', { name })
-            }
-          />
-        </div>
-      </details>
+      <div className="mt-6">
+        <TranscriptDetails turns={session.turns} clientName={name} />
+      </div>
 
       <form noValidate onSubmit={(event) => void handleSubmit(event)} className="mt-8 space-y-8">
         <div>

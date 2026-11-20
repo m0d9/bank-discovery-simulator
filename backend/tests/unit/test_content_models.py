@@ -70,8 +70,28 @@ def test_referral_note_is_required_only_without_a_catalogue_fit() -> None:
     referred = Client.model_validate(
         client_data(no_catalogue_fit=True, referral_note="Refer to the trade-finance team.")
     )
-    assert referred.referral_note == "Refer to the trade-finance team."
+    assert referred.referral_note == LocalizedText(en="Refer to the trade-finance team.")
     assert Client.model_validate(client_data()).referral_note is None
+
+
+def test_the_answer_key_text_shown_with_the_feedback_may_have_arabic() -> None:
+    data = client_data(
+        no_catalogue_fit=True,
+        referral_note={"en": "Refer to trade finance.", "ar": "الإحالة إلى التمويل التجاري."},
+    )
+    data["needs"][0]["description"] = {"en": "Bridge the gap.", "ar": "سدّ الفجوة."}
+    data["needs"][0]["unsuitable_products"][0]["reason"] = {"en": "No loan.", "ar": "لا قرض."}
+
+    need = Client.model_validate(data).needs[0]
+
+    assert need.description == LocalizedText(en="Bridge the gap.", ar="سدّ الفجوة.")
+    assert need.unsuitable_products[0].reason.ar == "لا قرض."
+    assert Client.model_validate(data).referral_note == LocalizedText(
+        en="Refer to trade finance.", ar="الإحالة إلى التمويل التجاري."
+    )
+    # Plain strings stay valid, as English only.
+    plain = Client.model_validate(client_data()).needs[0]
+    assert plain.description == LocalizedText(en="Bridge the gap until customers pay.")
 
 
 def test_valid_models_fill_their_defaults() -> None:
@@ -81,3 +101,23 @@ def test_valid_models_fill_their_defaults() -> None:
     assert client.hidden_facts[0].unlock_on_product_pitch == []
     assert client.hidden_facts[0].requires == []
     assert Product.model_validate(product_data()).name == LocalizedText(en="Alpha Loan")
+
+
+@pytest.mark.parametrize("gender", [None, "other", "Female"])
+def test_a_persona_needs_a_grammatical_gender(gender: str | None) -> None:
+    data = client_data()
+    if gender is None:
+        del data["persona"]["gender"]
+    else:
+        data["persona"]["gender"] = gender
+
+    with pytest.raises(ValidationError) as caught:
+        Client.model_validate(data)
+
+    assert error_locs(caught.value) == [("persona", "gender")]
+
+
+def test_a_product_may_list_aliases() -> None:
+    assert Product.model_validate(product_data()).aliases == []
+    product = Product.model_validate(product_data(aliases=[" Alpha ", "ألفا"]))
+    assert product.aliases == ["Alpha", "ألفا"]

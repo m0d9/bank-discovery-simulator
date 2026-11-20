@@ -101,6 +101,7 @@ class _Call:
     model: str
     prompt_version: str | None
     json_mode: JsonMode = "none"
+    json_retried: bool = False
     attempts: int = 0
     prompt_tokens: int | None = None
     completion_tokens: int | None = None
@@ -126,6 +127,7 @@ class _Call:
             latency_ms=self.latency_ms,
             attempts=self.attempts,
             json_mode=self.json_mode,
+            json_retried=self.json_retried,
         )
 
 
@@ -311,6 +313,7 @@ class OpenAICompatClient:
                 error = OutputTruncated if truncated else InvalidOutput
                 raise error(f"unusable JSON after one retry: {problem}", raw_text=text)
             retried = True
+            call.json_retried = True
             if truncated:
                 # Cut off by the token limit (often hidden reasoning): same request, more room.
                 budget *= 2

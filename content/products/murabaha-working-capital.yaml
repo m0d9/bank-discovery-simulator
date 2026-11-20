@@ -4,6 +4,7 @@ schema_version: 1
 name:
   en: Murabaha Working Capital
   ar: تمويل رأس المال العامل بالمرابحة
+aliases: [Murabaha, مرابحة]
 summary:
   en: The bank buys the goods or stock your business needs and sells them to you at a fixed, agreed profit, paid in instalments.
   ar: يشتري البنك البضائع أو المخزون الذي تحتاجه شركتك، ثم يبيعه لك بربح ثابت متفق عليه تسدده على أقساط.

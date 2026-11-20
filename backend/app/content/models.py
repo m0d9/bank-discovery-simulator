@@ -31,6 +31,7 @@ Category = Literal["financing", "deposit", "account", "transfer"]
 Difficulty = Literal["easy", "medium", "hard"]
 Importance = Literal["critical", "important", "minor"]
 FinancialKnowledge = Literal["low", "medium", "high"]
+Gender = Literal["female", "male"]
 
 
 class _Strict(BaseModel):
@@ -89,6 +90,11 @@ class Product(_Strict):
     """Lowercase words joined by hyphens. Must equal the file name without `.yaml`."""
     schema_version: Literal[1]
     name: LocalizedText
+    aliases: list[Text] = Field(default_factory=list)
+    """Other names that identify this product unmistakably, in any language, such as "Murabaha"
+    or «مرابحة». The coach's suggested questions must not name a product; these are checked
+    along with the full names. Leave out words that are also everyday terms, such as
+    "overdraft"."""
     summary: LocalizedText
     """One or two sentences describing the product."""
     segments: list[Segment] = Field(min_length=1)
@@ -140,6 +146,8 @@ class Persona(_Strict):
     """Private: who the AI client plays. English only, because it's an input to the model."""
 
     age: int
+    gender: Gender
+    """Grammatical gender, so that Arabic text about and to the client agrees with it."""
     occupation: Text
     nationality: Text
     family: Text | None = None
@@ -173,14 +181,16 @@ class UnsuitableProduct(_Strict):
     """A product that doesn't fit a need, and why."""
 
     id: Slug
-    reason: Text
+    reason: LocalizedText
+    """Shown to the student with the feedback. Arabic is optional."""
 
 
 class Need(_Strict):
     """Private: one part of the answer key."""
 
     id: Slug
-    description: Text
+    description: LocalizedText
+    """Shown to the student with the feedback. Arabic is optional."""
     evidence_facts: list[Slug] = Field(min_length=1)
     """Hidden fact ids that reveal this need. The student uncovers it by unlocking all of them."""
     suitable_products: list[Slug]
@@ -210,15 +220,15 @@ class Client(_Strict):
     needs: list[Need] = Field(min_length=1)
     no_catalogue_fit: bool = False
     """True when no product in the catalogue fits: the right answer is to refer the client."""
-    referral_note: Text | None = Field(default=None, validate_default=True)
-    """Where to refer the client. Required when `no_catalogue_fit` is true."""
+    referral_note: LocalizedText | None = Field(default=None, validate_default=True)
+    """Where to refer the client. Required when `no_catalogue_fit` is true. Arabic is optional."""
     coach_notes: CoachNotes
 
     @field_validator("referral_note")
     @classmethod
     def _required_without_a_catalogue_fit(
-        cls, value: str | None, info: ValidationInfo
-    ) -> str | None:
+        cls, value: LocalizedText | None, info: ValidationInfo
+    ) -> LocalizedText | None:
         if value is None and info.data.get("no_catalogue_fit") is True:
             raise PydanticCustomError(
                 "referral_note_missing", "required when no_catalogue_fit is true"

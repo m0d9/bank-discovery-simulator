@@ -1,0 +1,1 @@
+Important: the relationship manager's last message is in $language, so reply in $language only. Write every word in $language, in its own alphabet: no words, names or abbreviations from another language. Everything else in your instructions still applies.

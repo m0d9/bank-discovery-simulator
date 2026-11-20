@@ -2,6 +2,7 @@
 import type {
   Bank,
   ClientCard,
+  Feedback,
   Product,
   SessionCreated,
   SessionModels,
@@ -111,5 +112,180 @@ export function created(client: ClientCard = sara, sessionId = 's1'): SessionCre
     max_student_turns: 30,
     max_message_chars: 1000,
     models,
+  };
+}
+
+const english = (en: string) => ({ en, ar: null });
+const interestBased = { en: 'Interest-based.', ar: 'قائم على الفائدة.' };
+
+/** Feedback on `transcript(3)`: one need found in full only after the pitch at turn 3, one
+ * uncovered by the question at turn 1, one missed; an unsuitable and a not-in-key
+ * recommendation; one missed opportunity; and the coach's report. */
+export function feedback(overrides: Partial<Feedback> = {}): Feedback {
+  return {
+    session_id: 's1',
+    language: 'en',
+    analysis: {
+      needs: [
+        {
+          need_id: 'cash-gap',
+          status: 'revealed_by_pitch',
+          facts: [
+            { fact_id: 'late-payments', unlocked_at_turn: 1 },
+            { fact_id: 'sharia', unlocked_at_turn: 3 },
+          ],
+          via: { turn: 3, question: 'Question 2?' },
+        },
+        {
+          need_id: 'pay-staff',
+          status: 'uncovered',
+          facts: [{ fact_id: 'late-payments', unlocked_at_turn: 1 }],
+          via: { turn: 1, question: 'Question 1?' },
+        },
+        {
+          need_id: 'stock',
+          status: 'missed',
+          facts: [{ fact_id: 'big-order', unlocked_at_turn: null }],
+          via: null,
+        },
+      ],
+      facts: [
+        {
+          fact_id: 'late-payments',
+          importance: 'critical',
+          unlocked_at_turn: 1,
+          discovered_by: 'question',
+        },
+        {
+          fact_id: 'sharia',
+          importance: 'critical',
+          unlocked_at_turn: 3,
+          discovered_by: 'product_pitch',
+        },
+        {
+          fact_id: 'big-order',
+          importance: 'important',
+          unlocked_at_turn: null,
+          discovered_by: null,
+        },
+      ],
+      products: [
+        {
+          product_id: 'test-overdraft',
+          verdict: 'unsuitable',
+          reasons: [
+            { need_id: 'cash-gap', reason: interestBased },
+            { need_id: 'stock', reason: interestBased },
+          ],
+          needs: [],
+          // The overdraft's own pitch brought out the preference, so nothing was said before.
+          ruled_out_at: null,
+          pitched_at: null,
+        },
+        {
+          product_id: 'test-account',
+          verdict: 'not_in_key',
+          reasons: [],
+          needs: [],
+          ruled_out_at: null,
+          pitched_at: null,
+        },
+      ],
+      missed_opportunities: [{ product_id: 'test-murabaha', needs: ['cash-gap'] }],
+      stats: {
+        student_turns: 3,
+        needs_uncovered: 1,
+        needs_after_pitch: 1,
+        needs_total: 3,
+        critical_found: 2,
+        critical_total: 2,
+        first_unlock_turn: 1,
+      },
+    },
+    report: {
+      went_well: [{ point: 'You asked how her customers pay.', evidence_turns: [1, 3] }],
+      missed: [
+        {
+          point: 'You pitched an overdraft before asking about her values.',
+          need_id: 'cash-gap',
+          product_id: 'test-overdraft',
+          evidence_turns: [5],
+          better_question: 'Is Islamic banking important to you?',
+        },
+      ],
+      how_to_improve: [
+        { tip: 'Ask about values before you pitch.', example: 'What matters to you in a bank?' },
+      ],
+      summary_feedback: 'Your summary names the cash gap but not the big order.',
+    },
+    degraded: false,
+    models,
+    generated_at: '2026-11-20T09:00:00Z',
+    wrapup: {
+      needs_summary: 'She is paid late and needs Islamic finance.',
+      recommendations: [
+        { product_id: 'test-overdraft', reason: 'Flexible cash.' },
+        { product_id: 'test-account', reason: 'Collects payments.' },
+      ],
+    },
+    revealed: {
+      persona: {
+        age: 38,
+        occupation: english('Owner of a test bakery'),
+        nationality: english('Qatari'),
+        family: null,
+        background: english('Started baking in 2019.'),
+        personality: english('Warm and busy.'),
+        speaking_style: english('Short sentences.'),
+        financial_knowledge: 'low',
+      },
+      open_facts: [english('Runs a bakery in Doha.')],
+      hidden_facts: [
+        {
+          id: 'late-payments',
+          content: english('Customers pay 90 days late.'),
+          importance: 'critical',
+          unlocked_at_turn: 1,
+        },
+        {
+          id: 'sharia',
+          content: english('Uses only Sharia-compliant products.'),
+          importance: 'critical',
+          unlocked_at_turn: 3,
+        },
+        {
+          id: 'big-order',
+          content: english('A big order is coming.'),
+          importance: 'important',
+          unlocked_at_turn: null,
+        },
+      ],
+      needs: [
+        {
+          id: 'cash-gap',
+          description: { en: 'Bridge the cash gap.', ar: 'سدّ الفجوة النقدية.' },
+          status: 'revealed_by_pitch',
+          suitable_products: ['test-murabaha'],
+          unsuitable_products: [{ id: 'test-overdraft', reason: interestBased }],
+        },
+        {
+          id: 'pay-staff',
+          description: { en: 'Pay staff on time.', ar: 'دفع رواتب الموظفين في موعدها.' },
+          status: 'uncovered',
+          suitable_products: ['test-account'],
+          unsuitable_products: [],
+        },
+        {
+          id: 'stock',
+          description: english('Finance the stock.'),
+          status: 'missed',
+          suitable_products: ['test-murabaha'],
+          unsuitable_products: [],
+        },
+      ],
+      no_catalogue_fit: false,
+      referral_note: null,
+    },
+    ...overrides,
   };
 }

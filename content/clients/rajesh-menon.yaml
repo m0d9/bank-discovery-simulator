@@ -17,6 +17,7 @@ card:
 
 persona:
   age: 41
+  gender: male
   occupation: Founder and managing director of an IT support company
   nationality: Indian
   family: Married, with two children
@@ -85,16 +86,25 @@ hidden_facts:
 
 needs:
   - id: unlock-receivables
-    description: >-
-      Turn the roughly QAR 350,000 of unpaid corporate invoices into cash so salaries are covered
-      on the 25th, while the company is still too young for an overdraft.
+    description:
+      en: >-
+        Turn the roughly QAR 350,000 of unpaid corporate invoices into cash so salaries are
+        covered on the 25th, while the company is still too young for an overdraft.
+      ar: >-
+        تحويل نحو 350,000 ريال قطري من الفواتير غير المسددة لدى عملائه من الشركات إلى سيولة
+        تغطي الرواتب في يوم 25 من كل شهر، لأن الشركة ما زالت حديثة العهد ولا تستوفي شروط السحب
+        على المكشوف.
     evidence_facts: [corporate-invoices, payroll-pressure, short-history]
     suitable_products: [invoice-advance, business-collect-account]
     unsuitable_products:
       - id: business-overdraft
-        reason: Requires 2 years' trading and audited accounts.
+        reason:
+          en: Requires 2 years' trading and audited accounts.
+          ar: يشترط مزاولة النشاط لسنتين وتقديم بيانات مالية مدققة.
       - id: murabaha-working-capital
-        reason: Finances goods; Rajesh sells services.
+        reason:
+          en: Finances goods; Rajesh sells services.
+          ar: يموّل شراء البضائع، بينما يبيع راجيش خدمات.
 
 coach_notes:
   key_questions:
