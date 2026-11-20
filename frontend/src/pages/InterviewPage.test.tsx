@@ -241,7 +241,7 @@ describe('InterviewPage', () => {
       fakeInterview();
       await renderApp('/interview/s1');
       await messageBox();
-      const catalogue = screen.getByRole('complementary', { name: 'Product catalogue' });
+      const catalogue = screen.getByRole('region', { name: 'Product catalogue' });
       expect(catalogue.querySelector(':scope > details > summary')).toHaveTextContent(
         'Product catalogue',
       );
@@ -251,7 +251,7 @@ describe('InterviewPage', () => {
       setWideScreen(true);
       fakeInterview();
       const { user } = await renderApp('/interview/s1');
-      const catalogue = await screen.findByRole('complementary', { name: 'Product catalogue' });
+      const catalogue = await screen.findByRole('region', { name: 'Product catalogue' });
       expect(within(catalogue).getByRole('heading', { level: 2 })).toHaveTextContent(
         'Product catalogue',
       );

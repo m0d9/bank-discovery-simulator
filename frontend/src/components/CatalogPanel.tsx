@@ -16,8 +16,9 @@ interface CatalogPanelProps {
   products: Loadable<Product[]> & { reload: () => void };
 }
 
-/** The product catalogue beside the chat. On narrow screens the whole panel folds into a
- * <details>, so the conversation comes first. */
+/** The product catalogue beside the chat: a labelled region rather than an <aside>, because a
+ * complementary landmark inside <main> fails axe's landmark rules. On narrow screens the whole
+ * panel folds into a <details>, so the conversation comes first. */
 export function CatalogPanel({ products }: CatalogPanelProps) {
   const { t } = useTranslation();
   const wide = useMediaQuery(WIDE);
@@ -48,7 +49,7 @@ export function CatalogPanel({ products }: CatalogPanelProps) {
   );
 
   return (
-    <aside
+    <section
       aria-labelledby="catalog-title"
       className="min-w-0 lg:sticky lg:top-6 lg:max-h-[calc(100vh-3rem)] lg:self-start lg:overflow-y-auto"
     >
@@ -71,7 +72,7 @@ export function CatalogPanel({ products }: CatalogPanelProps) {
           <div className="px-5 pb-5">{content}</div>
         </details>
       )}
-    </aside>
+    </section>
   );
 }
 
