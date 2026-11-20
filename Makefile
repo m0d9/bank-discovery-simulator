@@ -67,8 +67,8 @@ validate-content: ## Validate content/ YAML: prints the counts, or every error w
 content-schema: ## Regenerate content/schema/*.schema.json (editor autocomplete) from the models
 	@cd $(BACKEND) && uv run python -m app.content schema
 
-openapi: ## Export OpenAPI schema and TS types
-	@echo "openapi: added in M3"
+openapi: ## Write frontend/src/api/openapi.json and error-codes.json (the API contract)
+	@cd $(BACKEND) && uv run python -m app.api.openapi_export
 
 eval: ## Run the evaluation harness
 	@echo "eval: added in M7"
