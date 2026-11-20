@@ -58,6 +58,7 @@ hidden_facts:
     unlock_when:
       - asks how long the company has been trading
       - asks about financial statements or audited accounts
+    unlock_on_product_pitch: [business-overdraft]
     importance: critical
     example_questions:
       - How long has the company been operating?
