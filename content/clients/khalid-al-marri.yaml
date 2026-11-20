@@ -10,7 +10,7 @@ card:
     ar: خالد المري
   headline:
     en: Runs a family logistics company that delivers for retailers across Qatar
-    ar: يدير شركة لوجستية عائلية توصّل البضائع لمتاجر التجزئة في أنحاء قطر
+    ar: يدير شركة لوجستية عائلية توصّل البضائع إلى متاجر التجزئة في أنحاء قطر
   opening_line:
     en: Good afternoon. We've banked with the same bank for many years, so what could you offer us that they don't?
     ar: مساء الخير. نتعامل مع البنك نفسه منذ سنوات طويلة، فما الذي يمكنكم تقديمه لنا ولا يقدّمه بنكنا الحالي؟
@@ -106,8 +106,8 @@ needs:
         Sharia-compliant products only, choosing a term that allows for buying out his brother
         within the year.
       ar: >-
-        تمويل شاحنتي توصيل مبرّدتين بنحو 420,000 ريال قطري لعقد سلسلة البقالة الجديد، بمنتجات
-        متوافقة مع الشريعة فقط، مع اختيار مدة تراعي شراء حصة أخيه خلال السنة.
+        تمويل شاحنتي توصيل مبرّدتين بنحو 420,000 ريال قطري لعقد سلسلة متاجر المواد الغذائية
+        الجديد، بمنتجات متوافقة مع الشريعة فقط، مع اختيار مدة تراعي شراء حصة أخيه خلال السنة.
     evidence_facts: [needs-trucks, sharia-on-pitch, brother-exit]
     suitable_products: [ijara-asset-finance]
     unsuitable_products:
