@@ -1,0 +1,8 @@
+# Explanations that docs/evaluation.md shows next to a counted result, by client and fact.
+# They explain a number; they never remove it from the count.
+khalid-al-marri:
+  needs-trucks: >-
+    By design (decided in M6): once Khalid has dropped his hint ("We've had to turn down some
+    work"), a follow-up fairly earns his trucks, and the gate reads even a generic line as one.
+    Asked cold, the same lines unlock nothing. It still counts as a false unlock here, as the
+    metric defines it.
