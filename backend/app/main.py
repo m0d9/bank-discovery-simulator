@@ -1,5 +1,6 @@
 """FastAPI application factory: API under `/api`, built SPA everywhere else."""
 
+import logging
 from pathlib import Path
 
 from fastapi import APIRouter, FastAPI, HTTPException
@@ -8,7 +9,10 @@ from fastapi.staticfiles import StaticFiles
 
 from app.api.router import api_router
 from app.config import Settings, get_settings
+from app.content import ContentStore, ContentValidationError
 from app.logging_setup import configure_logging
+
+logger = logging.getLogger(__name__)
 
 
 def _api_not_found_router() -> APIRouter:
@@ -68,11 +72,27 @@ def _mount_dev_note(app: FastAPI) -> None:
         raise HTTPException(status_code=404)
 
 
+def _open_content(content_dir: Path) -> ContentStore:
+    try:
+        return ContentStore(content_dir)
+    except ContentValidationError as exc:
+        # Fail fast: there's no earlier good version to serve instead.
+        logger.error(
+            "Content is invalid; fix the files and restart",
+            extra={"content_errors": exc.messages},
+        )
+        raise
+
+
 def create_app(settings: Settings | None = None) -> FastAPI:
-    """Build the FastAPI app. Pass `settings` to override the cached defaults (tests)."""
+    """Build the FastAPI app. Pass `settings` to override the cached defaults (tests).
+
+    Raises `ContentValidationError` if the content is invalid: the app won't start without it.
+    """
     injected = settings
     settings = settings or get_settings()
     configure_logging(secrets=[settings.LLM_API_KEY.get_secret_value()])
+    content_store = _open_content(settings.CONTENT_DIR)
 
     app = FastAPI(
         title="Bank Client Discovery Simulator",
@@ -80,6 +100,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         redoc_url=None,
         openapi_url="/api/openapi.json",
     )
+    app.state.content_store = content_store
     if injected is not None:
         # Routes read settings through Depends(get_settings); make them see the injected ones.
         app.dependency_overrides[get_settings] = lambda: injected

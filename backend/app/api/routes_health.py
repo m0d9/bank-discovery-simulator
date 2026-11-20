@@ -1,4 +1,5 @@
-"""Health endpoint: is the app up, can it reach the model endpoint, are the models there?"""
+"""Health endpoint: is the app up, can it reach the model endpoint, are the models there, and
+are the content files valid?"""
 
 import time
 from dataclasses import dataclass
@@ -7,8 +8,16 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request
 
-from app.api.dto import EndpointOut, HealthOut, HealthStatus, ModelsOut, ModelStatusOut
+from app.api.dto import (
+    ContentStatusDTO,
+    EndpointDTO,
+    HealthDTO,
+    HealthStatus,
+    ModelsDTO,
+    ModelStatusDTO,
+)
 from app.config import Settings, get_settings
+from app.content import ContentStore, get_content_store
 from app.llm import (
     LLMClient,
     LLMError,
@@ -27,8 +36,19 @@ _now = time.monotonic  # module-level so tests can move the clock
 
 
 @dataclass(frozen=True)
+class _ModelReport:
+    """Everything in the health response except the content status."""
+
+    status: HealthStatus
+    version: str
+    endpoint: EndpointDTO
+    models: ModelsDTO
+    hint: str | None
+
+
+@dataclass(frozen=True)
 class _Cached:
-    value: HealthOut
+    value: _ModelReport
     expires_at: float
 
 
@@ -39,16 +59,33 @@ def _app_version() -> str:
         return "0.0.0"
 
 
-@router.get("/health", response_model=HealthOut)
+@router.get("/health", response_model=HealthDTO)
 async def health(
     request: Request,
     llm: Annotated[LLMClient, Depends(llm_dep)],
     settings: Annotated[Settings, Depends(get_settings)],
-) -> HealthOut:
-    """Report the app version, the model endpoint and each role's model.
+    content: Annotated[ContentStore, Depends(get_content_store)],
+) -> HealthDTO:
+    """Report the app version, the model endpoint, each role's model and the content status.
 
-    Always HTTP 200: the body says whether the models can be used. Cached for 30 seconds.
+    Always HTTP 200: the body says whether the models can be used. The model check is cached
+    for 30 seconds; the content status is checked on every call, so a broken file shows up
+    as soon as the store notices it.
     """
+    await content.refresh()
+    report = await _model_report(request, llm, settings)
+    status = content.status
+    return HealthDTO(
+        status=report.status,
+        version=report.version,
+        endpoint=report.endpoint,
+        models=report.models,
+        hint=report.hint,
+        content=ContentStatusDTO(ok=status.ok, errors=list(status.errors)),
+    )
+
+
+async def _model_report(request: Request, llm: LLMClient, settings: Settings) -> _ModelReport:
     cached: _Cached | None = getattr(request.app.state, "health_cache", None)
     if cached is not None and _now() < cached.expires_at:
         return cached.value
@@ -57,7 +94,7 @@ async def health(
     return value
 
 
-async def _check(llm: LLMClient, settings: Settings) -> HealthOut:
+async def _check(llm: LLMClient, settings: Settings) -> _ModelReport:
     host = endpoint_host(settings.LLM_BASE_URL)
     names = {role: resolve_model(role, None, settings=settings) for role in Role}
     try:
@@ -95,14 +132,14 @@ def _report(
     names: dict[Role, str],
     present: set[str],
     hint: str | None,
-) -> HealthOut:
-    def model(role: Role) -> ModelStatusOut:
-        return ModelStatusOut(name=names[role], available=names[role] in present)
+) -> _ModelReport:
+    def model(role: Role) -> ModelStatusDTO:
+        return ModelStatusDTO(name=names[role], available=names[role] in present)
 
-    return HealthOut(
+    return _ModelReport(
         status=status,
         version=_app_version(),
-        endpoint=EndpointOut(reachable=reachable, host=host),
-        models=ModelsOut(gate=model(Role.GATE), client=model(Role.CLIENT), coach=model(Role.COACH)),
+        endpoint=EndpointDTO(reachable=reachable, host=host),
+        models=ModelsDTO(gate=model(Role.GATE), client=model(Role.CLIENT), coach=model(Role.COACH)),
         hint=hint,
     )

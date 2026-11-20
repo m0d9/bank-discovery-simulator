@@ -1,0 +1,36 @@
+# yaml-language-server: $schema=../schema/product.schema.json
+id: murabaha-working-capital
+schema_version: 1
+name:
+  en: Murabaha Working Capital
+  ar: تمويل رأس المال العامل بالمرابحة
+summary:
+  en: The bank buys the goods or stock your business needs and sells them to you at a fixed, agreed profit, paid in instalments.
+  ar: يشتري البنك البضائع أو المخزون الذي تحتاجه شركتك، ثم يبيعه لك بربح ثابت متفق عليه تسدده على أقساط.
+segments: [sme]
+category: financing
+sharia_compliant: true
+interest_based: false
+features:
+  - en: Sharia-compliant, with a fixed, agreed profit instead of interest
+    ar: متوافق مع أحكام الشريعة، بهامش ربح ثابت متفق عليه مسبقًا
+  - en: Instalments over up to 12 months
+    ar: أقساط على مدى يصل إلى 12 شهرًا
+  - en: You know the total cost from day one
+    ar: تعرف التكلفة الإجمالية منذ اليوم الأول
+limitations:
+  - en: Finances identifiable goods or stock only, not salaries, rent or cash
+    ar: يقتصر على تمويل بضائع أو مخزون محدد، ولا يشمل الرواتب أو الإيجار أو النقد
+  - en: Sharia documentation adds about 5 working days
+    ar: تحتاج المستندات الشرعية إلى نحو 5 أيام عمل إضافية
+  - en: Fixed repayment schedule
+    ar: جدول سداد ثابت
+eligibility:
+  - en: Small or medium business registered in Qatar
+    ar: منشأة صغيرة أو متوسطة مسجلة في قطر
+  - en: A supplier's quotation or invoice for the goods to be financed
+    ar: عرض سعر أو فاتورة من المورد للبضائع المراد تمويلها
+pricing:
+  en: Fixed profit equivalent to 6.5% a year on the purchase price, plus a processing fee of QAR 500 (fictional)
+  ar: ربح ثابت يعادل 6.5% سنويًا من سعر الشراء، إضافةً إلى رسوم معالجة قدرها 500 ريال قطري (أرقام افتراضية)
+client_view: An Islamic way to finance stock, where the bank buys the goods you need and sells them to you at a fixed profit paid back in instalments; it can't pay salaries or give cash.

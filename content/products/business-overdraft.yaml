@@ -1,0 +1,38 @@
+# yaml-language-server: $schema=../schema/product.schema.json
+id: business-overdraft
+schema_version: 1
+name:
+  en: Business Overdraft
+  ar: السحب على المكشوف للأعمال
+summary:
+  en: A flexible credit limit on your business current account. You pay interest only on the amount you use.
+  ar: حد ائتماني مرن على الحساب الجاري لشركتك، ولا تدفع الفائدة إلا على المبلغ الذي تستخدمه.
+segments: [sme]
+category: financing
+sharia_compliant: false
+interest_based: true
+features:
+  - en: Flexible limit of up to QAR 500,000
+    ar: حد مرن يصل إلى 500,000 ريال قطري
+  - en: Interest is charged only on the amount you use, for the days you use it
+    ar: تُحتسب الفائدة على المبلغ المستخدم وعن مدة استخدامه فقط
+  - en: Draw and repay at any time
+    ar: يمكنك السحب والسداد في أي وقت
+limitations:
+  - en: Needs at least 2 years of trading and audited financial statements
+    ar: يُشترط مزاولة النشاط سنتين على الأقل وتقديم بيانات مالية مدققة
+  - en: The limit is reviewed and renewed every year
+    ar: يخضع الحد للمراجعة والتجديد كل سنة
+  - en: Variable interest rate
+    ar: سعر فائدة متغير
+  - en: Collateral is required for limits above QAR 250,000
+    ar: تُطلب ضمانات للحدود التي تزيد على 250,000 ريال قطري
+eligibility:
+  - en: Small or medium business registered in Qatar, trading for at least 2 years
+    ar: منشأة صغيرة أو متوسطة مسجلة في قطر، تزاول نشاطها منذ سنتين على الأقل
+  - en: Audited financial statements for the last 2 years
+    ar: بيانات مالية مدققة عن آخر سنتين
+pricing:
+  en: Variable interest of 7.5% a year on the amount used, plus an arrangement fee of 1% of the limit (fictional)
+  ar: فائدة متغيرة بنسبة 7.5% سنويًا على المبلغ المستخدم، إضافةً إلى رسوم ترتيب بنسبة 1% من الحد (أرقام افتراضية)
+client_view: A business overdraft is a credit limit on the business account; you pay interest on whatever you use, and banks usually want two years of audited accounts first.

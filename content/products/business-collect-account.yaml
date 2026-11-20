@@ -1,0 +1,36 @@
+# yaml-language-server: $schema=../schema/product.schema.json
+id: business-collect-account
+schema_version: 1
+name:
+  en: Business Collect Account
+  ar: حساب التحصيل للأعمال
+summary:
+  en: A business current account that helps you get paid faster, with payment links, card terminals and automatic invoice reminders.
+  ar: حساب جارٍ للأعمال يساعدك على تحصيل مستحقاتك أسرع، عبر روابط الدفع وأجهزة نقاط البيع وتذكيرات الفواتير التلقائية.
+segments: [sme]
+category: account
+sharia_compliant: false
+interest_based: false
+features:
+  - en: Payment links you can send by email or text message
+    ar: روابط دفع يمكنك إرسالها بالبريد الإلكتروني أو الرسائل النصية
+  - en: Card terminals for in-person payments
+    ar: أجهزة نقاط بيع لقبول الدفع بالبطاقات حضوريًا
+  - en: Automatic reminders for unpaid invoices
+    ar: تذكيرات تلقائية بالفواتير غير المسددة
+limitations:
+  - en: Monthly fee unless the balance stays above QAR 50,000
+    ar: رسوم شهرية ما لم يبق الرصيد فوق 50,000 ريال قطري
+  - en: A merchant fee on every card payment
+    ar: رسوم تاجر على كل عملية دفع بالبطاقة
+  - en: Speeds up collection but provides no financing
+    ar: يسرّع التحصيل لكنه لا يقدم أي تمويل
+eligibility:
+  - en: Business registered in Qatar with a valid commercial registration
+    ar: منشأة مسجلة في قطر بسجل تجاري ساري المفعول
+  - en: Qatar ID of each authorised signatory
+    ar: البطاقة الشخصية القطرية لكل مفوض بالتوقيع
+pricing:
+  en: Monthly fee of QAR 150, waived while the balance stays above QAR 50,000, plus a merchant fee of 1.8% per card payment (fictional)
+  ar: رسوم شهرية قدرها 150 ريال قطري تُلغى ما دام الرصيد فوق 50,000 ريال قطري، إضافةً إلى رسوم تاجر بنسبة 1.8% لكل عملية دفع بالبطاقة (أرقام افتراضية)
+client_view: A business current account with payment links, card machines and automatic invoice reminders to help you get paid faster; it doesn't lend money.

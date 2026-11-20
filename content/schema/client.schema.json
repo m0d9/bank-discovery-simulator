@@ -1,0 +1,427 @@
+{
+  "$defs": {
+    "Card": {
+      "additionalProperties": false,
+      "description": "Public: what students see before the interview.",
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/LocalizedText"
+        },
+        "headline": {
+          "$ref": "#/$defs/LocalizedText",
+          "description": "One line saying who the client is."
+        },
+        "opening_line": {
+          "$ref": "#/$defs/LocalizedText",
+          "description": "The client's first words when the interview starts."
+        }
+      },
+      "required": [
+        "name",
+        "headline",
+        "opening_line"
+      ],
+      "title": "Card",
+      "type": "object"
+    },
+    "CoachNotes": {
+      "additionalProperties": false,
+      "description": "Private: guidance for the AI coach.",
+      "properties": {
+        "key_questions": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 2,
+          "title": "Key Questions",
+          "type": "array"
+        },
+        "common_mistakes": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Common Mistakes",
+          "type": "array"
+        }
+      },
+      "required": [
+        "key_questions",
+        "common_mistakes"
+      ],
+      "title": "CoachNotes",
+      "type": "object"
+    },
+    "HiddenFact": {
+      "additionalProperties": false,
+      "description": "Private: something the client shares only once the student has earned it.",
+      "properties": {
+        "id": {
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "content": {
+          "description": "What the client may share once the fact is unlocked.",
+          "minLength": 1,
+          "title": "Content",
+          "type": "string"
+        },
+        "signal": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "A vague hint the client may drop once while the fact is still locked.",
+          "title": "Signal"
+        },
+        "unlock_when": {
+          "description": "Student behaviours that earn the fact, such as \"asks how customers pay\".",
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Unlock When",
+          "type": "array"
+        },
+        "unlock_on_product_pitch": {
+          "description": "Product ids. Proposing any of them makes the client react by revealing this fact.",
+          "items": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+            "type": "string"
+          },
+          "title": "Unlock On Product Pitch",
+          "type": "array"
+        },
+        "requires": {
+          "description": "Hidden fact ids that must be unlocked before this fact can be.",
+          "items": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+            "type": "string"
+          },
+          "title": "Requires",
+          "type": "array"
+        },
+        "importance": {
+          "enum": [
+            "critical",
+            "important",
+            "minor"
+          ],
+          "title": "Importance",
+          "type": "string"
+        },
+        "example_questions": {
+          "description": "Questions that should unlock this fact. Used by the evaluations and the coach.",
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Example Questions",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "content",
+        "unlock_when",
+        "importance",
+        "example_questions"
+      ],
+      "title": "HiddenFact",
+      "type": "object"
+    },
+    "LocalizedText": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "en": {
+              "description": "English text.",
+              "minLength": 1,
+              "title": "En",
+              "type": "string"
+            },
+            "ar": {
+              "anyOf": [
+                {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Arabic text, in Modern Standard Arabic.",
+              "title": "Ar"
+            }
+          },
+          "required": [
+            "en"
+          ],
+          "title": "LocalizedText",
+          "type": "object"
+        }
+      ],
+      "description": "Text in English (required) and Arabic (optional). A plain string means English only."
+    },
+    "Need": {
+      "additionalProperties": false,
+      "description": "Private: one part of the answer key.",
+      "properties": {
+        "id": {
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "description": {
+          "minLength": 1,
+          "title": "Description",
+          "type": "string"
+        },
+        "evidence_facts": {
+          "description": "Hidden fact ids that reveal this need. The student uncovers it by unlocking all of them.",
+          "items": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Evidence Facts",
+          "type": "array"
+        },
+        "suitable_products": {
+          "items": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+            "type": "string"
+          },
+          "title": "Suitable Products",
+          "type": "array"
+        },
+        "unsuitable_products": {
+          "items": {
+            "$ref": "#/$defs/UnsuitableProduct"
+          },
+          "title": "Unsuitable Products",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "description",
+        "evidence_facts",
+        "suitable_products",
+        "unsuitable_products"
+      ],
+      "title": "Need",
+      "type": "object"
+    },
+    "Persona": {
+      "additionalProperties": false,
+      "description": "Private: who the AI client plays. English only, because it's an input to the model.",
+      "properties": {
+        "age": {
+          "title": "Age",
+          "type": "integer"
+        },
+        "occupation": {
+          "minLength": 1,
+          "title": "Occupation",
+          "type": "string"
+        },
+        "nationality": {
+          "minLength": 1,
+          "title": "Nationality",
+          "type": "string"
+        },
+        "family": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Family"
+        },
+        "background": {
+          "description": "Keep hidden facts out of this text, or the client may share them before they're earned.",
+          "minLength": 1,
+          "title": "Background",
+          "type": "string"
+        },
+        "personality": {
+          "minLength": 1,
+          "title": "Personality",
+          "type": "string"
+        },
+        "speaking_style": {
+          "minLength": 1,
+          "title": "Speaking Style",
+          "type": "string"
+        },
+        "financial_knowledge": {
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ],
+          "title": "Financial Knowledge",
+          "type": "string"
+        }
+      },
+      "required": [
+        "age",
+        "occupation",
+        "nationality",
+        "background",
+        "personality",
+        "speaking_style",
+        "financial_knowledge"
+      ],
+      "title": "Persona",
+      "type": "object"
+    },
+    "UnsuitableProduct": {
+      "additionalProperties": false,
+      "description": "A product that doesn't fit a need, and why.",
+      "properties": {
+        "id": {
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "reason": {
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "reason"
+      ],
+      "title": "UnsuitableProduct",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "One client the student can interview (`content/clients/<id>.yaml`).",
+  "properties": {
+    "id": {
+      "description": "Lowercase words joined by hyphens. Must equal the file name without `.yaml`.",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "title": "Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "segment": {
+      "enum": [
+        "retail",
+        "sme"
+      ],
+      "title": "Segment",
+      "type": "string"
+    },
+    "difficulty": {
+      "enum": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "title": "Difficulty",
+      "type": "string"
+    },
+    "card": {
+      "$ref": "#/$defs/Card"
+    },
+    "persona": {
+      "$ref": "#/$defs/Persona"
+    },
+    "open_facts": {
+      "description": "Things the client shares freely when asked general questions.",
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "maxItems": 6,
+      "minItems": 1,
+      "title": "Open Facts",
+      "type": "array"
+    },
+    "hidden_facts": {
+      "items": {
+        "$ref": "#/$defs/HiddenFact"
+      },
+      "maxItems": 8,
+      "minItems": 2,
+      "title": "Hidden Facts",
+      "type": "array"
+    },
+    "needs": {
+      "items": {
+        "$ref": "#/$defs/Need"
+      },
+      "minItems": 1,
+      "title": "Needs",
+      "type": "array"
+    },
+    "no_catalogue_fit": {
+      "default": false,
+      "description": "True when no product in the catalogue fits: the right answer is to refer the client.",
+      "title": "No Catalogue Fit",
+      "type": "boolean"
+    },
+    "referral_note": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Where to refer the client. Required when `no_catalogue_fit` is true.",
+      "title": "Referral Note"
+    },
+    "coach_notes": {
+      "$ref": "#/$defs/CoachNotes"
+    }
+  },
+  "required": [
+    "id",
+    "schema_version",
+    "segment",
+    "difficulty",
+    "card",
+    "persona",
+    "open_facts",
+    "hidden_facts",
+    "needs",
+    "coach_notes"
+  ],
+  "title": "Client",
+  "type": "object"
+}
