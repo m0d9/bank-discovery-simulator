@@ -3,7 +3,7 @@ SHELL := /bin/bash
 BACKEND := backend
 FRONTEND := frontend
 
-# Model routing. `make dev` uses .env (default: 4b gate, 9b client and coach; no model swap).
+# Model routing. `make dev` uses .env (default: qwen3.5:9b for every role; no model swap).
 # `make dev COACH=gpt-oss:20b` (or `make dev-strong-coach`) starts the backend with that coach
 # and LLM_MAX_RETRIES=4 without editing .env: the bigger coach makes Ollama swap models at
 # feedback time, and the extra retries absorb Ollama's occasional reload crash (HTTP 500).
