@@ -6,9 +6,10 @@ import { useProducts, useSession } from '../api/hooks';
 import type { Feedback, LocalizedText, Product, SessionPublic } from '../api/types';
 import { useSessionModels } from '../components/AppShell';
 import { ErrorBanner } from '../components/ErrorBanner';
-import { CoachSections } from '../components/feedback/CoachSections';
+import { CoachSections, SummaryFeedback } from '../components/feedback/CoachSections';
 import { DegradedNotice } from '../components/feedback/DegradedNotice';
 import { DiscoveryMap } from '../components/feedback/DiscoveryMap';
+import { FeedbackStats } from '../components/feedback/FeedbackStats';
 import { Recommendations } from '../components/feedback/Recommendations';
 import { RevealedProfile } from '../components/feedback/RevealedProfile';
 import { DownloadIcon } from '../components/icons';
@@ -155,17 +156,18 @@ function FeedbackSections({ feedback, product, onShowTurn, summary }: FeedbackSe
   const needs = new Map(feedback.revealed.needs.map((need) => [need.id, need.description]));
   const describeNeed = (needId: string): LocalizedText =>
     needs.get(needId) ?? { en: needId, ar: null };
+  // The brief asks the coach for three sections, so they come first, after the counts.
   return (
     <>
+      <FeedbackStats stats={feedback.analysis.stats} onShowTurn={onShowTurn} />
+      {feedback.report && <CoachSections report={feedback.report} onShowTurn={onShowTurn} />}
       <DiscoveryMap
         analysis={feedback.analysis}
         describeNeed={describeNeed}
         onShowTurn={onShowTurn}
       />
       <Recommendations feedback={feedback} product={product} describeNeed={describeNeed} />
-      {feedback.report && (
-        <CoachSections report={feedback.report} summary={summary} onShowTurn={onShowTurn} />
-      )}
+      {feedback.report && <SummaryFeedback report={feedback.report} summary={summary} />}
     </>
   );
 }

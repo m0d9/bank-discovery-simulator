@@ -7,14 +7,12 @@ import { EvidenceLinks, type ShowTurn } from './TurnLink';
 
 interface CoachSectionsProps {
   report: CoachReport;
-  /** The student's own summary, which the last section comments on. */
-  summary: string;
   onShowTurn: ShowTurn;
 }
 
-/** Sections 3 to 6: the AI coach's report. Its text comes from a model, so it keeps its own
- * direction (`dir="auto"`). */
-export function CoachSections({ report, summary, onShowTurn }: CoachSectionsProps) {
+/** The three sections the brief asks the coach for, first on the page. Their text comes from
+ * a model, so it keeps its own direction (`dir="auto"`). */
+export function CoachSections({ report, onShowTurn }: CoachSectionsProps) {
   const { t } = useTranslation();
   return (
     <>
@@ -59,21 +57,28 @@ export function CoachSections({ report, summary, onShowTurn }: CoachSectionsProp
           </li>
         ))}
       </Section>
-      <section className="space-y-3">
-        <h2 className={sectionHeading}>{t('feedback.coach.summary')}</h2>
-        <figure className={`${card} p-4`}>
-          <figcaption className="text-sm font-medium text-ink-muted">
-            {t('feedback.coach.yourSummary')}
-          </figcaption>
-          <blockquote dir="auto" className="mt-2 whitespace-pre-wrap text-ink">
-            {summary}
-          </blockquote>
-        </figure>
-        <p dir="auto" className="text-ink">
-          {report.summary_feedback}
-        </p>
-      </section>
     </>
+  );
+}
+
+/** The coach's comment on the student's written summary, under the summary itself. */
+export function SummaryFeedback({ report, summary }: { report: CoachReport; summary: string }) {
+  const { t } = useTranslation();
+  return (
+    <section className="space-y-3">
+      <h2 className={sectionHeading}>{t('feedback.coach.summary')}</h2>
+      <figure className={`${card} p-4`}>
+        <figcaption className="text-sm font-medium text-ink-muted">
+          {t('feedback.coach.yourSummary')}
+        </figcaption>
+        <blockquote dir="auto" className="mt-2 whitespace-pre-wrap text-ink">
+          {summary}
+        </blockquote>
+      </figure>
+      <p dir="auto" className="text-ink">
+        {report.summary_feedback}
+      </p>
+    </section>
   );
 }
 

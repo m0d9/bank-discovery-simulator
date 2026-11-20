@@ -4,6 +4,7 @@ from app.coaching.analysis import analyse
 from app.coaching.export import LABELS, export_filename, export_markdown
 from app.coaching.feedback import Feedback
 from app.coaching.report import CoachReport
+from app.content import Client
 from app.simulation import Session
 from tests.coaching_factory import (
     ASK_PAYMENTS,
@@ -11,6 +12,7 @@ from tests.coaching_factory import (
     NOT_IN_KEY,
     Step,
     coach_reply,
+    coaching_client_data,
     interview,
     missed_item,
 )
@@ -163,3 +165,19 @@ def test_text_from_students_and_models_cannot_add_markup() -> None:
 
 def test_the_file_name_has_the_client_and_the_date_the_interview_started() -> None:
     assert export_filename(interview(recommend=[ALPHA])) == "interview-test-client-20261120.md"
+
+
+def test_the_export_shows_each_distinct_reason_once() -> None:
+    data = coaching_client_data()
+    data["needs"][1]["suitable_products"] = [BETA]
+    data["needs"][1]["unsuitable_products"] = [{"id": ALPHA, "reason": "Interest-based."}]
+    session = interview(ASK_PAYMENTS, recommend=[ALPHA])
+    session.client = Client.model_validate(data)
+    feedback = Feedback(
+        language="en", analysis=analyse(session), report=None, degraded=True, generated_at=T0
+    )
+
+    text = export_markdown(session, feedback)
+
+    # Alpha Loan is unsuitable for both needs, for the same reason: it's given once.
+    assert "- **Alpha Loan: Not suitable.** Interest-based.\n" in text

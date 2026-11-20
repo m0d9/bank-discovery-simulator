@@ -43,9 +43,11 @@ export function Recommendations({ feedback, product, describeNeed }: Recommendat
             (item) => item.product_id === verdict.product_id,
           )?.reason;
           const details = product(verdict.product_id);
-          // One reason per need: the same reason can come up for two needs.
+          // Each distinct reason once, as shown: the same reason can come up for two needs.
           const reasons = [
-            ...new Map(verdict.reasons.map((item) => [item.reason.en, item.reason])).values(),
+            ...new Map(
+              verdict.reasons.map((item) => [localize(item.reason, language), item.reason]),
+            ).values(),
           ];
           return (
             <li key={verdict.product_id} className={`${card} space-y-3 p-4`}>

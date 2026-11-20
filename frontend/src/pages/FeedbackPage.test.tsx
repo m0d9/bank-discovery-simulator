@@ -44,14 +44,20 @@ describe('FeedbackPage', () => {
     await renderApp('/feedback/s1');
 
     await screen.findByRole('heading', { level: 2, name: 'Discovery map' });
-    expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual([
-      'Discovery map',
-      'Your recommendations',
+    // The brief's three coach sections first, after the counts.
+    const headings = screen.getAllByRole('heading', { level: 2 });
+    expect(headings.map((h) => h.textContent)).toEqual([
       'What went well',
       'What was missed',
       'How to improve',
+      'Discovery map',
+      'Your recommendations',
       'About your summary',
     ]);
+    const counts = screen.getByText('Needs found by your questions');
+    expect(counts.compareDocumentPosition(present(headings[0]))).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
     expect(screen.getByText('Your feedback is ready.')).toBeInTheDocument();
 
     const map = screen.getByRole('table', { name: 'Discovery map' });
