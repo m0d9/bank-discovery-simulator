@@ -4,7 +4,14 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Annotated, Literal, Protocol
 
-from pydantic import AfterValidator, BaseModel, ConfigDict, Field, StringConstraints
+from pydantic import (
+    AfterValidator,
+    BaseModel,
+    ConfigDict,
+    Field,
+    SerializeAsAny,
+    StringConstraints,
+)
 from pydantic_core import PydanticCustomError
 
 from app.content import Bank, Client, Product
@@ -111,6 +118,9 @@ class Session(BaseModel):
     products_mentioned: dict[str, list[int]] = Field(default_factory=dict)
     """Product id -> the student turns `n` that proposed or asked about it."""
     wrapup: WrapUp | None = None
+    feedback: SerializeAsAny[BaseModel] | None = None
+    """The latest feedback (an `app.coaching.Feedback`), set once feedback has been generated.
+    Typed loosely so that interviews don't depend on the coaching package."""
     created_at: datetime
     last_active_at: datetime
     client: Client
