@@ -1,9 +1,11 @@
 """The repository's real `content/` folder: valid, bilingual where students read it, and in sync."""
 
+import shutil
 from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+import yaml
 
 from app.content import Client, ContentRegistry, LocalizedText, load_registry
 from app.content.__main__ import render_schemas, validate
@@ -48,6 +50,26 @@ def test_the_catalogue_and_clients_are_the_ones_the_brief_fixes(registry: Conten
     assert [client.id for client in registry.list_clients()] == CLIENT_IDS
     assert registry.bank.name.en == "Al Murjan Bank"
     assert registry.bank.currency == "QAR"
+
+
+def test_the_templates_validate_when_copied_next_to_the_real_catalogue(tmp_path: Path) -> None:
+    """A lecturer copies a template into `clients/` or `products/`: it must validate as it is."""
+    content = tmp_path / "content"
+    shutil.copytree(REPO_CONTENT / "products", content / "products")
+    (content / "clients").mkdir()
+    shutil.copy(REPO_CONTENT / "bank.yaml", content / "bank.yaml")
+    copied: dict[str, str] = {}
+    for kind, folder in (("client", "clients"), ("product", "products")):
+        template = REPO_CONTENT / "_templates" / f"{kind}.yaml"
+        # The template's own instructions: save it as <id>.yaml.
+        copied[kind] = yaml.safe_load(template.read_text(encoding="utf-8"))["id"]
+        shutil.copy(template, content / folder / f"{copied[kind]}.yaml")
+
+    registry = load_registry(content)
+
+    assert [client.id for client in registry.list_clients()] == [copied["client"]]
+    assert copied["product"] in [product.id for product in registry.list_products()]
+    assert len(registry.list_products()) == len(PRODUCT_IDS) + 1
 
 
 def student_facing_text(registry: ContentRegistry) -> Iterator[tuple[str, LocalizedText]]:
