@@ -15,6 +15,7 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./src/test/setup.ts'],
-    css: false,
+    // Tests read the style sheets as text (the contrast table, the left/right guard).
+    css: { include: [/src\/styles\/[\w-]+\.css/] },
   },
 });

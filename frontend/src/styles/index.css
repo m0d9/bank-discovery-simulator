@@ -1,1 +1,62 @@
 @import 'tailwindcss';
+@import './tokens.css';
+
+@theme {
+  --font-sans: 'Inter', 'IBM Plex Sans Arabic', ui-sans-serif, system-ui, sans-serif;
+
+  --animate-typing: typing 1.2s ease-in-out infinite;
+  @keyframes typing {
+    0%,
+    80%,
+    100% {
+      opacity: 0.25;
+    }
+    40% {
+      opacity: 1;
+    }
+  }
+}
+
+@layer base {
+  html {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+  }
+
+  /* Arabic: its own face first, a little more line height, and never any letter-spacing. */
+  html:lang(ar) {
+    --font-sans: 'IBM Plex Sans Arabic', 'Inter', ui-sans-serif, system-ui, sans-serif;
+    --text-xs--line-height: 1.8;
+    --text-sm--line-height: 1.8;
+    --text-base--line-height: 1.8;
+    --text-lg--line-height: 1.7;
+    --text-xl--line-height: 1.6;
+    --text-2xl--line-height: 1.5;
+    line-height: 1.8;
+    letter-spacing: normal;
+  }
+
+  /* One visible focus style for everything that can take keyboard focus. */
+  :focus-visible {
+    outline: 3px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+
+  /* The page heading and <main> take focus from code (after navigation, or the skip link)
+   * only to move the reading position: no ring there. */
+  h1[tabindex='-1']:focus,
+  main[tabindex='-1']:focus {
+    outline: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}

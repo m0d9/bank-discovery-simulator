@@ -1,0 +1,127 @@
+{
+  "common": {
+    "appName": "Bank Client Discovery Simulator",
+    "documentTitle": "{{page}} – {{app}}",
+    "languageName": "English",
+    "skipLink": "Skip to main content",
+    "loading": "Loading…",
+    "retry": "Try again",
+    "startAgain": "Start again",
+    "home": "Go to the client list",
+    "models": "Models in this session",
+    "modelRole": {
+      "client": "AI client",
+      "gate": "Disclosure gate",
+      "coach": "AI coach"
+    },
+    "segment": {
+      "retail": "Personal banking",
+      "sme": "Small business"
+    },
+    "difficultyLabel": "Difficulty: {{level}}",
+    "difficulty": {
+      "easy": "Easy",
+      "medium": "Medium",
+      "hard": "Hard"
+    },
+    "notFound": {
+      "title": "Page not found",
+      "body": "The address may be wrong. You can go back to the list of clients."
+    }
+  },
+  "select": {
+    "title": "Choose a client",
+    "intro": "In each interview, your goal is to discover what the client needs. Some needs come up only when you ask the right questions.",
+    "start": "Start interview with {{name}}",
+    "starting": "Starting the interview…",
+    "loading": "Loading clients…",
+    "empty": "No clients are available yet."
+  },
+  "interview": {
+    "title": "Interview with {{name}}",
+    "titleShort": "Interview",
+    "conversation": "Conversation",
+    "youSaid": "You said:",
+    "clientSaid": "{{name}} said:",
+    "messageLabel": "Your message",
+    "messageHint": "Enter sends the message; Shift+Enter starts a new line.",
+    "send": "Send",
+    "chars": "Characters: {{used}} of {{max}}",
+    "charsOver_one": "You have {{value}} character too many.",
+    "charsOver_other": "You have {{value}} characters too many.",
+    "turns": "Questions used: {{used}} of {{max}}",
+    "typing": "{{name}} is typing…",
+    "slowReply": "The first reply can take up to 30 seconds while the model loads.",
+    "arabicNote": "The AI client's Arabic replies are experimental and may vary in quality.",
+    "turnLimit": "You've used all your questions. You can now end the interview.",
+    "end": "End interview",
+    "endHint_one": "You can end the interview after asking at least {{count}} question.",
+    "endHint_other": "You can end the interview after asking at least {{count}} questions.",
+    "endDialog": {
+      "title": "End the interview?",
+      "body": "Next, you'll summarise the client's needs and recommend products.",
+      "cancel": "Keep interviewing",
+      "confirm": "End interview"
+    }
+  },
+  "catalog": {
+    "title": "Product catalogue",
+    "intro": "Products you can recommend. All of them are fictional.",
+    "sharia": "Sharia-compliant",
+    "interest": "Interest-based",
+    "features": "Features",
+    "limitations": "Limitations",
+    "eligibility": "Eligibility",
+    "pricing": "Pricing",
+    "loading": "Loading products…"
+  },
+  "wrapup": {
+    "title": "Wrap up your interview with {{name}}",
+    "titleShort": "Wrap-up",
+    "intro": "Summarise the client's needs, then recommend the products that fit them and say why.",
+    "transcript": "Interview transcript",
+    "summaryLabel": "Summarise the client's needs",
+    "lengthHint_one": "Use between {{min}} and {{value}} character.",
+    "lengthHint_other": "Use between {{min}} and {{value}} characters.",
+    "productsLegend": "Recommend products",
+    "productsHint_one": "Choose {{count}} product.",
+    "productsHint_other": "Choose between 1 and {{count}} products.",
+    "chosen": "Chosen: {{chosen}} of {{max}}",
+    "atMax": "That's the maximum. To choose a different product, untick one first.",
+    "reasonLabel": "Why this product?",
+    "submit": "Submit wrap-up",
+    "submitting": "Submitting…",
+    "errorSummaryTitle": "There is a problem",
+    "errors": {
+      "summaryShort": "Your summary is too short.",
+      "summaryLong": "Your summary is too long.",
+      "noProducts": "Choose at least one product.",
+      "reasonMissing": "Say why you recommend {{product}}.",
+      "reasonShort": "The reason for {{product}} is too short.",
+      "reasonLong": "The reason for {{product}} is too long."
+    }
+  },
+  "feedback": {
+    "title": "Feedback",
+    "titleWithName": "Feedback on your interview with {{name}}",
+    "placeholder": "Your wrap-up has been submitted. Feedback from the AI coach will appear here in the next version of the app.",
+    "another": "Interview another client"
+  },
+  "errors": {
+    "GENERIC": "Something went wrong. Please try again.",
+    "NETWORK": "We can't reach the server. Check that the app is running, then try again.",
+    "NOT_FOUND": "We couldn't find what you asked for.",
+    "SESSION_NOT_FOUND": "This interview is no longer available. Interviews are kept only for a limited time, and they're lost when the app restarts.",
+    "UNKNOWN_CLIENT": "This client is no longer available. Please choose another client.",
+    "SESSION_BUSY": "The client is still answering your last message. Wait a moment, then try again.",
+    "TURN_LIMIT": "You've used all your questions. You can now end the interview.",
+    "INVALID_STATE": "This step isn't available at this point in the interview.",
+    "INVALID_INPUT": "Some of what you entered isn't valid. Check it, then try again.",
+    "RATE_LIMITED": "The AI model is busy. Wait a few seconds, then try again.",
+    "INTERNAL_ERROR": "Something went wrong on the server. Please try again.",
+    "INVALID_OUTPUT": "The AI client's reply couldn't be used. Please try again.",
+    "LLM_ERROR": "The AI model returned an error. Please try again.",
+    "MODEL_UNAVAILABLE": "The AI model isn't available right now. Wait a moment, then try again.",
+    "MODEL_TIMEOUT": "The AI model took too long to reply. Please try again."
+  }
+}
