@@ -1,0 +1,34 @@
+# Model setups for the evaluation (M7). Run one from the repository root with
+#   uv run --project backend python -m evals.run --config default
+# Models are Ollama tags (CLAUDE.md, Models). `max_retries` sets LLM_MAX_RETRIES for the run.
+
+# The setup docs/evaluation.md recommends, chosen from the numbers there.
+recommended: default
+
+# One judge for every setup, so that the judged numbers compare across setups. It is also
+# strong-coach's coach, so that row alone is judged by its own model, which biases it.
+judge:
+  model: gpt-oss:20b
+  # Its hidden reasoning counts against this budget.
+  max_tokens: 4000
+  # Ollama's reload after a model swap sometimes fails with HTTP 500.
+  max_retries: 4
+
+configs:
+  # One model for every role, so Ollama never swaps (the app's default routing).
+  default:
+    gate: qwen3.5:9b
+    client: qwen3.5:9b
+    coach: qwen3.5:9b
+  # The same as default except the coach: together they show whether the swap is worth it.
+  strong-coach:
+    gate: qwen3.5:9b
+    client: qwen3.5:9b
+    coach: gpt-oss:20b
+    # As `make dev-strong-coach` sets it.
+    max_retries: 4
+  # The smallest setup, for a machine without a 16 GB GPU.
+  single-small:
+    gate: qwen3.5:4b
+    client: qwen3.5:4b
+    coach: qwen3.5:4b
