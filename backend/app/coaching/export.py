@@ -154,7 +154,11 @@ class _Document:
         title = f"**{name}: {self._label(f'verdict_{verdict.verdict}')}.**"
         if verdict.verdict == "unsuitable":
             reasons = dict.fromkeys(self._text(reason.reason) for reason in verdict.reasons)
-            return f"{title} " + " ".join(self._free(reason) for reason in reasons)
+            line = f"{title} " + " ".join(self._free(reason) for reason in reasons)
+            if verdict.ruled_out_at is not None:
+                turn = self._label("turn", n=verdict.ruled_out_at)
+                line += " " + self._label("ruled_out", turn=turn)
+            return line
         if verdict.verdict == "suitable":
             needs = "; ".join(self._free(self._need(need_id)) for need_id in verdict.needs)
             return f"{title} {self._label('fits')}: {needs}"

@@ -178,8 +178,18 @@ export function feedback(overrides: Partial<Feedback> = {}): Feedback {
             { need_id: 'stock', reason: interestBased },
           ],
           needs: [],
+          // The overdraft's own pitch brought out the preference, so nothing was said before.
+          ruled_out_at: null,
+          pitched_at: null,
         },
-        { product_id: 'test-account', verdict: 'not_in_key', reasons: [], needs: [] },
+        {
+          product_id: 'test-account',
+          verdict: 'not_in_key',
+          reasons: [],
+          needs: [],
+          ruled_out_at: null,
+          pitched_at: null,
+        },
       ],
       missed_opportunities: [{ product_id: 'test-murabaha', needs: ['cash-gap'] }],
       stats: {

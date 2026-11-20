@@ -446,3 +446,19 @@ async def test_the_coach_reads_the_clients_grammatical_gender() -> None:
 
     data = json.loads(fake.calls_for(Role.COACH)[0].messages[1].content)
     assert data["client"]["persona"]["gender"] == "female"
+
+
+async def test_the_coach_reads_when_the_client_had_already_ruled_a_product_out() -> None:
+    session = real_interview(
+        "noura-al-kuwari",
+        ("What do you need from the bank?", ["sharia-only"], []),
+        ("I'd suggest our Business Overdraft.", [], []),
+        recommend=["business-overdraft"],
+        pitched={"business-overdraft": [3]},
+    )
+
+    _, fake = await coach(session, coach_reply())
+
+    data = json.loads(fake.calls_for(Role.COACH)[0].messages[1].content)
+    (verdict,) = data["analysis"]["products"]
+    assert (verdict["ruled_out_at"], verdict["pitched_at"]) == (2, 3)

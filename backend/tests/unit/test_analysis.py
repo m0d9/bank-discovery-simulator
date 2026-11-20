@@ -12,7 +12,7 @@ from app.coaching.analysis import (
     product_verdict,
 )
 from app.content import Client, LocalizedText
-from tests.coaching_factory import NOT_IN_KEY, coaching_client_data, interview
+from tests.coaching_factory import NOT_IN_KEY, coaching_client_data, interview, real_interview
 from tests.content_factory import ALPHA, BETA
 from tests.interview_factory import make_session
 
@@ -193,3 +193,70 @@ def test_a_partly_found_need_stays_partial_even_after_a_pitch() -> None:
     fund_gap = analyse(session).needs[0]
 
     assert (fund_gap.status, fund_gap.via) == ("partial", None)
+
+
+OVERDRAFT = "business-overdraft"
+OVERDRAFT_PITCH = (
+    "أقترح عليكِ السحب على المكشوف للأعمال: حد ائتماني مرن على حسابك التجاري، ولا تدفعين "
+    "الفائدة إلا على ما تستخدمينه."
+)
+
+
+def test_an_unsuitable_product_the_client_had_already_ruled_out_says_when() -> None:
+    # The manual test: "What do you need from the bank?" brought out her Sharia preference at
+    # turn 5, she said it at turn 6, and the student pitched the overdraft at turn 7.
+    session = real_interview(
+        "noura-al-kuwari",
+        ("مرحبًا نورة، حدّثيني عن عملك.", [], []),
+        ("كيف تسير الأمور؟", [], []),
+        ("ماذا تحتاجين من البنك؟", ["sharia-only"], []),
+        (OVERDRAFT_PITCH, [], []),
+        recommend=[OVERDRAFT],
+        pitched={OVERDRAFT: [7]},
+    )
+
+    (verdict,) = analyse(session).products
+
+    assert verdict.verdict == "unsuitable"
+    assert (verdict.ruled_out_at, verdict.pitched_at) == (6, 7)
+
+
+def test_a_fact_that_the_products_own_pitch_revealed_rules_nothing_out_beforehand() -> None:
+    session = real_interview(
+        "noura-al-kuwari",
+        ("مرحبًا نورة، حدّثيني عن عملك.", [], []),
+        (OVERDRAFT_PITCH, ["sharia-only"], ["sharia-only"]),
+        recommend=[OVERDRAFT],
+        pitched={OVERDRAFT: [3]},
+    )
+
+    (verdict,) = analyse(session).products
+
+    assert (verdict.verdict, verdict.ruled_out_at, verdict.pitched_at) == ("unsuitable", None, None)
+
+
+def test_a_fact_revealed_by_another_products_pitch_counts() -> None:
+    session = real_interview(
+        "noura-al-kuwari",
+        ("I'd suggest our Invoice Advance.", ["sharia-only"], ["sharia-only"]),
+        ("What about our Business Overdraft instead?", [], []),
+        recommend=[OVERDRAFT],
+        pitched={"invoice-advance": [1], OVERDRAFT: [3]},
+    )
+
+    (verdict,) = analyse(session).products
+
+    assert (verdict.ruled_out_at, verdict.pitched_at) == (2, 3)
+
+
+def test_an_unsuitable_product_that_no_fact_rules_out_says_nothing() -> None:
+    # Murabaha is unsuitable for Rajesh (it finances goods), and no fact of his lists it.
+    session = real_interview(
+        "rajesh-menon",
+        ("How do your clients pay you?", ["corporate-invoices"], []),
+        recommend=["murabaha-working-capital"],
+    )
+
+    (verdict,) = analyse(session).products
+
+    assert (verdict.verdict, verdict.ruled_out_at, verdict.pitched_at) == ("unsuitable", None, None)

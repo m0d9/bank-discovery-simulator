@@ -1604,6 +1604,28 @@
             },
             "type": "array",
             "title": "Needs"
+          },
+          "ruled_out_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ruled Out At"
+          },
+          "pitched_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pitched At"
           }
         },
         "type": "object",
@@ -1611,7 +1633,9 @@
           "product_id",
           "verdict",
           "reasons",
-          "needs"
+          "needs",
+          "ruled_out_at",
+          "pitched_at"
         ],
         "title": "ProductVerdictDTO",
         "description": "A recommended product against the answer key: `reasons` when it's unsuitable, `needs`\n(the needs it meets) when it's suitable."

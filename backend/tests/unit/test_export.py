@@ -181,3 +181,29 @@ def test_the_export_shows_each_distinct_reason_once() -> None:
 
     # Alpha Loan is unsuitable for both needs, for the same reason: it's given once.
     assert "- **Alpha Loan: Not suitable.** Interest-based.\n" in text
+
+
+def test_a_product_the_client_had_already_ruled_out_says_so() -> None:
+    session, feedback = with_feedback(ASK_PAYMENTS, recommend=[ALPHA])
+    (verdict,) = feedback.analysis.products
+    ruled = verdict.model_copy(update={"ruled_out_at": 2})
+    analysis = feedback.analysis.model_copy(update={"products": (ruled,)})
+
+    text = export_markdown(session, feedback.model_copy(update={"analysis": analysis}))
+
+    assert (
+        "- **Alpha Loan: Not suitable.** Interest-based. The client had already said something "
+        "that rules this out (Turn 2)." in text
+    )
+
+
+def test_the_ruled_out_line_is_in_arabic_in_an_arabic_export() -> None:
+    session, english = with_feedback(ASK_PAYMENTS, recommend=[ALPHA])
+    (verdict,) = english.analysis.products
+    ruled = verdict.model_copy(update={"ruled_out_at": 2})
+    analysis = english.analysis.model_copy(update={"products": (ruled,)})
+    arabic = english.model_copy(update={"language": "ar", "analysis": analysis})
+
+    text = export_markdown(session, arabic)
+
+    assert "كانت المقابلة قد كشفت ما يستبعد هذا المنتج (الرسالة 2)." in text

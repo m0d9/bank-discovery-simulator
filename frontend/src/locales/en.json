@@ -144,6 +144,7 @@
       },
       "meets": "Meets:",
       "notInKey": "This client's answer key doesn't mention this product.",
+      "ruledOut": "The client had already said something that rules this out ({{turn}}).",
       "yourReason": "Your reason:",
       "missedTitle": "Suitable products you didn't recommend"
     },

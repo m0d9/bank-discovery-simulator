@@ -255,6 +255,11 @@ class ProductVerdictDTO(BaseModel):
     verdict: Verdict
     reasons: list[VerdictReasonDTO]
     needs: list[str]
+    ruled_out_at: int | None
+    """For an unsuitable product: the client turn that had already said something that rules it
+    out, if the interview revealed it before the recommendation."""
+    pitched_at: int | None
+    """The student's first pitch of the product after `ruled_out_at`, if any."""
 
 
 class MissedOpportunityDTO(BaseModel):

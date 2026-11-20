@@ -73,6 +73,11 @@ class ProductVerdict(_Frozen):
     verdict: Verdict
     reasons: tuple[VerdictReason, ...]
     needs: tuple[str, ...]
+    ruled_out_at: int | None = None
+    """For an unsuitable product: the client turn that had already said something ruling it
+    out (a fact that lists it in `unlock_on_product_pitch`), if the interview revealed one."""
+    pitched_at: int | None = None
+    """The student's first pitch of the product after `ruled_out_at`, if any."""
 
 
 class MissedOpportunity(_Frozen):
@@ -132,7 +137,7 @@ def analyse(session: Session) -> Analysis:
     return Analysis(
         needs=needs,
         facts=facts,
-        products=tuple(product_verdict(client, product_id) for product_id in recommended),
+        products=tuple(_checked_verdict(session, product_id) for product_id in recommended),
         missed_opportunities=missed_opportunities(client, needs, recommended),
         stats=Stats(
             student_turns=session.student_turns_used,
@@ -175,6 +180,42 @@ def product_verdict(client: Client, product_id: str) -> ProductVerdict:
     fits = tuple(need.id for need in client.needs if product_id in need.suitable_products)
     verdict: Verdict = "suitable" if fits else "not_in_key"
     return ProductVerdict(product_id=product_id, verdict=verdict, reasons=(), needs=fits)
+
+
+def ruled_out(session: Session, product_id: str) -> tuple[int | None, int | None]:
+    """When the client had already ruled a product out: the client turn that said it, and the
+    student's first pitch of the product after that (or None).
+
+    A fact rules the product out when it lists the product in `unlock_on_product_pitch` and the
+    interview revealed it. A fact that this product's own pitch brought out doesn't count: the
+    client was reacting to the pitch, so nothing had been said before it. The earliest fact wins.
+    """
+    pitches = sorted(session.products_mentioned.get(product_id, []))
+    turns = {turn.n: turn for turn in session.turns}
+    revealed: list[int] = []
+    for fact in session.client.hidden_facts:
+        unlocked_at = session.unlocked.get(fact.id)
+        if unlocked_at is None or product_id not in fact.unlock_on_product_pitch:
+            continue
+        turn = turns.get(unlocked_at)
+        own_pitch = (
+            unlocked_at in pitches and turn is not None and fact.id in turn.unlocked_by_pitch
+        )
+        if not own_pitch:
+            revealed.append(unlocked_at)
+    if not revealed:
+        return None, None
+    first = min(revealed)
+    # The client's reply to the student turn that unlocked the fact.
+    return first + 1, next((n for n in pitches if n > first), None)
+
+
+def _checked_verdict(session: Session, product_id: str) -> ProductVerdict:
+    verdict = product_verdict(session.client, product_id)
+    if verdict.verdict != "unsuitable":
+        return verdict
+    said, pitched = ruled_out(session, product_id)
+    return verdict.model_copy(update={"ruled_out_at": said, "pitched_at": pitched})
 
 
 def missed_opportunities(

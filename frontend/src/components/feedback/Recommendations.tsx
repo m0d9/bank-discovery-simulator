@@ -7,16 +7,23 @@ import { ProductBadges } from '../ProductBadges';
 import { card } from '../styles';
 import { VerdictBadge } from './StatusBadges';
 import { sectionHeading, subHeading } from './styles';
+import { type ShowTurn, TURN_MARK, TurnSentence } from './TurnLink';
 
 interface RecommendationsProps {
   feedback: Feedback;
   product: (productId: string) => Product | undefined;
   describeNeed: (needId: string) => LocalizedText;
+  onShowTurn: ShowTurn;
 }
 
-/** Section 2: each recommended product with its verdict (icon, words and reason), then the
- * suitable products the student didn't recommend. */
-export function Recommendations({ feedback, product, describeNeed }: RecommendationsProps) {
+/** Each recommended product with its verdict (icon, words and reasons), then the suitable
+ * products the student didn't recommend. */
+export function Recommendations({
+  feedback,
+  product,
+  describeNeed,
+  onShowTurn,
+}: RecommendationsProps) {
   const { t } = useTranslation();
   const language = currentLanguage();
   const { analysis, wrapup } = feedback;
@@ -64,6 +71,15 @@ export function Recommendations({ feedback, product, describeNeed }: Recommendat
                     </li>
                   ))}
                 </ul>
+              )}
+              {verdict.ruled_out_at !== null && (
+                <p className="text-ink">
+                  <TurnSentence
+                    text={t('feedback.recommendations.ruledOut', { turn: TURN_MARK })}
+                    n={verdict.ruled_out_at}
+                    onShow={onShowTurn}
+                  />
+                </p>
               )}
               {verdict.verdict === 'suitable' && (
                 <div className="text-ink">

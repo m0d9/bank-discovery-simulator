@@ -187,6 +187,8 @@ def analysis_dto(analysis: Analysis) -> AnalysisDTO:
                     for reason in verdict.reasons
                 ],
                 needs=list(verdict.needs),
+                ruled_out_at=verdict.ruled_out_at,
+                pitched_at=verdict.pitched_at,
             )
             for verdict in analysis.products
         ],

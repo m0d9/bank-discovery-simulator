@@ -43,3 +43,19 @@ export function EvidenceLinks({ turns, onShow }: { turns: number[]; onShow: Show
     </p>
   );
 }
+
+/** Stands in for a turn link inside a translated sentence. */
+export const TURN_MARK = '\u2063';
+
+/** A translated sentence with a turn link where its `{{turn}}` placeholder was: pass the
+ * sentence translated with `{ turn: TURN_MARK }`, so the locale string stays one sentence. */
+export function TurnSentence({ text, n, onShow }: { text: string; n: number; onShow: ShowTurn }) {
+  const [before = '', after = ''] = text.split(TURN_MARK);
+  return (
+    <>
+      {before}
+      <TurnLink n={n} onShow={onShow} />
+      {after}
+    </>
+  );
+}

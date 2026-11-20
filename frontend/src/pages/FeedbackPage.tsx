@@ -166,7 +166,12 @@ function FeedbackSections({ feedback, product, onShowTurn, summary }: FeedbackSe
         describeNeed={describeNeed}
         onShowTurn={onShowTurn}
       />
-      <Recommendations feedback={feedback} product={product} describeNeed={describeNeed} />
+      <Recommendations
+        feedback={feedback}
+        product={product}
+        describeNeed={describeNeed}
+        onShowTurn={onShowTurn}
+      />
       {feedback.report && <SummaryFeedback report={feedback.report} summary={summary} />}
     </>
   );

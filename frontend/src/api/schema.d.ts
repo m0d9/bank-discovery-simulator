@@ -612,6 +612,10 @@ export interface components {
             reasons: components["schemas"]["VerdictReasonDTO"][];
             /** Needs */
             needs: string[];
+            /** Ruled Out At */
+            ruled_out_at: number | null;
+            /** Pitched At */
+            pitched_at: number | null;
         };
         /**
          * RecommendationDTO
