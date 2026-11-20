@@ -1,0 +1,68 @@
+/*
+ * Colour tokens: every colour the app uses. Tailwind makes utilities from them (bg-surface,
+ * text-ink, border-line-strong…), and its default palette is switched off, so no other colour
+ * can creep in. A calm, neutral identity for the fictional Al Murjan Bank: deep sea-teal, slate
+ * greys and a warm off-white. Red is for errors only.
+ *
+ * Contrast ratios (WCAG 2.1). Text needs at least 4.5:1. Large text, icons, focus rings and the
+ * borders of controls ("ui") need at least 3:1. tokens.test.ts recomputes every line below from
+ * the values in this file, so the table can't drift from the colours.
+ *
+ *   ink on canvas: 14.33:1 (text)
+ *   ink on surface: 15.75:1 (text)
+ *   ink on surface-sunken: 13.74:1 (text)
+ *   ink on brand-tint: 13.29:1 (text)
+ *   ink on danger-tint: 13.93:1 (text)
+ *   ink-muted on canvas: 6.53:1 (text)
+ *   ink-muted on surface: 7.18:1 (text)
+ *   ink-muted on surface-sunken: 6.26:1 (text)
+ *   ink-muted on brand-tint: 6.06:1 (text)
+ *   on-brand on brand: 7.83:1 (text)
+ *   on-brand on brand-strong: 10.59:1 (text)
+ *   brand on surface: 7.83:1 (text)
+ *   brand on canvas: 7.13:1 (text)
+ *   brand-strong on surface: 10.59:1 (text)
+ *   danger on surface: 7.28:1 (text)
+ *   danger on danger-tint: 6.44:1 (text)
+ *   sharia-ink on sharia-tint: 6.93:1 (text)
+ *   interest-ink on interest-tint: 6.98:1 (text)
+ *   line-strong on surface: 4.39:1 (ui)
+ *   line-strong on canvas: 4.00:1 (ui)
+ *   focus on canvas: 9.63:1 (ui)
+ *   focus on surface: 10.59:1 (ui)
+ *   focus on brand-tint: 8.94:1 (ui)
+ *   danger on canvas: 6.62:1 (ui)
+ */
+@theme {
+  --color-*: initial;
+
+  /* Backgrounds */
+  --color-canvas: #f6f4ef; /* the page: warm off-white */
+  --color-surface: #ffffff; /* cards, header, inputs */
+  --color-surface-sunken: #edf0f0; /* neutral badges, hover */
+
+  /* Text */
+  --color-ink: #16252b; /* body text */
+  --color-ink-muted: #4a5a61; /* secondary text, hints */
+
+  /* Lines */
+  --color-line: #d5dbdc; /* decorative dividers only, never a control's only edge */
+  --color-line-strong: #6b7b82; /* borders of inputs and buttons */
+
+  /* Brand: sea-teal */
+  --color-brand: #0b5a69; /* primary buttons, links, the wordmark */
+  --color-brand-strong: #084552; /* hover */
+  --color-brand-tint: #e2eef0; /* the student's chat bubbles */
+  --color-on-brand: #ffffff; /* text on brand */
+  --color-focus: #084552; /* focus rings */
+
+  /* Errors */
+  --color-danger: #a4271c;
+  --color-danger-tint: #fceeec;
+
+  /* Product badges: the icon and text carry the meaning; the tint only groups them */
+  --color-sharia-tint: #e3f0e8;
+  --color-sharia-ink: #1e5a3c;
+  --color-interest-tint: #f8edda;
+  --color-interest-ink: #774310;
+}
