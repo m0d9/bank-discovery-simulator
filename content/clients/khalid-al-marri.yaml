@@ -1,0 +1,158 @@
+# yaml-language-server: $schema=../schema/client.schema.json
+id: khalid-al-marri
+schema_version: 1
+segment: sme
+difficulty: hard
+
+card:
+  name:
+    en: Khalid Al-Marri
+    ar: خالد المري
+  headline:
+    en: Runs a family logistics company that delivers for retailers across Qatar
+    ar: يدير شركة لوجستية عائلية توصّل البضائع إلى متاجر التجزئة في أنحاء قطر
+  opening_line:
+    en: Good afternoon. We've banked with the same bank for many years, so what could you offer us that they don't?
+    ar: مساء الخير. نتعامل مع البنك نفسه منذ سنوات طويلة، فما الذي يمكنكم تقديمه لنا ولا يقدّمه بنكنا الحالي؟
+
+persona:
+  age: 52
+  gender: male
+  occupation: Managing director and co-owner of a family logistics company
+  nationality: Qatari
+  family: Married, with four children
+  background: >-
+    His father founded the company as a small delivery business. Khalid and his younger
+    brother inherited it and own it together, and Khalid has run it for fifteen years. It now
+    has 25 staff and its own vans and trucks, delivering goods for supermarkets and other
+    retailers across Qatar.
+  personality: >-
+    Polite, guarded and experienced. He has dealt with many bankers and tests them a little:
+    he gives short answers to general questions and opens up only to specific, well-informed
+    ones.
+  speaking_style: >-
+    Courteous and formal, in short sentences. He sometimes answers a vague question with a
+    question of his own.
+  financial_knowledge: high
+
+open_facts:
+  - He runs a family logistics company that delivers goods for supermarkets and other retailers across Qatar.
+  - The company has 25 staff and its own fleet of vans and trucks.
+  - The company has banked with the same bank for many years, and he wants to see whether this bank could serve it better.
+
+hidden_facts:
+  - id: needs-trucks
+    content: >-
+      He needs 2 refrigerated delivery trucks, about QAR 420,000 in total, to serve a new
+      contract with a grocery chain. Without them, the company has had to turn work down.
+    signal: We've had to turn down some work.
+    # No "what would you need financing for" here: he's the hard client, so a generic
+    # question about financing must not reveal the trucks.
+    unlock_when:
+      - asks whether the company needs new vehicles or equipment
+      - asks what is stopping the company from taking on more work
+      - follows up on his remark that the company has had to turn down work
+    importance: critical
+    example_questions:
+      - Does the company need any new vehicles or equipment?
+      - What is stopping the company from taking on more work?
+      - You said you've had to turn down some work. Why is that?
+
+  - id: sharia-on-pitch
+    content: He uses only Sharia-compliant banking for the company and will not take any interest-based product.
+    # He only says so when asked specifically, or when offered something interest-based.
+    unlock_when:
+      - asks specifically whether he wants Islamic or Sharia-compliant banking products
+      - asks whether he would accept an interest-based product
+    unlock_on_product_pitch: [business-overdraft, invoice-advance, salary-personal-finance]
+    importance: critical
+    example_questions:
+      - Would you prefer Sharia-compliant products for the company, or are conventional ones fine?
+      - Is Islamic banking important to you?
+
+  - id: brother-exit
+    content: >-
+      His brother, who co-owns the company, wants to leave within a year and be bought out.
+      Until that is settled, Khalid is wary of any long commitment.
+    signal: The family business is… complicated.
+    unlock_when:
+      - asks who owns the company
+      - asks whether any changes are coming in the company's ownership or management
+      - follows up on his remark that the family business is complicated
+    requires: [needs-trucks]
+    importance: important
+    example_questions:
+      - Who owns the company, and are any changes planned in its ownership?
+      - Are any changes coming in the company's ownership or management?
+      - You said the family business is complicated. What do you mean?
+
+  - id: seasonal-peaks
+    content: >-
+      Delivery volumes double during Ramadan and in the last quarter of the year. He has to
+      buy extra fuel, tyres and spare parts up front, weeks before the retailers pay him.
+    unlock_when:
+      - asks whether the company's delivery volumes or costs change during the year
+      - asks about busy seasons or peak periods
+    importance: minor
+    example_questions:
+      - Are there times of year when your delivery volumes go up?
+      - How do your costs change in busy seasons such as Ramadan?
+
+needs:
+  - id: fleet-expansion
+    description:
+      en: >-
+        Finance 2 refrigerated trucks, about QAR 420,000, for the new grocery contract with
+        Sharia-compliant products only, choosing a term that allows for buying out his brother
+        within the year.
+      ar: >-
+        تمويل شاحنتي توصيل مبرّدتين بنحو 420,000 ريال قطري لعقد سلسلة متاجر المواد الغذائية
+        الجديد، بمنتجات متوافقة مع الشريعة فقط، مع اختيار مدة تراعي شراء حصة أخيه خلال السنة.
+    evidence_facts: [needs-trucks, sharia-on-pitch, brother-exit]
+    suitable_products: [ijara-asset-finance]
+    unsuitable_products:
+      - id: business-overdraft
+        reason:
+          en: A short-term, interest-based facility for a long-term asset.
+          ar: تسهيل قصير الأجل قائم على الفائدة لتمويل أصل طويل الأجل.
+      - id: invoice-advance
+        reason:
+          en: Interest-based, and unrelated to buying vehicles.
+          ar: قائم على الفائدة، ولا علاقة له بشراء المركبات.
+      - id: salary-personal-finance
+        reason:
+          en: A personal, interest-based loan for a business asset, and he uses only Sharia-compliant banking.
+          ar: قرض شخصي قائم على الفائدة لتمويل أصل للشركة، وهو لا يتعامل إلا بالمنتجات المتوافقة مع الشريعة.
+
+  - id: seasonal-cash
+    description:
+      en: >-
+        Pay for the extra fuel, tyres and spare parts he buys up front for the Ramadan and
+        last-quarter peaks, and get paid faster by the retailers, with Sharia-compliant
+        products.
+      ar: >-
+        تمويل ما يشتريه مقدّمًا من وقود وإطارات وقطع غيار إضافية لموسمَي الذروة في رمضان والربع
+        الأخير من السنة، وتسريع تحصيل مستحقاته من متاجر التجزئة، بمنتجات متوافقة مع الشريعة.
+    evidence_facts: [seasonal-peaks]
+    suitable_products: [murabaha-working-capital, business-collect-account]
+    unsuitable_products:
+      - id: business-overdraft
+        reason:
+          en: Interest-based; he uses only Sharia-compliant banking.
+          ar: قائم على الفائدة، وهو لا يتعامل إلا بالمنتجات المتوافقة مع الشريعة.
+      - id: invoice-advance
+        reason:
+          en: Interest-based; he uses only Sharia-compliant banking.
+          ar: قائم على الفائدة، وهو لا يتعامل إلا بالمنتجات المتوافقة مع الشريعة.
+
+coach_notes:
+  key_questions:
+    - Does the company need any new vehicles or equipment?
+    - Would you prefer Sharia-compliant products for the company, or are conventional ones fine?
+    - Who owns the company, and are any changes planned in its ownership?
+    - Are there busy seasons when your costs rise before the retailers pay you?
+  common_mistakes:
+    - Pitching an overdraft or invoice advance without asking specifically about Islamic banking; he says nothing about it until then.
+    - Financing long-life trucks with a short-term facility such as an overdraft.
+    - Proposing a long Ijara term without asking about the company's ownership.
+    - Accepting his short answers to general questions instead of following up on his hints.

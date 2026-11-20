@@ -1,0 +1,116 @@
+# yaml-language-server: $schema=../schema/client.schema.json
+id: ahmed-hassan
+schema_version: 1
+segment: retail
+difficulty: medium
+
+card:
+  name:
+    en: Ahmed Hassan
+    ar: أحمد حسن
+  headline:
+    en: Civil engineer at a Doha construction company
+    ar: مهندس مدني في شركة إنشاءات بالدوحة
+  opening_line:
+    en: Hello. I've been working in Doha for 6 years now, and I'm thinking of moving my salary to a bank that offers me more.
+    ar: مرحبًا. أعمل في الدوحة منذ 6 سنوات، وأفكر في تحويل راتبي إلى بنك يقدّم لي مزايا أكثر.
+
+persona:
+  age: 34
+  gender: male
+  occupation: Civil engineer and project manager at a construction company
+  nationality: Egyptian
+  family: Married, with a three-year-old son; his wife and son live with him in Doha
+  background: >-
+    He grew up in Cairo and moved to Doha six years ago as a site engineer for a construction
+    company, where he now manages building projects. His salary of QAR 18,000 a month is paid
+    into an account at another bank.
+  personality: >-
+    Friendly, practical and careful with money. He likes to compare options before deciding,
+    and he opens up when the conversation feels practical rather than like a sales pitch.
+  speaking_style: >-
+    Polite and direct, with an engineer's habit of giving exact figures when asked. Short
+    answers to general questions, more detail to specific ones.
+  financial_knowledge: medium
+
+open_facts:
+  - He is a civil engineer who has worked for a construction company in Doha for six years.
+  - His salary is QAR 18,000 a month, paid into an account at another bank.
+  - He is thinking of moving his salary to a bank that offers him more.
+
+hidden_facts:
+  - id: family-remittance
+    content: >-
+      He sends about QAR 4,000 a month to his parents in Cairo through an exchange house, and
+      its fees and exchange rates cost him a lot every month.
+    signal: My family back home depends on me.
+    unlock_when:
+      - asks whether he sends money abroad, for example to family
+      - asks how he sends money abroad or what it costs him
+      - follows up on his remark that his family back home depends on him
+    importance: critical
+    example_questions:
+      - Do you send money abroad regularly, for example to family?
+      - How do you send money home at the moment, and what does it cost you?
+      - You said your family back home depends on you. Do you support them financially?
+
+  - id: existing-loan
+    content: >-
+      He already has a personal loan at another bank that costs him QAR 8,000 a month, with
+      the last payment in 10 months. Banks cap all loan repayments together at half his
+      salary, QAR 9,000 a month, so until then he has only about QAR 1,000 a month left for
+      any new repayments.
+    unlock_when:
+      - asks whether he has any existing loans, debts or monthly repayments
+      - asks how much of his salary already goes to loan repayments
+    unlock_on_product_pitch: [salary-personal-finance]
+    importance: critical
+    example_questions:
+      - Do you have any existing loans or monthly repayments?
+      - How much of your salary already goes to loan repayments?
+
+  - id: car-plan
+    content: He wants to buy a family car in about 6 months, costing around QAR 90,000.
+    unlock_when:
+      - asks about any big purchases he is planning
+      - asks what he would need financing for in the coming months
+    importance: important
+    example_questions:
+      - Are you planning any big purchases in the next year?
+      - Is there anything you would need financing for in the coming months?
+
+needs:
+  - id: cheaper-remittance
+    description:
+      en: Send about QAR 4,000 a month to his parents in Cairo for lower fees than the exchange house charges.
+      ar: تحويل نحو 4,000 ريال قطري شهريًا إلى والديه في القاهرة برسوم أقل مما تتقاضاه شركة الصرافة.
+    evidence_facts: [family-remittance]
+    suitable_products: [multicurrency-remit-account]
+    unsuitable_products: []
+
+  - id: car-later
+    description:
+      en: >-
+        Buy a car of about QAR 90,000 without pushing his monthly commitments past 50% of his
+        salary: Ijara works once his current loan ends in 10 months, or sooner with a larger
+        advance payment.
+      ar: >-
+        شراء سيارة بنحو 90,000 ريال قطري دون أن تتجاوز التزاماته الشهرية 50% من راتبه، إذ تناسبه
+        الإجارة بعد انتهاء قرضه الحالي خلال 10 أشهر، أو قبل ذلك مع دفعة مقدمة أكبر.
+    evidence_facts: [car-plan, existing-loan]
+    suitable_products: [ijara-asset-finance]
+    unsuitable_products:
+      - id: salary-personal-finance
+        reason:
+          en: Would push his total repayments past the 50% cap, given his existing loan.
+          ar: سيرفع مجموع أقساطه الشهرية فوق الحد الأقصى البالغ 50% من راتبه، بسبب قرضه الحالي.
+
+coach_notes:
+  key_questions:
+    - Do you send money abroad regularly, and what does it cost you?
+    - Do you have any existing loans or monthly repayments?
+    - Are you planning any big purchases in the coming months?
+  common_mistakes:
+    - Pitching the personal loan as soon as he mentions moving his salary, before asking about his existing debts.
+    - Recommending new financing without checking that his total repayments stay within 50% of his salary.
+    - Not asking whether he sends money abroad, a common need for expatriate clients.

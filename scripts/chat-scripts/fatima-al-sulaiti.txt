@@ -1,0 +1,8 @@
+# Fatima Al-Sulaiti: the M6 acceptance run.
+#   make chat CLIENT=fatima-al-sulaiti DEBUG=1 SCRIPT=scripts/chat-scripts/fatima-al-sulaiti.txt
+# A generic question: nothing should unlock.
+How is work going at the moment?
+# Each fact's first example question, in dependency order: each should unlock its fact.
+Do you prefer Islamic or conventional banking products?
+How much risk are you comfortable taking with these savings?
+Might you need any of this money before your daughter starts university?

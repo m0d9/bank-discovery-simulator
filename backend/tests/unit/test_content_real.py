@@ -1,11 +1,13 @@
 """The repository's real `content/` folder: valid, bilingual where students read it, and in sync."""
 
+import shutil
 from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+import yaml
 
-from app.content import ContentRegistry, LocalizedText, load_registry
+from app.content import Client, ContentRegistry, LocalizedText, load_registry
 from app.content.__main__ import render_schemas, validate
 
 REPO_CONTENT = Path(__file__).resolve().parents[3] / "content"
@@ -19,7 +21,13 @@ PRODUCT_IDS = [
     "salary-personal-finance",
     "wakala-term-deposit",
 ]
-CLIENT_IDS = ["rajesh-menon", "noura-al-kuwari"]  # easy, then medium
+CLIENT_IDS = [  # easy, then medium, then hard; by id within each
+    "fatima-al-sulaiti",
+    "rajesh-menon",
+    "ahmed-hassan",
+    "noura-al-kuwari",
+    "khalid-al-marri",
+]
 ARABIC_FICTIONAL_MARKER = "(أرقام افتراضية)"
 ARABIC_INTEREST = "فائدة"
 # Covers فائدة, الفائدة, فوائد and their other forms.
@@ -34,7 +42,7 @@ def registry() -> ContentRegistry:
 
 def test_the_real_content_validates(capsys: pytest.CaptureFixture[str]) -> None:
     assert validate(REPO_CONTENT) == 0
-    assert capsys.readouterr().out == "✓ 8 products, 2 clients\n"
+    assert capsys.readouterr().out == "✓ 8 products, 5 clients\n"
 
 
 def test_the_catalogue_and_clients_are_the_ones_the_brief_fixes(registry: ContentRegistry) -> None:
@@ -44,15 +52,48 @@ def test_the_catalogue_and_clients_are_the_ones_the_brief_fixes(registry: Conten
     assert registry.bank.currency == "QAR"
 
 
+def test_the_templates_validate_when_copied_next_to_the_real_catalogue(tmp_path: Path) -> None:
+    """A lecturer copies a template into `clients/` or `products/`: it must validate as it is."""
+    content = tmp_path / "content"
+    shutil.copytree(REPO_CONTENT / "products", content / "products")
+    (content / "clients").mkdir()
+    shutil.copy(REPO_CONTENT / "bank.yaml", content / "bank.yaml")
+    copied: dict[str, str] = {}
+    for kind, folder in (("client", "clients"), ("product", "products")):
+        template = REPO_CONTENT / "_templates" / f"{kind}.yaml"
+        # The template's own instructions: save it as <id>.yaml.
+        copied[kind] = yaml.safe_load(template.read_text(encoding="utf-8"))["id"]
+        shutil.copy(template, content / folder / f"{copied[kind]}.yaml")
+
+    registry = load_registry(content)
+
+    assert [client.id for client in registry.list_clients()] == [copied["client"]]
+    assert copied["product"] in [product.id for product in registry.list_products()]
+    assert len(registry.list_products()) == len(PRODUCT_IDS) + 1
+
+
 def student_facing_text(registry: ContentRegistry) -> Iterator[tuple[str, LocalizedText]]:
-    """Every field students read, as (where, text): the bank, client cards and products."""
+    """Every field students read, as (where, text): the bank, client cards, the answer key's
+    texts in the feedback, and products."""
     for field in ("name", "tagline", "disclaimer"):
         yield f"bank.{field}", getattr(registry.bank, field)
     for client in registry.list_clients():
         for field in ("name", "headline", "opening_line"):
             yield f"{client.id}.card.{field}", getattr(client.card, field)
+        yield from answer_key_text(client)
     for product in registry.list_products():
         yield from product_text(product.id, registry)
+
+
+def answer_key_text(client: Client) -> Iterator[tuple[str, LocalizedText]]:
+    """What the feedback shows from the answer key: need descriptions, the reasons products
+    are unsuitable, and the referral note."""
+    for need in client.needs:
+        yield f"{client.id}.needs.{need.id}.description", need.description
+        for entry in need.unsuitable_products:
+            yield f"{client.id}.needs.{need.id}.unsuitable.{entry.id}", entry.reason
+    if client.referral_note is not None:
+        yield f"{client.id}.referral_note", client.referral_note
 
 
 def product_text(product_id: str, registry: ContentRegistry) -> Iterator[tuple[str, LocalizedText]]:

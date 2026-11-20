@@ -24,6 +24,7 @@ from app.simulation import InterviewService, Session
 from app.simulation.disclosure import eligible_facts
 from tests.content_factory import ALPHA, CLIENT
 from tests.interview_factory import (
+    REPO_CONTENT,
     client_data_with,
     gate_reply,
     hidden_fact,
@@ -148,7 +149,11 @@ async def test_facts_and_signals_reach_only_the_client_and_only_when_allowed(
     assert not any("SIGNAL-" in t for t in by_turn[3] + by_turn[4])
 
 
-@pytest.mark.parametrize("client_id", ["noura-al-kuwari", "rajesh-menon"])
+# Every client file in the repository, so a new client is covered without editing this test.
+REAL_CLIENT_IDS = sorted(path.stem for path in (REPO_CONTENT / "clients").glob("[!_]*.yaml"))
+
+
+@pytest.mark.parametrize("client_id", REAL_CLIENT_IDS)
 async def test_the_real_clients_keep_their_facts_out_of_every_prompt_until_unlocked(
     settings: Settings, client_id: str
 ) -> None:

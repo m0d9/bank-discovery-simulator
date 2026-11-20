@@ -78,8 +78,11 @@ def test_products_show_the_catalogue_fields_but_not_the_client_view(api: TestCli
 def test_the_real_content_is_served(client: TestClient) -> None:
     assert client.get("/api/bank").json()["name"] == {"en": "Al Murjan Bank", "ar": "بنك المرجان"}
     assert [card["id"] for card in client.get("/api/clients").json()] == [
+        "fatima-al-sulaiti",
         "rajesh-menon",
+        "ahmed-hassan",
         "noura-al-kuwari",
+        "khalid-al-marri",
     ]
     assert len(client.get("/api/products").json()) == 8
 
