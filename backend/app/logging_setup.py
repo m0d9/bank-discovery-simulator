@@ -13,6 +13,10 @@ _EXCEPTION_FORMATTER = logging.Formatter()
 
 REDACTED = "[REDACTED]"
 
+# HTTP client libraries log every request at INFO. That's noise in the app's log and in the
+# middle of scripts/chat.py's conversation; their warnings and errors still come through.
+QUIET_LOGGERS = ("httpx", "httpx2", "openai")
+
 
 class JsonFormatter(logging.Formatter):
     """Format log records as single-line JSON."""
@@ -75,7 +79,8 @@ class RedactSecretsFilter(logging.Filter):
 
 
 def configure_logging(level: int | str = logging.INFO, *, secrets: Iterable[str] = ()) -> None:
-    """Install the JSON formatter and the secret-redacting filter on the root logger.
+    """Install the JSON formatter and the secret-redacting filter on the root logger, and keep
+    the HTTP client libraries at WARNING.
 
     Idempotent: replaces any handlers already on the root logger.
     """
@@ -85,3 +90,5 @@ def configure_logging(level: int | str = logging.INFO, *, secrets: Iterable[str]
     root = logging.getLogger()
     root.handlers[:] = [handler]
     root.setLevel(level)
+    for name in QUIET_LOGGERS:
+        logging.getLogger(name).setLevel(logging.WARNING)

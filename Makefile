@@ -38,7 +38,7 @@ dev-frontend: ## Run the Vite dev server on :5173
 
 chat: ## Interview a client in the terminal: make chat CLIENT=<id> [DEBUG=1] [SCRIPT=path]
 	@test -n "$(CLIENT)" || { echo "Usage: make chat CLIENT=<client-id> [DEBUG=1] [SCRIPT=path]" >&2; exit 2; }
-	uv run --project $(BACKEND) python scripts/chat.py --client "$(CLIENT)" $(if $(filter 1 true yes,$(DEBUG)),--debug) $(if $(SCRIPT),--script "$(SCRIPT)")
+	@uv run --project $(BACKEND) python scripts/chat.py --client "$(CLIENT)" $(if $(filter 1 true yes,$(DEBUG)),--debug) $(if $(SCRIPT),--script "$(SCRIPT)")
 
 test: ## Unit and API tests (no real model)
 	cd $(BACKEND) && uv run pytest
