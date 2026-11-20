@@ -80,6 +80,7 @@ def test_the_real_content_is_served(client: TestClient) -> None:
     assert [card["id"] for card in client.get("/api/clients").json()] == [
         "fatima-al-sulaiti",
         "rajesh-menon",
+        "ahmed-hassan",
         "noura-al-kuwari",
     ]
     assert len(client.get("/api/products").json()) == 8
