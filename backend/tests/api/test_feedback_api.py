@@ -164,7 +164,7 @@ def test_the_export_is_a_markdown_attachment(api: TestClient, fake_llm: FakeLLM)
     assert before.text.startswith("# Interview with Noura Al-Kuwari")
     assert "Two government-linked" not in before.text
     # The latest feedback was in Arabic, so the export is too.
-    assert after.text.startswith('<div dir="rtl">\n\n# مقابلة مع نورة الكواري')
+    assert after.text.startswith('<div dir="rtl">\n\n# \u2068مقابلة مع نورة الكواري\u2069')
     assert "## خلف الكواليس: الملف الكامل للعميل" in after.text
     assert "Two government-linked" in after.text
 

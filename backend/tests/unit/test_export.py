@@ -121,10 +121,23 @@ def test_an_arabic_export_uses_arabic_labels_and_reads_right_to_left() -> None:
 
     text = export_markdown(session, arabic)
 
-    assert text.startswith('<div dir="rtl">\n\n# مقابلة مع عميل الاختبار\n')
+    assert text.startswith('<div dir="rtl">\n\n# \u2068مقابلة مع عميل الاختبار\u2069\n')
     assert text.endswith("\n</div>\n")
-    assert "**الرسالة 1 · أنت:** How do your customers pay?" in text
-    assert "| تمويل الفجوة. | اكتُشف جزئيًا | – | – |" in text
+    # Free text is isolated (FSI…PDI), so English keeps its direction, full stop included.
+    assert "**الرسالة 1 · \u2068أنت\u2069:** \u2068How do your customers pay?\u2069" in text
+    assert "\u2068SECRET-CASH-GAP: the content of cash-gap.\u2069" in text
+    assert (
+        "| \u2068تمويل الفجوة.\u2069 | \u2068اكتُشف جزئيًا\u2069 | \u2068–\u2069 | \u2068–\u2069 |"
+        in text
+    )
+
+
+def test_an_english_export_has_no_isolates() -> None:
+    session, feedback = with_feedback(ASK_PAYMENTS, recommend=[ALPHA])
+
+    text = export_markdown(session, feedback)
+
+    assert "\u2068" not in text and "\u2069" not in text
 
 
 def test_text_from_students_and_models_cannot_add_markup() -> None:
