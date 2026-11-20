@@ -29,7 +29,7 @@ Hidden facts start locked. After each student message, an AI "gate" checks it ag
 
 - **Name a specific topic, not a mood or a theme.** After a pitch, Noura's "…or money worries" let "What would worry you about it?" unlock `late-payments` (3 of 3). "…or difficulty covering salaries or suppliers" cut that to 1 in 12.
 - **Describe the student's question, not the client's situation.** The gate over-unlocks after a pitch: "…for when cash is short" unlocked `late-payments` in 2 of 3 runs, though it asked nothing.
-- **Hints get stretched too.** After Khalid says "We've had to turn down some work", "Do you need any financing?" unlocks his trucks as a follow-up; before the hint, nothing. Test a general question after each hint.
+- **Hints make the follow-up easier, by design.** After Khalid says "We've had to turn down some work", even "Do you need any financing?" counts as a follow-up and unlocks his trucks; asked cold, it unlocks nothing. So hard clients should drop hints sparingly.
 - **Match the difficulty.** A hard client gets no line a general question would match, such as "asks what the company would need financing for".
 
 ## 3. Writing the answer key
