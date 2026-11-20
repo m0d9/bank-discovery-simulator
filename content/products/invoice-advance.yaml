@@ -3,7 +3,7 @@ id: invoice-advance
 schema_version: 1
 name:
   en: Invoice Advance
-  ar: تمويل الفواتير
+  ar: خصم الفواتير
 summary:
   en: Get most of the value of your approved invoices in cash before your customers pay them.
   ar: احصل على معظم قيمة فواتيرك المعتمدة نقدًا قبل أن يسددها عملاؤك.
