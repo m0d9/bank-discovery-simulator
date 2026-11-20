@@ -58,18 +58,6 @@ describe('FeedbackPage', () => {
     expect(counts.compareDocumentPosition(present(headings[0]))).toBe(
       Node.DOCUMENT_POSITION_FOLLOWING,
     );
-    // Under the coach's sections, before the map: the coach can be wrong, the answer key can't.
-    const note = screen.getByText(
-      'The AI coach wrote these notes and can make mistakes. The discovery map and the verdicts ' +
-        'below come from the answer key.',
-    );
-    expect(present(headings[2]).compareDocumentPosition(note)).toBe(
-      Node.DOCUMENT_POSITION_FOLLOWING,
-    );
-    expect(note.compareDocumentPosition(present(headings[3]))).toBe(
-      Node.DOCUMENT_POSITION_FOLLOWING,
-    );
-    expect(note.closest('[role="alert"], [role="status"]')).toBeNull();
     expect(screen.getByText('Your feedback is ready.')).toBeInTheDocument();
 
     const map = screen.getByRole('table', { name: 'Discovery map' });
@@ -121,6 +109,23 @@ describe('FeedbackPage', () => {
       'auto',
     );
     expect(screen.getByText(/Your summary names the cash gap/)).toBeInTheDocument();
+  });
+
+  it('notes under the coach sections that the AI coach can make mistakes', async () => {
+    wrappedUp();
+    await renderApp('/feedback/s1');
+
+    const map = await screen.findByRole('heading', { level: 2, name: 'Discovery map' });
+    const improve = screen.getByRole('heading', { level: 2, name: 'How to improve' });
+    const note = screen.getByText(
+      'The AI coach wrote these notes and can make mistakes. The discovery map and the verdicts ' +
+        'below come from the answer key.',
+    );
+    // Under the coach's sections and before the map, as muted text rather than an alert.
+    expect(improve.compareDocumentPosition(note)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(note.compareDocumentPosition(map)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(note).toHaveClass('text-ink-muted');
+    expect(note.closest('[role="alert"], [role="status"]')).toBeNull();
   });
 
   it('asks for the feedback in Arabic, and marks English-only content as English', async () => {
