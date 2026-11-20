@@ -11,6 +11,7 @@ from app.content import ContentRegistry, LocalizedText, UnknownProduct
 from app.llm import LLMClient, Role, resolve_model
 from app.prompts import PROMPT_VERSION
 from app.simulation.client_agent import (
+    LanguageRetry,
     client_history,
     client_reminder,
     client_system_prompt,
@@ -52,6 +53,8 @@ class TurnResult:
     """The behaviour the gate quoted for each fact it unlocked itself."""
     role_break: bool
     regenerated: bool
+    language_retry: LanguageRetry | None
+    """Set when the client's reply was in the wrong language and was regenerated."""
     latency_ms: Mapping[str, int]
     """Milliseconds per role (`gate`, `client`), retries included."""
 
@@ -203,6 +206,7 @@ class InterviewService:
                 gate_quotes=gate.quotes,
                 role_break=reply.role_break,
                 regenerated=reply.regenerated,
+                language_retry=reply.language_retry,
                 latency_ms=MappingProxyType({"gate": gate.latency_ms, "client": reply.latency_ms}),
             )
             await self._emit_turn(result)
@@ -255,7 +259,8 @@ class InterviewService:
             "latency_ms": dict(result.latency_ms),
             "models": {"gate": session.models.gate, "client": session.models.client},
             "prompt_versions": {
-                name: PROMPT_VERSION[name] for name in ("gate", "client_system", "client_reminder")
+                name: PROMPT_VERSION[name]
+                for name in ("gate", "client_system", "client_reminder", "client_language")
             },
         }
         if self._settings.LOG_TRANSCRIPTS:
@@ -263,6 +268,19 @@ class InterviewService:
             fields["client_text"] = result.client_turn.text
             fields["gate_note"] = result.gate_note
         await self._events.emit("turn", **fields)
+        retry = result.language_retry
+        if retry is not None:
+            mismatch: dict[str, object] = {
+                "session_id": session.id,
+                "client_id": session.client_id,
+                "student_turn_no": session.student_turns_used,
+                "reason": retry.reason,
+                "retried": retry.retried,
+                "fixed": retry.fixed,
+            }
+            if self._settings.LOG_TRANSCRIPTS:
+                mismatch["first_text"] = retry.first_text
+            await self._events.emit("language_mismatch", **mismatch)
 
 
 def _in(text: LocalizedText, language: Language) -> str:

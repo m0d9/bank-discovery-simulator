@@ -6,9 +6,10 @@ import unicodedata
 from collections.abc import Collection, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from types import MappingProxyType
+from typing import Literal
 
 from app.content import Bank, Client, Product
-from app.llm import ChatMessage, InvalidOutput, LLMClient, OutputTruncated, Role
+from app.llm import ChatMessage, InvalidOutput, LLMClient, LLMError, OutputTruncated, Role
 from app.prompts import PROMPT_VERSION, render
 from app.simulation.disclosure import eligible_facts
 from app.simulation.models import Language, Turn
@@ -129,6 +130,51 @@ def client_reminder(client: Client, bank: Bank) -> str:
     return render("client_reminder", name=client.card.name.en, bank=bank.name.en)
 
 
+_LANGUAGE_NAMES: Mapping[Language, str] = MappingProxyType({"en": "English", "ar": "Arabic"})
+
+
+def client_language_reminder(language: Language) -> str:
+    """The extra instruction for regenerating a reply that is in the wrong language."""
+    return render("client_language", language=_LANGUAGE_NAMES[language])
+
+
+LanguageMismatch = Literal["script", "latin_word"]
+
+_ARABIC_LETTER = re.compile("[\u0600-\u06ff\u0750-\u077f\u08a0-\u08ff\ufb50-\ufdff\ufe70-\ufeff]")
+_LATIN_LETTER = re.compile("[A-Za-z\u00c0-\u024f]")
+_LATIN_WORD = re.compile("[A-Za-z\u00c0-\u024f]{2,}")
+
+
+def script_of(text: str) -> Language | None:
+    """The script most of the text's letters are in: "ar" for Arabic letters, "en" for Latin
+    letters, or None when it has neither (only digits or punctuation) or as many of each."""
+    arabic = latin = 0
+    for char in text:
+        if not char.isalpha():
+            continue
+        if _ARABIC_LETTER.match(char):
+            arabic += 1
+        elif _LATIN_LETTER.match(char):
+            latin += 1
+    if arabic == latin:
+        return None
+    return "ar" if arabic > latin else "en"
+
+
+def language_mismatch(student_message: str, reply: str) -> LanguageMismatch | None:
+    """Why `reply` is in the wrong language for the student's message, or None if it isn't.
+
+    "script": the reply is mostly in the other script (Arabic letters against Latin letters).
+    "latin_word": the reply is Arabic but has a word of two or more Latin letters in it.
+    """
+    expected, actual = script_of(student_message), script_of(reply)
+    if expected is not None and actual is not None and expected != actual:
+        return "script"
+    if actual == "ar" and _LATIN_WORD.search(reply):
+        return "latin_word"
+    return None
+
+
 def client_history(turns: Sequence[Turn], limit: int) -> list[ChatMessage]:
     """The last `limit` turns as chat messages: the student is the user, the client the
     assistant."""
@@ -136,6 +182,20 @@ def client_history(turns: Sequence[Turn], limit: int) -> list[ChatMessage]:
         ChatMessage(role="user" if turn.role == "student" else "assistant", content=turn.text)
         for turn in turns[-limit:]
     ]
+
+
+@dataclass(frozen=True)
+class LanguageRetry:
+    """A reply in the wrong language, regenerated once with the language reminder."""
+
+    reason: LanguageMismatch
+    retried: bool
+    """The retry gave a usable reply, which replaced the first. False when the retry was empty,
+    broke character or failed: the first reply was kept, so the turn never fails over this."""
+    fixed: bool
+    """The reply that was kept is in the right language."""
+    first_text: str
+    """The reply in the wrong language."""
 
 
 @dataclass(frozen=True)
@@ -149,6 +209,8 @@ class ClientReply:
     """The first reply broke character and was regenerated."""
     attempts: int
     latency_ms: int
+    language_retry: LanguageRetry | None = None
+    """Set when the reply was in the wrong language and was regenerated for that."""
 
 
 async def generate_reply(
@@ -166,6 +228,11 @@ async def generate_reply(
     breaks character is regenerated once, with `reminder` added to the system prompt; if that
     breaks character too, or is empty, the fallback line is used. Any other model error
     propagates, so the caller saves nothing for the turn.
+
+    Then the language: a reply in another script than the student's last message, or an Arabic
+    reply with a Latin word in it, is regenerated once with the language reminder. The retry's
+    reply is kept even if it's still wrong; if it's empty, breaks character or fails, the first
+    reply is kept. This check never fails the turn, and the fallback line skips it.
     """
     started = time.perf_counter()
     attempts = 0
@@ -187,23 +254,54 @@ async def generate_reply(
             return ""  # all of max_tokens went on hidden reasoning: no visible reply
         return result.text.strip()
 
-    def reply(text: str, *, role_break: bool, regenerated: bool) -> ClientReply:
+    def reply(
+        text: str,
+        *,
+        role_break: bool,
+        regenerated: bool,
+        language_retry: LanguageRetry | None = None,
+    ) -> ClientReply:
         elapsed = round((time.perf_counter() - started) * 1000)
-        return ClientReply(text, role_break, regenerated, attempts, elapsed)
+        return ClientReply(text, role_break, regenerated, attempts, elapsed, language_retry)
 
     version = PROMPT_VERSION["client_system"]
     text = await ask(system_prompt, version) or await ask(system_prompt, version)
     if not text:
         raise InvalidOutput("the client model returned an empty reply twice")
-    if not breaks_character(text):
-        return reply(text, role_break=False, regenerated=False)
-    # Appended to the one system message: a second system message confuses some chat templates.
-    retry = await ask(
-        f"{system_prompt}\n\n{reminder}", f"{version}+{PROMPT_VERSION['client_reminder']}"
+    regenerated = False
+    if breaks_character(text):
+        # Appended to the one system message: a second system message confuses some chat
+        # templates.
+        retry = await ask(
+            f"{system_prompt}\n\n{reminder}", f"{version}+{PROMPT_VERSION['client_reminder']}"
+        )
+        if not retry or breaks_character(retry):
+            return reply(FALLBACK_LINES[language], role_break=True, regenerated=True)
+        text, regenerated = retry, True
+
+    student = next((message.content for message in reversed(history) if message.role == "user"), "")
+    mismatch = language_mismatch(student, text)
+    if mismatch is None:
+        return reply(text, role_break=False, regenerated=regenerated)
+    expected = script_of(student)
+    # A Latin word is only a mistake in Arabic; otherwise the reply should match the student.
+    target: Language = expected if mismatch == "script" and expected is not None else "ar"
+    try:
+        retry = await ask(
+            f"{system_prompt}\n\n{client_language_reminder(target)}",
+            f"{version}+{PROMPT_VERSION['client_language']}",
+        )
+    except LLMError:
+        retry = ""  # the first reply is still a reply: never fail the turn over its language
+    usable = bool(retry) and not breaks_character(retry)
+    kept = retry if usable else text
+    checked = LanguageRetry(
+        reason=mismatch,
+        retried=usable,
+        fixed=language_mismatch(student, kept) is None,
+        first_text=text,
     )
-    if retry and not breaks_character(retry):
-        return reply(retry, role_break=False, regenerated=True)
-    return reply(FALLBACK_LINES[language], role_break=True, regenerated=True)
+    return reply(kept, role_break=False, regenerated=regenerated, language_retry=checked)
 
 
 def _bullets(items: Iterable[str]) -> str:

@@ -282,7 +282,12 @@ async def test_the_turn_event_has_ids_and_no_text_by_default(
     assert turn["gate_rejected"] == []
     assert set(turn["latency_ms"]) == {"gate", "client"}
     assert set(turn["models"]) == {"gate", "client"}
-    assert set(turn["prompt_versions"]) == {"gate", "client_system", "client_reminder"}
+    assert set(turn["prompt_versions"]) == {
+        "gate",
+        "client_system",
+        "client_reminder",
+        "client_language",
+    }
     line = json.dumps(turn)
     for text in ("How do your customers pay you?", "They pay late", "asks how they pay"):
         assert text not in line
@@ -431,3 +436,55 @@ async def test_a_running_session_keeps_the_content_it_started_with(
 
     system = fake.calls_for(Role.CLIENT)[-1].messages[0].content
     assert "EDITED-OPEN-FACT" not in system and "Runs a company in Doha." in system
+
+
+async def test_a_reply_in_the_wrong_language_is_regenerated_and_logged_without_text(
+    settings: Settings, service: InterviewService, fake: FakeLLM
+) -> None:
+    session = await service.create_session(CLIENT, "en")
+    fake.script(Role.GATE, gate_reply())
+    fake.script(Role.CLIENT, "يدفعون متأخرين أحيانًا.", "They pay late, sometimes.")
+
+    result = await service.student_message(session.id, "How do your customers pay you?")
+
+    assert result.client_turn.text == "They pay late, sometimes."
+    event = read_events(settings)[-1]
+    assert event["event"] == "language_mismatch"
+    fields = ("session_id", "client_id", "student_turn_no", "reason", "retried", "fixed")
+    assert {key: event[key] for key in fields} == {
+        "session_id": session.id,
+        "client_id": CLIENT,
+        "student_turn_no": 1,
+        "reason": "script",
+        "retried": True,
+        "fixed": True,
+    }
+    assert "first_text" not in event
+    assert "يدفعون" not in json.dumps(event, ensure_ascii=False)
+
+
+async def test_the_language_event_has_the_first_reply_only_with_log_transcripts(
+    settings_factory: SettingsFactory, fake: FakeLLM
+) -> None:
+    settings = settings_factory(LOG_TRANSCRIPTS=True)
+    service = make_service(settings, fake)
+    session = await service.create_session(CLIENT, "en")
+    fake.script(Role.GATE, gate_reply())
+    fake.script(Role.CLIENT, "يدفعون متأخرين أحيانًا.", "يدفعون متأخرين.")
+
+    await service.student_message(session.id, "How do your customers pay you?")
+
+    event = read_events(settings)[-1]
+    assert (event["event"], event["retried"], event["fixed"]) == ("language_mismatch", True, False)
+    assert event["first_text"] == "يدفعون متأخرين أحيانًا."
+
+
+async def test_a_reply_in_the_right_language_logs_no_language_event(
+    settings: Settings, service: InterviewService, fake: FakeLLM
+) -> None:
+    session = await service.create_session(CLIENT, "en")
+
+    result = await say(service, fake, session.id)
+
+    assert result.language_retry is None
+    assert [event["event"] for event in read_events(settings)] == ["session_created", "turn"]
