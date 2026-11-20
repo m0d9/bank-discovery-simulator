@@ -118,8 +118,9 @@ export function created(client: ClientCard = sara, sessionId = 's1'): SessionCre
 const english = (en: string) => ({ en, ar: null });
 const interestBased = { en: 'Interest-based.', ar: 'قائم على الفائدة.' };
 
-/** Feedback on `transcript(3)`: one need uncovered at turn 3, one missed; an unsuitable and a
- * not-in-key recommendation; one missed opportunity; and the coach's report. */
+/** Feedback on `transcript(3)`: one need found in full only after the pitch at turn 3, one
+ * uncovered by the question at turn 1, one missed; an unsuitable and a not-in-key
+ * recommendation; one missed opportunity; and the coach's report. */
 export function feedback(overrides: Partial<Feedback> = {}): Feedback {
   return {
     session_id: 's1',
@@ -128,12 +129,18 @@ export function feedback(overrides: Partial<Feedback> = {}): Feedback {
       needs: [
         {
           need_id: 'cash-gap',
-          status: 'uncovered',
+          status: 'revealed_by_pitch',
           facts: [
             { fact_id: 'late-payments', unlocked_at_turn: 1 },
             { fact_id: 'sharia', unlocked_at_turn: 3 },
           ],
           via: { turn: 3, question: 'Question 2?' },
+        },
+        {
+          need_id: 'pay-staff',
+          status: 'uncovered',
+          facts: [{ fact_id: 'late-payments', unlocked_at_turn: 1 }],
+          via: { turn: 1, question: 'Question 1?' },
         },
         {
           need_id: 'stock',
@@ -178,7 +185,8 @@ export function feedback(overrides: Partial<Feedback> = {}): Feedback {
       stats: {
         student_turns: 3,
         needs_uncovered: 1,
-        needs_total: 2,
+        needs_after_pitch: 1,
+        needs_total: 3,
         critical_found: 2,
         critical_total: 2,
         first_unlock_turn: 1,
@@ -246,9 +254,16 @@ export function feedback(overrides: Partial<Feedback> = {}): Feedback {
         {
           id: 'cash-gap',
           description: { en: 'Bridge the cash gap.', ar: 'سدّ الفجوة النقدية.' },
-          status: 'uncovered',
+          status: 'revealed_by_pitch',
           suitable_products: ['test-murabaha'],
           unsuitable_products: [{ id: 'test-overdraft', reason: interestBased }],
+        },
+        {
+          id: 'pay-staff',
+          description: { en: 'Pay staff on time.', ar: 'دفع رواتب الموظفين في موعدها.' },
+          status: 'uncovered',
+          suitable_products: ['test-account'],
+          unsuitable_products: [],
         },
         {
           id: 'stock',

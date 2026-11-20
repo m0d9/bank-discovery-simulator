@@ -105,6 +105,15 @@ def test_a_fact_brought_out_by_a_pitch_says_so() -> None:
     assert "in reaction to a product you proposed" in export_markdown(session, feedback)
 
 
+def test_a_need_completed_by_a_pitch_is_labelled_after_a_pitch() -> None:
+    pitch: Step = ("I'd suggest our Alpha Loan.", ["sharia"], ["sharia"])
+    session, feedback = with_feedback(ASK_PAYMENTS, pitch, recommend=[ALPHA])
+
+    text = export_markdown(session, feedback)
+
+    assert "| Fund the gap. | After a pitch | Turn 3 | I'd suggest our Alpha Loan. |" in text
+
+
 def test_degraded_feedback_says_the_coach_was_unavailable() -> None:
     session, feedback = with_feedback(ASK_PAYMENTS, recommend=[ALPHA], report=None)
 

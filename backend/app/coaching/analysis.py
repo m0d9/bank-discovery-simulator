@@ -14,7 +14,7 @@ from pydantic import BaseModel, ConfigDict
 from app.content import Client, Importance, LocalizedText, Need
 from app.simulation import Session, Turn
 
-NeedStatus = Literal["uncovered", "partial", "missed"]
+NeedStatus = Literal["uncovered", "revealed_by_pitch", "partial", "missed"]
 Verdict = Literal["suitable", "unsuitable", "not_in_key"]
 DiscoveredBy = Literal["question", "product_pitch"]
 
@@ -38,8 +38,10 @@ class Via(_Frozen):
 
 
 class NeedResult(_Frozen):
-    """`uncovered` when every evidence fact is unlocked, `partial` when some are, `missed`
-    when none are. `via` is set only for an uncovered need."""
+    """`uncovered` when the student's questions unlocked every evidence fact;
+    `revealed_by_pitch` when every evidence fact is unlocked, but at least one only because the
+    client reacted to a product the student pitched; `partial` when some are; `missed` when
+    none are. `via` is set when every fact is unlocked."""
 
     need_id: str
     status: NeedStatus
@@ -85,6 +87,9 @@ class Stats(_Frozen):
 
     student_turns: int
     needs_uncovered: int
+    """Needs the student's questions found: `uncovered` only."""
+    needs_after_pitch: int
+    """Needs found in full, but only after a pitch (`revealed_by_pitch`)."""
     needs_total: int
     critical_found: int
     critical_total: int
@@ -121,7 +126,7 @@ def analyse(session: Session) -> Analysis:
         )
         for fact in client.hidden_facts
     )
-    needs = tuple(_need_result(need, session.unlocked, turns) for need in client.needs)
+    needs = tuple(_need_result(need, session.unlocked, turns, by_pitch) for need in client.needs)
     recommended = [item.product_id for item in session.wrapup.recommendations]
     critical = [fact for fact in facts if fact.importance == "critical"]
     return Analysis(
@@ -132,6 +137,7 @@ def analyse(session: Session) -> Analysis:
         stats=Stats(
             student_turns=session.student_turns_used,
             needs_uncovered=sum(1 for need in needs if need.status == "uncovered"),
+            needs_after_pitch=sum(1 for need in needs if need.status == "revealed_by_pitch"),
             needs_total=len(needs),
             critical_found=sum(1 for fact in critical if fact.unlocked_at_turn is not None),
             critical_total=len(critical),
@@ -174,7 +180,7 @@ def product_verdict(client: Client, product_id: str) -> ProductVerdict:
 def missed_opportunities(
     client: Client, needs: Sequence[NeedResult], recommended: Collection[str]
 ) -> tuple[MissedOpportunity, ...]:
-    """Suitable products for uncovered or partly uncovered needs that weren't recommended.
+    """Suitable products for needs found in full or in part that weren't recommended.
 
     A product that is unsuitable for any need is never listed: recommending it would have
     earned the `unsuitable` verdict, so it can't be a missed opportunity.
@@ -218,7 +224,9 @@ def _discovered_by(
     return "product_pitch" if fact_id in by_pitch else "question"
 
 
-def _need_result(need: Need, unlocked: Mapping[str, int], turns: Mapping[int, Turn]) -> NeedResult:
+def _need_result(
+    need: Need, unlocked: Mapping[str, int], turns: Mapping[int, Turn], by_pitch: Collection[str]
+) -> NeedResult:
     facts = tuple(
         FactUnlock(fact_id=fact_id, unlocked_at_turn=unlocked.get(fact_id))
         for fact_id in need.evidence_facts
@@ -231,4 +239,6 @@ def _need_result(need: Need, unlocked: Mapping[str, int], turns: Mapping[int, Tu
     completed = max(found)
     turn = turns.get(completed)
     via = Via(turn=completed, question=turn.text) if turn is not None else None
-    return NeedResult(need_id=need.id, status="uncovered", facts=facts, via=via)
+    pitched = any(fact_id in by_pitch for fact_id in need.evidence_facts)
+    status: NeedStatus = "revealed_by_pitch" if pitched else "uncovered"
+    return NeedResult(need_id=need.id, status=status, facts=facts, via=via)

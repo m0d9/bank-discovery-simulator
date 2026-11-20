@@ -170,6 +170,7 @@ async def test_the_event_has_ids_counts_and_verdicts_but_no_text(
         "cached": False,
         "json_retried": False,
         "needs_uncovered": 0,
+        "needs_after_pitch": 0,
         "needs_total": 2,
         "critical_found": 1,
         "critical_total": 2,

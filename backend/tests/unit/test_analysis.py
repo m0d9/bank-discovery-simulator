@@ -38,6 +38,7 @@ def test_every_need_found_is_uncovered_via_the_turn_that_completed_it() -> None:
     assert analysis.stats.model_dump() == {
         "student_turns": 3,
         "needs_uncovered": 2,
+        "needs_after_pitch": 0,
         "needs_total": 2,
         "critical_found": 2,
         "critical_total": 2,
@@ -167,3 +168,28 @@ def test_the_analysis_needs_a_wrap_up() -> None:
 
     with pytest.raises(ValueError, match="no wrap-up"):
         analyse(session)
+
+
+def test_a_need_completed_by_a_pitch_is_revealed_by_pitch_not_uncovered() -> None:
+    session = interview(
+        ("How do your customers pay?", ["cash-gap"], []),
+        ("I'd suggest our Alpha Loan.", ["sharia"], ["sharia"]),
+        recommend=[ALPHA],
+    )
+
+    analysis = analyse(session)
+
+    fund_gap = analysis.needs[0]
+    assert fund_gap.status == "revealed_by_pitch"
+    assert fund_gap.via == Via(turn=3, question="I'd suggest our Alpha Loan.")
+    assert (analysis.stats.needs_uncovered, analysis.stats.needs_after_pitch) == (0, 1)
+    # It was found in full, so its suitable products still count as missed opportunities.
+    assert [item.product_id for item in analysis.missed_opportunities] == [BETA]
+
+
+def test_a_partly_found_need_stays_partial_even_after_a_pitch() -> None:
+    session = interview(("I'd suggest our Alpha Loan.", ["sharia"], ["sharia"]), recommend=[ALPHA])
+
+    fund_gap = analyse(session).needs[0]
+
+    assert (fund_gap.status, fund_gap.via) == ("partial", None)

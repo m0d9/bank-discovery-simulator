@@ -1069,6 +1069,10 @@
             "type": "integer",
             "title": "Needs Uncovered"
           },
+          "needs_after_pitch": {
+            "type": "integer",
+            "title": "Needs After Pitch"
+          },
           "needs_total": {
             "type": "integer",
             "title": "Needs Total"
@@ -1097,6 +1101,7 @@
         "required": [
           "student_turns",
           "needs_uncovered",
+          "needs_after_pitch",
           "needs_total",
           "critical_found",
           "critical_total",
@@ -1380,6 +1385,7 @@
             "type": "string",
             "enum": [
               "uncovered",
+              "revealed_by_pitch",
               "partial",
               "missed"
             ],
@@ -1411,7 +1417,7 @@
           "via"
         ],
         "title": "NeedResultDTO",
-        "description": "`uncovered` when every evidence fact came out, `partial` when some did, `missed` when\nnone did. `via` is set only for an uncovered need."
+        "description": "`uncovered` when the student's questions brought out every evidence fact;\n`revealed_by_pitch` when every fact came out, but at least one only in reaction to a product\nthe student pitched; `partial` when some did; `missed` when none did. `via` is set when every\nfact came out."
       },
       "NeedViaDTO": {
         "properties": {
@@ -1737,6 +1743,7 @@
             "type": "string",
             "enum": [
               "uncovered",
+              "revealed_by_pitch",
               "partial",
               "missed"
             ],

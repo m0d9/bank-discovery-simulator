@@ -55,23 +55,34 @@ describe('FeedbackPage', () => {
     expect(screen.getByText('Your feedback is ready.')).toBeInTheDocument();
 
     const map = screen.getByRole('table', { name: 'Discovery map' });
-    const [, found, missed] = within(map).getAllByRole('row');
-    expect(within(present(found)).getByRole('rowheader')).toHaveTextContent('Bridge the cash gap.');
-    expect(found).toHaveTextContent('Uncovered');
-    expect(within(present(found)).getByRole('link', { name: 'Turn 3' })).toBeInTheDocument();
-    expect(found).toHaveTextContent('Question 2?');
+    const row = (need: string) =>
+      present(within(map).getByRole('rowheader', { name: need }).closest('tr'));
     // `sharia` completed the need, and the overdraft pitch brought it out.
-    expect(found).toHaveTextContent('In reaction to a product you proposed.');
+    const pitched = row('Bridge the cash gap.');
+    expect(pitched).toHaveTextContent('After a pitch');
+    expect(within(pitched).getByRole('link', { name: 'Turn 3' })).toBeInTheDocument();
+    expect(pitched).toHaveTextContent('Question 2?');
+    expect(pitched).toHaveTextContent('In reaction to a product you proposed.');
+    const asked = row('Pay staff on time.');
+    expect(asked).toHaveTextContent('Uncovered');
+    expect(asked).not.toHaveTextContent('In reaction to a product you proposed.');
+    const missed = row('Finance the stock.');
     expect(missed).toHaveTextContent('Missed');
     expect(missed).toHaveTextContent('Not found');
-    expect(screen.getByText('Needs uncovered').nextSibling).toHaveTextContent('1 of 2');
+    // Only needs the student's questions found count; the pitch's need is shown apart.
+    const needsFound = screen.getByText('Needs found by your questions').nextSibling;
+    expect(needsFound).toHaveTextContent('1 of 3');
+    expect(needsFound).toHaveTextContent('+1 after a pitch');
 
     const overdraft = present(screen.getByText('Test Overdraft').closest('li'));
     expect(overdraft).toHaveTextContent('Not suitable');
     // The same reason for two needs is shown once.
     expect(within(overdraft).getAllByText('Interest-based.')).toHaveLength(1);
     expect(overdraft).toHaveTextContent('Your reason: Flexible cash.');
-    expect(screen.getByText('Test Account').closest('li')).toHaveTextContent(
+    const recommendations = present(
+      screen.getByRole('heading', { level: 2, name: 'Your recommendations' }).closest('section'),
+    );
+    expect(within(recommendations).getByText('Test Account').closest('li')).toHaveTextContent(
       "This client's answer key doesn't mention this product.",
     );
     const opportunities = screen.getByRole('heading', {
@@ -107,6 +118,10 @@ describe('FeedbackPage', () => {
     expect(englishOnly.getByText('Finance the stock.')).toHaveAttribute('lang', 'en');
     expect(englishOnly.getByText('Finance the stock.')).toHaveAttribute('dir', 'ltr');
     expect(screen.getAllByText('لم يُكتشف').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('بعد اقتراح منتج').length).toBeGreaterThan(0);
+    expect(screen.getByText('الاحتياجات المكتشفة بأسئلتك').nextSibling).toHaveTextContent(
+      '+1 بعد اقتراح منتج',
+    );
     const overdraft = screen.getByText('سحب على المكشوف تجريبي').closest('li');
     expect(overdraft).toHaveTextContent('غير مناسب');
     expect(overdraft).toHaveTextContent('قائم على الفائدة.');

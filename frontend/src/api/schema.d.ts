@@ -406,6 +406,8 @@ export interface components {
             student_turns: number;
             /** Needs Uncovered */
             needs_uncovered: number;
+            /** Needs After Pitch */
+            needs_after_pitch: number;
             /** Needs Total */
             needs_total: number;
             /** Critical Found */
@@ -519,8 +521,10 @@ export interface components {
         };
         /**
          * NeedResultDTO
-         * @description `uncovered` when every evidence fact came out, `partial` when some did, `missed` when
-         *     none did. `via` is set only for an uncovered need.
+         * @description `uncovered` when the student's questions brought out every evidence fact;
+         *     `revealed_by_pitch` when every fact came out, but at least one only in reaction to a product
+         *     the student pitched; `partial` when some did; `missed` when none did. `via` is set when every
+         *     fact came out.
          */
         NeedResultDTO: {
             /** Need Id */
@@ -529,7 +533,7 @@ export interface components {
              * Status
              * @enum {string}
              */
-            status: "uncovered" | "partial" | "missed";
+            status: "uncovered" | "revealed_by_pitch" | "partial" | "missed";
             /** Facts */
             facts: components["schemas"]["FactUnlockDTO"][];
             via: components["schemas"]["NeedViaDTO"] | null;
@@ -663,7 +667,7 @@ export interface components {
              * Status
              * @enum {string}
              */
-            status: "uncovered" | "partial" | "missed";
+            status: "uncovered" | "revealed_by_pitch" | "partial" | "missed";
             /** Suitable Products */
             suitable_products: string[];
             /** Unsuitable Products */

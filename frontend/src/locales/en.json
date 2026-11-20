@@ -121,7 +121,8 @@
       "turn": "Found at",
       "notFound": "Not found",
       "byPitch": "In reaction to a product you proposed.",
-      "needs": "Needs uncovered",
+      "needs": "Needs found by your questions",
+      "afterPitch": "+{{n}} after a pitch",
       "critical": "Critical facts found",
       "questions": "Your questions",
       "firstFind": "First discovery",
@@ -130,6 +131,7 @@
     },
     "status": {
       "uncovered": "Uncovered",
+      "revealed_by_pitch": "After a pitch",
       "partial": "Partly uncovered",
       "missed": "Missed"
     },

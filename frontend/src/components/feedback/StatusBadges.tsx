@@ -8,6 +8,7 @@ import {
   DashedCircleIcon,
   HalfCircleIcon,
   MinusCircleIcon,
+  ReplyIcon,
 } from '../icons';
 
 interface Look {
@@ -17,6 +18,7 @@ interface Look {
 
 const NEED: Record<NeedStatus, Look> = {
   uncovered: { tone: 'found', Icon: CheckCircleIcon },
+  revealed_by_pitch: { tone: 'neutral', Icon: ReplyIcon },
   partial: { tone: 'neutral', Icon: HalfCircleIcon },
   missed: { tone: 'attention', Icon: DashedCircleIcon },
 };

@@ -197,6 +197,7 @@ def analysis_dto(analysis: Analysis) -> AnalysisDTO:
         stats=FeedbackStatsDTO(
             student_turns=analysis.stats.student_turns,
             needs_uncovered=analysis.stats.needs_uncovered,
+            needs_after_pitch=analysis.stats.needs_after_pitch,
             needs_total=analysis.stats.needs_total,
             critical_found=analysis.stats.critical_found,
             critical_total=analysis.stats.critical_total,

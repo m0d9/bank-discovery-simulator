@@ -48,6 +48,15 @@ export function DiscoveryMap({ analysis, describeNeed, onShowTurn }: DiscoveryMa
       <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Stat label={t('feedback.map.needs')}>
           {outOf(stats.needs_uncovered, stats.needs_total)}
+          {stats.needs_after_pitch > 0 && (
+            <span className="block text-sm font-normal text-ink-muted">
+              {/* A left-to-right mark, so right-to-left text shows "+1", not "1+". */}
+              {'\u200e'}
+              {t('feedback.map.afterPitch', {
+                n: formatNumber(stats.needs_after_pitch, language),
+              })}
+            </span>
+          )}
         </Stat>
         <Stat label={t('feedback.map.critical')}>
           {outOf(stats.critical_found, stats.critical_total)}

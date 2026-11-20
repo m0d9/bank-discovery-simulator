@@ -121,6 +121,7 @@ class FeedbackService:
             json_retried=outcome.json_retried,
             latency_ms=latency_ms,
             needs_uncovered=stats.needs_uncovered,
+            needs_after_pitch=stats.needs_after_pitch,
             needs_total=stats.needs_total,
             critical_found=stats.critical_found,
             critical_total=stats.critical_total,

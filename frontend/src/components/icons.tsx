@@ -137,3 +137,13 @@ export function DownloadIcon(props: IconProps) {
     </Icon>
   );
 }
+
+/** Came out in reaction to something the student did: an arrow turning back. */
+export function ReplyIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M9 14L4 9l5-5" />
+      <path d="M4 9h10a6 6 0 0 1 6 6v5" />
+    </Icon>
+  );
+}

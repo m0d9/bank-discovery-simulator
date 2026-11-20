@@ -220,8 +220,10 @@ class NeedViaDTO(BaseModel):
 
 
 class NeedResultDTO(BaseModel):
-    """`uncovered` when every evidence fact came out, `partial` when some did, `missed` when
-    none did. `via` is set only for an uncovered need."""
+    """`uncovered` when the student's questions brought out every evidence fact;
+    `revealed_by_pitch` when every fact came out, but at least one only in reaction to a product
+    the student pitched; `partial` when some did; `missed` when none did. `via` is set when every
+    fact came out."""
 
     need_id: str
     status: NeedStatus
@@ -267,6 +269,9 @@ class FeedbackStatsDTO(BaseModel):
 
     student_turns: int
     needs_uncovered: int
+    """Needs the student's questions found (`uncovered` only)."""
+    needs_after_pitch: int
+    """Needs found in full, but only after a pitch (`revealed_by_pitch`)."""
     needs_total: int
     critical_found: int
     critical_total: int
