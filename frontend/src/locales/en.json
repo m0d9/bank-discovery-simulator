@@ -8,6 +8,7 @@
     "retry": "Try again",
     "startAgain": "Start again",
     "home": "Go to the client list",
+    "transcript": "Interview transcript",
     "models": "Models in this session",
     "modelRole": {
       "client": "AI client",
@@ -79,7 +80,6 @@
     "title": "Wrap up your interview with {{name}}",
     "titleShort": "Wrap-up",
     "intro": "Summarise the client's needs, then recommend the products that fit them and say why.",
-    "transcript": "Interview transcript",
     "summaryLabel": "Summarise the client's needs",
     "lengthHint_one": "Use between {{min}} and {{value}} character.",
     "lengthHint_other": "Use between {{min}} and {{value}} characters.",

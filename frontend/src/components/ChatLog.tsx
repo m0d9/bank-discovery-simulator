@@ -13,15 +13,28 @@ interface ChatLogProps {
   live?: boolean;
   /** The id of the element that names the live log. */
   labelledBy?: string;
+  /** A visible label with each message's turn number, such as "Turn 3", which feedback cites. */
+  turnLabel?: (n: number) => string;
 }
 
 /** The conversation. Each message keeps its turn number as its key, so a message is never
  * re-created (and never re-announced) as the conversation grows. */
-export function ChatLog({ messages, speakerLabel, live = true, labelledBy }: ChatLogProps) {
+export function ChatLog({
+  messages,
+  speakerLabel,
+  live = true,
+  labelledBy,
+  turnLabel,
+}: ChatLogProps) {
   const list = (
     <ol className="flex flex-col gap-3">
       {messages.map((message) => (
-        <MessageBubble key={message.n} message={message} speaker={speakerLabel(message.role)} />
+        <MessageBubble
+          key={message.n}
+          message={message}
+          speaker={speakerLabel(message.role)}
+          turn={turnLabel?.(message.n)}
+        />
       ))}
     </ol>
   );
@@ -36,12 +49,14 @@ export function ChatLog({ messages, speakerLabel, live = true, labelledBy }: Cha
 interface MessageBubbleProps {
   message: ChatMessage;
   speaker: string;
+  /** The turn number's label, when the transcript shows them. */
+  turn?: string;
 }
 
 /** One message. The student's sit at the inline end and the client's at the start, so the
  * layout mirrors in Arabic; `dir="auto"` lets each message keep its own direction. The id lets
  * a link move focus to a turn. */
-export function MessageBubble({ message, speaker }: MessageBubbleProps) {
+export function MessageBubble({ message, speaker, turn }: MessageBubbleProps) {
   const fromStudent = message.role === 'student';
   return (
     <li
@@ -53,6 +68,7 @@ export function MessageBubble({ message, speaker }: MessageBubbleProps) {
           : 'self-start rounded-es-sm border border-line bg-surface'
       }`}
     >
+      {turn && <span className="mb-1 block text-xs font-medium text-ink-muted">{turn}</span>}
       <span className="sr-only">{speaker}</span>
       <p dir="auto" className="text-start whitespace-pre-wrap wrap-break-word text-ink">
         {message.text}
