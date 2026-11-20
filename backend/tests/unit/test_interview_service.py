@@ -158,6 +158,24 @@ async def test_the_client_sees_only_the_last_history_turns(
     ]
 
 
+async def test_the_client_knows_only_the_products_the_student_has_mentioned(
+    service: InterviewService, fake: FakeLLM
+) -> None:
+    session = await service.create_session(CLIENT, "en")
+
+    await say(service, fake, session.id)
+    await say(
+        service, fake, session.id, "Would our Alpha Loan help?", gate=gate_reply(products=[ALPHA])
+    )
+    await say(service, fake, session.id, "What else would you need?")
+
+    first, pitched, later = (call.messages[0].content for call in fake.calls_for(Role.CLIENT))
+    for loan in ("Alpha Loan", "Beta Deposit"):
+        assert loan not in first
+    assert "- Alpha Loan: A business loan that charges interest." in pitched
+    assert "Alpha Loan" in later and "Beta Deposit" not in pitched + later
+
+
 def test_control_characters_are_removed_but_newlines_and_tabs_stay() -> None:
     assert clean_message("  Hi\x00 there\x07\r\nnext\tline\x1b  ") == "Hi there\nnext\tline"
 

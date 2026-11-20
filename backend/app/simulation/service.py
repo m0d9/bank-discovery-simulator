@@ -163,11 +163,15 @@ class InterviewService:
                 unlocked=list(gate.unlocked),
             )
             unlocked_after = {*session.unlocked, *gate.unlocked}
+            # The client knows only the products the student has brought up: knowing the rest,
+            # it hinted at the right one ("an Islamic option for working capital").
+            mentioned = {*session.products_mentioned, *gate.products_mentioned}
+            discussed = [product for product in products if product.id in mentioned]
             reply = await generate_reply(
                 self._llm,
                 model=session.models.client,
                 system_prompt=client_system_prompt(
-                    session.client, session.bank, products, unlocked=unlocked_after
+                    session.client, session.bank, discussed, unlocked=unlocked_after
                 ),
                 reminder=client_reminder(session.client, session.bank),
                 history=client_history(
