@@ -105,7 +105,14 @@ def test_feedback_has_the_analysis_the_report_and_the_revealed_profile(
     assert report["went_well"] == [
         {"point": "You asked how her customers pay.", "evidence_turns": [1]}
     ]
-    assert report["missed"][0]["better_question"] == "Is Islamic banking important to you?"
+    # The model's item names the overdraft, so it doesn't cover the need: the backfill adds the
+    # discovery entry first, with the locked critical fact's example question.
+    backfill, model_item = report["missed"]
+    assert (backfill["need_id"], backfill["product_id"]) == ("bridge-cash-gap", None)
+    assert backfill["better_question"] == (
+        "Do you have any preferences about the kind of banking products you use?"
+    )
+    assert model_item["better_question"] == "Is Islamic banking important to you?"
     revealed = body["revealed"]
     assert [fact["unlocked_at_turn"] for fact in revealed["hidden_facts"]] == [1, None, None]
     assert revealed["hidden_facts"][0]["content"]["en"].startswith("Two government-linked")

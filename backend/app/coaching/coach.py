@@ -211,9 +211,11 @@ def check_report(
       the page and the export add one pair.
     - An unknown `need_id` or `product_id` becomes None. Ids are matched ignoring case.
     - Items without text are dropped, and each list keeps its first four items.
-    - Every missed critical need without an entry gets one, first in `missed`: the point is
-      the need's description, and the better question the first example question of its
-      first critical fact still locked. Those entries are never cut.
+    - Every missed critical need without a discovery entry (an item with that `need_id` and
+      no `product_id`) gets one, first in `missed`: the point is the need's description, and
+      the better question the first example question of its first critical fact still
+      locked. An item about a product doesn't count: it explains a recommendation, not how to
+      find the need. Those entries are never cut.
     """
     student_turns = {turn.n for turn in session.turns if turn.role == "student"}
     client_turns = [_words(turn.text) for turn in session.turns if turn.role == "client"]
@@ -261,7 +263,9 @@ def check_report(
             )
         )
     missed = missed[:MAX_ITEMS]
-    covered = {item.need_id for item in missed}
+    # Only a discovery item covers a need. A product item that also names the need (M6's
+    # traced failure) used to suppress the backfill, so the student got no question for it.
+    covered = {item.need_id for item in missed if item.product_id is None}
     added = [
         _backfill(need, session.client, analysis, language)
         for need in missed_critical_needs(session.client, analysis)
