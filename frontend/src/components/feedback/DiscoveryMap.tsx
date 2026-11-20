@@ -15,7 +15,7 @@ interface DiscoveryMapProps {
 }
 
 /** Section 1: each need, its status (icon and words), and the turn and question that found
- * it. Counts above it, never a score. */
+ * it, in one cell so the table fits a 320 px screen. Counts above it, never a score. */
 export function DiscoveryMap({ analysis, describeNeed, onShowTurn }: DiscoveryMapProps) {
   const { t } = useTranslation();
   const language = currentLanguage();
@@ -25,6 +25,14 @@ export function DiscoveryMap({ analysis, describeNeed, onShowTurn }: DiscoveryMa
       found: formatNumber(found, language),
       total: formatNumber(total, language),
     });
+  const pitched = new Set(
+    analysis.facts.filter((fact) => fact.discovered_by === 'product_pitch').map((f) => f.fact_id),
+  );
+  // The fact that completed the need came out because the student proposed a product.
+  const byPitch = (need: Feedback['analysis']['needs'][number]) =>
+    need.facts.some(
+      (fact) => fact.unlocked_at_turn === need.via?.turn && pitched.has(fact.fact_id),
+    );
   const notFound = (
     <>
       <span aria-hidden="true">–</span>
@@ -64,11 +72,8 @@ export function DiscoveryMap({ analysis, describeNeed, onShowTurn }: DiscoveryMa
             <th scope="col" className="py-2 pe-3 text-start font-semibold">
               {t('feedback.map.status')}
             </th>
-            <th scope="col" className="py-2 pe-3 text-start font-semibold">
-              {t('feedback.map.turn')}
-            </th>
             <th scope="col" className="py-2 text-start font-semibold">
-              {t('feedback.map.question')}
+              {t('feedback.map.turn')}
             </th>
           </tr>
         </thead>
@@ -81,14 +86,19 @@ export function DiscoveryMap({ analysis, describeNeed, onShowTurn }: DiscoveryMa
               <td className="py-3 pe-3">
                 <NeedStatusBadge status={need.status} />
               </td>
-              <td className="py-3 pe-3 whitespace-nowrap">
-                {need.via ? <TurnLink n={need.via.turn} onShow={onShowTurn} /> : notFound}
-              </td>
               <td className="py-3 text-ink">
                 {need.via ? (
-                  <q dir="auto" className="wrap-break-word">
-                    {need.via.question}
-                  </q>
+                  <>
+                    <TurnLink n={need.via.turn} onShow={onShowTurn} />
+                    <q dir="auto" className="mt-1 block wrap-break-word">
+                      {need.via.question}
+                    </q>
+                    {byPitch(need) && (
+                      <span className="mt-1 block text-sm text-ink-muted">
+                        {t('feedback.map.byPitch')}
+                      </span>
+                    )}
+                  </>
                 ) : (
                   notFound
                 )}

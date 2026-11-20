@@ -60,6 +60,8 @@ describe('FeedbackPage', () => {
     expect(found).toHaveTextContent('Uncovered');
     expect(within(present(found)).getByRole('link', { name: 'Turn 3' })).toBeInTheDocument();
     expect(found).toHaveTextContent('Question 2?');
+    // `sharia` completed the need, and the overdraft pitch brought it out.
+    expect(found).toHaveTextContent('In reaction to a product you proposed.');
     expect(missed).toHaveTextContent('Missed');
     expect(missed).toHaveTextContent('Not found');
     expect(screen.getByText('Needs uncovered').nextSibling).toHaveTextContent('1 of 2');
