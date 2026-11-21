@@ -52,7 +52,7 @@ Set `LLM_MODEL=qwen3.5:4b`. It is about a third faster per call, but in the [eva
 **Your key.** Use your own free key from [console.groq.com/keys](https://console.groq.com/keys), and never commit it.
 
 **What to expect.** The test was a three-question interview with Rajesh through the API, with `qwen/qwen3.8-27b` in every role. Each question unlocked the fact it should, each reply took 0.7–1.9 s and the coach's report 2.0–2.2 s. Two caveats:
-- **Rate limits.** The free tier limits tokens per minute, and the coach's request alone sends about 4,700 input tokens. Feedback requested seconds after the last question came back degraded, because the coach was rate-limited. Requesting it again 41 s later returned the full report, and so did a run that paused 60 s before the wrap-up.
+- **Rate limits.** The free tier limits tokens per minute, and the coach's request alone sends about 4,700 input tokens. Feedback requested seconds after the last question came back degraded, because the coach was rate-limited. Requesting it again 41 s later returned the full report, and so did a run that paused 60 s before the wrap-up. On the free tier, feedback right after a quick interview can come back degraded because of the per-minute token limit; wait about a minute and press **Ask the coach again**.
 - **An empty "What went well".** In both reports the coach cited the same turns under "What was missed", and the app drops praise for a turn it also criticises.
 
 `openai/gpt-oss-20b` doesn't work with this app. Groq rejects `reasoning_effort="none"` for it, and its hidden reasoning then uses up the gate's and the client's token budgets. In two runs no hidden fact unlocked, some replies were cut off and the feedback came back degraded.
@@ -123,6 +123,8 @@ Clients (their hidden facts and answer keys) and products are YAML files in [con
 
 No code changes. The running app picks up a saved change in about 2 seconds, and if a file has an error it keeps serving the last valid version. The [faculty guide](content/README.md) explains every field and how to write unlock conditions that work.
 
+**For faculty:** `uv run --project backend python scripts/usage_report.py` reports how often students find each hidden fact, from `data/events.jsonl` ([sample from test sessions](docs/usage-report-sample.md)).
+
 ## Evaluation
 `make eval` runs scripted interviews with the five clients through the app's own services:
 - **Scripts:** strong, weak, weak in Arabic, and adversarial.
@@ -181,7 +183,6 @@ The method, the comparison of three model setups, and what these numbers can't t
 - A follow-up chat with the coach about the interview
 - A model picker in the interface
 - Streaming replies
-- A usage report for faculty: how often students find each hidden fact
 - More clients, including a referral client that no product in the catalogue fits
 - SSO and LTI, so it opens from the university's LMS
 - Persistence, with a retention policy
@@ -200,17 +201,17 @@ backend/app/
   content/      YAML loading, validation, hot reload
   prompts/      every prompt, as a Markdown template
   telemetry/    data/events.jsonl: timings and counts, no message text
-backend/tests/  unit, API, architecture and live tests
+backend/tests/  unit, API, architecture, evaluation and live tests
 frontend/src/   React + TypeScript pages and components, English and Arabic locales
 content/        clients, products, the bank, templates, JSON schemas
 evals/          the evaluation harness and its committed results
-scripts/        `make chat`: interview a client in the terminal
+scripts/        `make chat` (interview a client in the terminal) and the usage report
 samples/        a sample interview
-docs/           architecture, decisions, evaluation, accessibility, privacy, demo script
+docs/           architecture, decisions, evaluation, accessibility, privacy, demo script, usage-report sample
 ```
 
 ## Tests and CI
-- **`make test`:** the backend tests (626, with a fake model and no network) and the frontend tests (238).
+- **`make test`:** the backend tests (633, with a fake model and no network) and the frontend tests (238).
 - **`make lint` and `make typecheck`:** ruff, mypy (strict), eslint and tsc.
 - **`make test-live`:** the tests that need a real model.
 - **CI** runs four jobs on every pull request:
