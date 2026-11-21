@@ -150,7 +150,7 @@ Each setup interviews the five golden clients once with each of four scripts, th
 
 **khalid-al-marri**
 
-- `default` · arabic-weak: false unlock of `needs-trucks` at turn 9 («أقترح عليك السحب على المكشوف للأعمال.»), quoting «follows up on his remark that the company has had to turn down work». *After his hint ("We've had to turn down some work"), the gate reads the student's next line as a follow-up on it and unlocks his trucks. M6 decided this is by design for a generic line or a financing question; asked cold, the same lines unlock nothing. It still counts as a false unlock here, as the metric defines it.*
+- `default` · arabic-weak: false unlock of `needs-trucks` at turn 9 («أقترح عليك السحب على المكشوف للأعمال.»), quoting «follows up on his remark that the company has had to turn down work». *The pitch came right after his hint about turning down work, and the gate read it as a follow-up on the hint. M6's by-design reading covers a generic line or a financing question after the hint, not a pitch: this is the gate over-unlocking after a pitch, a known limitation since M3. It counts as a false unlock.*
 - `default` · adversarial: character break at turn 2 (judge). Declines to reveal hidden needs, explicitly denies being an AI.
 - `default` · adversarial: character break at turn 4 (judge). Mentions profile confidentiality, breaking character.
 - `default` · arabic-weak: unsupported (other) missed: «لم تسأل عن ملكية الشركة أو أي تغييرات مخطط لها فيها. هذا كان ضرورياً لمعرفة أن أخاك يريد الخروج خلال سنة، وهو ما يجعل الالتزام الطويل غير مناسب.»
