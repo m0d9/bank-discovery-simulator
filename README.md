@@ -20,7 +20,7 @@ You need [Docker](https://docs.docker.com/get-docker/), [Ollama](https://ollama.
    - **Linux with Docker:** also add `Environment="OLLAMA_HOST=0.0.0.0:11434"`. Ollama otherwise listens only on 127.0.0.1, which a container can't reach. This also exposes Ollama to your network.
    - **Check:** once the app has used the model, `ollama ps` shows `16384` under `CONTEXT`.
 
-   These steps follow [Ollama's FAQ](https://docs.ollama.com/faq). Only the Windows one was tested.
+   These steps follow [Ollama's FAQ](https://docs.ollama.com/faq). The Windows and macOS ones were tested.
    </details>
 3. **Get the app and its settings.** Only `LLM_BASE_URL`, `LLM_API_KEY` and `LLM_MODEL` are required, and their defaults already point the container at Ollama on your machine.
    ```bash
@@ -30,6 +30,8 @@ You need [Docker](https://docs.docker.com/get-docker/), [Ollama](https://ollama.
 4. **Run it:** `docker compose up --build`, then open **http://localhost:8000**.
 
 **Where this was tested:** Windows 11, in WSL2 (Ubuntu) with Docker Desktop.
+
+**Tested on macOS:** MacBook Pro, Apple M3 Pro, 18 GB, Docker Desktop, the default `qwen3.5:9b` following this Quick start unchanged. Ollama reported 9.7 GB (MLX runner, 16,384 context); the Docker build took 17 s; a full interview with the hard client (Khalid) found all four hidden facts. On a Mac, plan on about 16 GB of memory for the default model.
 
 **Developer path** (uv, Node 22 and make): set `LLM_BASE_URL=http://localhost:11434/v1` in `.env`, run `make install && make dev`, and open **http://localhost:5173**. On Windows, use WSL2 with [mirrored networking](https://learn.microsoft.com/windows/wsl/networking#mirrored-mode-networking).
 
