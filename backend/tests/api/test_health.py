@@ -7,7 +7,8 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.api import routes_health
-from app.llm import LLMClient, LLMError, ModelTimeout, ModelUnavailable, llm_dep
+from app.api.errors import STATUS_BY_CODE
+from app.llm import LLMClient, LLMError, ModelTimeout, ModelUnavailable, Role, llm_dep
 from app.llm.client import OpenAICompatClient
 from app.llm.fake import FakeLLM
 from app.main import create_app
@@ -149,6 +150,46 @@ def test_result_is_cached_for_30_seconds(
 
     clock[0] += 2
     client.get("/api/health")
+    assert llm.list_models_calls == 2
+
+
+@pytest.mark.parametrize(
+    "llm",
+    [FakeLLM(list_models_error=ModelUnavailable("unreachable")), FakeLLM(models=["other:1b"])],
+    ids=["down", "degraded"],
+)
+def test_a_problem_is_checked_again_on_every_call(
+    health_client: HealthClient, monkeypatch: pytest.MonkeyPatch, llm: FakeLLM
+) -> None:
+    monkeypatch.setattr(routes_health, "_now", lambda: 1000.0)
+    client = health_client(llm)
+
+    assert client.get("/api/health").json()["status"] != "ok"
+    llm.list_models_error, llm.models = None, ["test-model"]
+
+    assert client.get("/api/health").json()["status"] == "ok"
+    assert llm.list_models_calls == 2
+
+
+@pytest.mark.parametrize(
+    "error", [ModelUnavailable("unreachable"), ModelTimeout("timed out")], ids=["503", "504"]
+)
+def test_a_failed_model_call_clears_the_cached_result(
+    health_client: HealthClient, monkeypatch: pytest.MonkeyPatch, error: LLMError
+) -> None:
+    monkeypatch.setattr(routes_health, "_now", lambda: 1000.0)
+    llm = FakeLLM(models=["test-model"])
+    client = health_client(llm)
+    client.get("/api/health")
+    created = client.post("/api/sessions", json={"client_id": "noura-al-kuwari", "language": "en"})
+    session_id = created.json()["session_id"]
+    llm.script(Role.GATE, error)
+    llm.script(Role.CLIENT, error)
+
+    sent = client.post(f"/api/sessions/{session_id}/messages", json={"text": "Hi?"})
+    client.get("/api/health")
+
+    assert sent.status_code == STATUS_BY_CODE[error.code]
     assert llm.list_models_calls == 2
 
 

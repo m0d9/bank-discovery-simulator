@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from importlib.metadata import PackageNotFoundError, version
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, FastAPI, Request
 
 from app.api.dto import (
     ContentStatusDTO,
@@ -70,9 +70,10 @@ async def health(
 ) -> HealthDTO:
     """Report the app version, the model endpoint, each role's model and the content status.
 
-    Always HTTP 200: the body says whether the models can be used. The model check is cached
-    for 30 seconds; the content status is checked on every call, so a broken file shows up
-    as soon as the store notices it.
+    Always HTTP 200: the body says whether the models can be used. A good model check is
+    cached for 30 seconds; a problem is checked again on every call, so Retry sees a
+    restarted endpoint at once, and a failed model call clears the cache. The content status
+    is checked on every call, so a broken file shows up as soon as the store notices it.
     """
     await content.refresh()
     report = await _model_report(request, llm, settings)
@@ -93,8 +94,14 @@ async def _model_report(request: Request, llm: LLMClient, settings: Settings) ->
     if cached is not None and _now() < cached.expires_at:
         return cached.value
     value = await _check(llm, settings)
-    request.app.state.health_cache = _Cached(value, _now() + CACHE_TTL_S)
+    if value.status == "ok":
+        request.app.state.health_cache = _Cached(value, _now() + CACHE_TTL_S)
     return value
+
+
+def forget_cached_health(app: FastAPI) -> None:
+    """Drop the cached model check, so the next `/api/health` checks the endpoint again."""
+    app.state.health_cache = None
 
 
 async def _check(llm: LLMClient, settings: Settings) -> _ModelReport:

@@ -15,9 +15,10 @@ export interface paths {
          * Health
          * @description Report the app version, the model endpoint, each role's model and the content status.
          *
-         *     Always HTTP 200: the body says whether the models can be used. The model check is cached
-         *     for 30 seconds; the content status is checked on every call, so a broken file shows up
-         *     as soon as the store notices it.
+         *     Always HTTP 200: the body says whether the models can be used. A good model check is
+         *     cached for 30 seconds; a problem is checked again on every call, so Retry sees a
+         *     restarted endpoint at once, and a failed model call clears the cache. The content status
+         *     is checked on every call, so a broken file shows up as soon as the store notices it.
          */
         get: operations["health_api_health_get"];
         put?: never;
