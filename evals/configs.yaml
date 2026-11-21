@@ -1,6 +1,7 @@
 # Model setups for the evaluation (M7). Run one from the repository root with
 #   uv run --project backend python -m evals.run --config default
-# Models are Ollama tags (CLAUDE.md, Models). `max_retries` sets LLM_MAX_RETRIES for the run.
+# Models are Ollama tags, as `ollama list` shows them. `max_retries` sets LLM_MAX_RETRIES for
+# the run.
 
 # The setup docs/evaluation.md recommends, chosen from the numbers there.
 recommended: default

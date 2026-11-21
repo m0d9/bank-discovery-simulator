@@ -1,6 +1,6 @@
 """Prompt templates (`*.md` files with `$placeholders`) and their versions.
 
-Prompt wording lives only in these files (CLAUDE.md rule 5). Python fills in the values.
+Prompt wording lives only in these files. Python fills in the values.
 """
 
 from app.prompts.loader import PROMPT_VERSION, render

@@ -1,4 +1,4 @@
-"""scripts/chat.py drives the same InterviewService as the API (CLAUDE.md rule 8)."""
+"""scripts/chat.py drives the same InterviewService as the API: one code path for both."""
 
 import importlib.util
 import io
