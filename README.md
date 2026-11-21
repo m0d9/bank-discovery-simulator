@@ -8,7 +8,7 @@ It runs on free, open models through any OpenAI-compatible API (tested with Olla
 
 ## Quick start
 
-You need [Docker](https://docs.docker.com/get-docker/), [Ollama](https://ollama.com/download), git, and a GPU with about 6 GB free ([hardware](#hardware)).
+You need [Docker](https://docs.docker.com/get-docker/), [Ollama](https://ollama.com/download), git, and a GPU with 8 GB ([hardware](#hardware)).
 
 1. **Download the model** (6.6 GB): `ollama pull qwen3.5:9b`
 2. **Give Ollama a 16k context window.** Set `OLLAMA_CONTEXT_LENGTH=16384` for the Ollama server and restart it. Its default of 4,096 tokens silently cuts the coach's prompt from the start.
@@ -48,22 +48,23 @@ Set `LLM_MODEL=qwen3.5:4b`. It is about a third faster per call, but in the [eva
 **Without a GPU,** Ollama uses the CPU, much more slowly (not measured). **The first reply after a cold start** took about 8 s on the test machine, while the model loaded.
 </details>
 
-### Optional: Groq (tested on 2026-11-21 with qwen/qwen3.8-27b)
-**Your key.** Use your own free key from [console.groq.com/keys](https://console.groq.com/keys), and never commit it.
-
-**What to expect.** The test was a three-question interview with Rajesh through the API, with `qwen/qwen3.8-27b` in every role. Each question unlocked the fact it should, each reply took 0.7–1.9 s and the coach's report 2.0–2.2 s. Two caveats:
-- **Rate limits.** The free tier limits tokens per minute, and the coach's request alone sends about 4,700 input tokens. Feedback requested seconds after the last question came back degraded, because the coach was rate-limited. Requesting it again 41 s later returned the full report, and so did a run that paused 60 s before the wrap-up. On the free tier, feedback right after a quick interview can come back degraded because of the per-minute token limit; wait about a minute and press **Ask the coach again**.
-- **An empty "What went well".** In both reports the coach cited the same turns under "What was missed", and the app drops praise for a turn it also criticises.
-
-`openai/gpt-oss-20b` doesn't work with this app. Groq rejects `reasoning_effort="none"` for it, and its hidden reasoning then uses up the gate's and the client's token budgets. In two runs no hidden fact unlocked, some replies were cut off and the feedback came back degraded.
-<details><summary>The three variables for <code>.env</code>, and the free-tier limits</summary>
+### No GPU? Use Groq (free tier)
+Skip steps 1 and 2. After step 3, set these three variables in `.env`, with your own free key from [console.groq.com/keys](https://console.groq.com/keys). `.env` is git-ignored; never commit the key.
 
 ```bash
 LLM_BASE_URL=https://api.groq.com/openai/v1
 LLM_API_KEY=<your Groq key>
 LLM_MODEL=qwen/qwen3.8-27b
 ```
-On 2026-11-21, [Groq's rate-limits page](https://console.groq.com/docs/rate-limits) listed these free-plan limits for `qwen/qwen3.8-27b`: 30 requests a minute, 1,000 a day, 8,000 tokens a minute and 200,000 a day. The test key also had a limit of 7,000 input tokens a minute. The test interview used about 13,000 tokens, feedback included. `.env` is git-ignored.
+
+**What to expect.** Tested on 2026-11-21; [PR #12](https://github.com/m0d9/bank-discovery-simulator/pull/12) is the test record. The test was a three-question interview with Rajesh through the API, with `qwen/qwen3.8-27b` in every role. Each question unlocked the fact it should, each reply took 0.7–1.9 s and the coach's report 2.0–2.2 s. Two caveats:
+- **Rate limits.** The free tier limits tokens per minute, and the coach's request alone sends about 4,700 input tokens. Feedback requested seconds after the last question came back degraded, because the coach was rate-limited. Requesting it again 41 s later returned the full report, and so did a run that paused 60 s before the wrap-up. On the free tier, feedback right after a quick interview can come back degraded because of the per-minute token limit; wait about a minute and press **Ask the coach again**.
+- **An empty "What went well".** In both reports the coach cited the same turns under "What was missed", and the app drops praise for a turn it also criticises.
+
+`openai/gpt-oss-20b` doesn't work with this app. Groq rejects `reasoning_effort="none"` for it, and its hidden reasoning then uses up the gate's and the client's token budgets. In two runs no hidden fact unlocked, some replies were cut off and the feedback came back degraded.
+<details><summary>The free-tier limits</summary>
+
+On 2026-11-21, [Groq's rate-limits page](https://console.groq.com/docs/rate-limits) listed these free-plan limits for `qwen/qwen3.8-27b`: 30 requests a minute, 1,000 a day, 8,000 tokens a minute and 200,000 a day. The test key also had a limit of 7,000 input tokens a minute. The test interview used about 13,000 tokens, feedback included.
 </details>
 
 ## Using it
@@ -175,10 +176,10 @@ The method, the comparison of three model setups, and what these numbers can't t
 | An OpenAI-compatible API for both chatbots, with a provider or a local model | [`llm/client.py`](backend/app/llm/client.py) (the `openai` SDK); tested with Ollama, Groq optional |
 | The API URL, key and model in `.env` | [`.env.example`](.env.example), with the three required variables first |
 | Works with the model chosen for testing | `qwen3.5:9b` on Ollama: [evaluation.md](docs/evaluation.md) and `make test-live` |
-| Client profiles, hidden needs and products in simple, separate files, editable without code | YAML in [`content/`](content/), validated and reloaded while the app runs; [faculty guide](content/README.md) |
+| Client profiles, hidden needs and products in simple, separate files, editable without code | YAML in [`content/`](content/). Each client is one self-contained file: its profile, hidden facts and answer key together, so authors keep them consistent and the validator cross-checks them. Each product has its own file. The files are validated and reloaded while the app runs; [faculty guide](content/README.md) |
 | A simple web interface, with no login and no database | [`frontend/`](frontend/); sessions in memory |
 | A repository with the code, sample client data, products and `.env.example` | This repository |
-| A README covering installing, running and configuring the AI, and the model used for testing | [Quick start](#quick-start), [Hardware](#hardware), [Groq](#optional-groq-tested-on-2026-11-21-with-qwenqwen38-27b) |
+| A README covering installing, running and configuring the AI, and the model used for testing | [Quick start](#quick-start), [Hardware](#hardware), [Groq](#no-gpu-use-groq-free-tier) |
 | One sample interview: the conversation, the student's summary and recommendations, the coach's feedback | [samples/noura-al-kuwari-en.md](samples/noura-al-kuwari-en.md), plus an [Arabic one](samples/noura-al-kuwari-ar.md) (experimental) |
 | The workflow Select Client → Interview → Receive Feedback | [Using it](#using-it) |
 
