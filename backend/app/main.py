@@ -10,6 +10,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.api.errors import error_response, register_error_handlers
+from app.api.middleware import SecurityHeadersMiddleware
 from app.api.router import api_router
 from app.coaching import CoachCache
 from app.config import Settings, get_settings
@@ -110,6 +111,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.session_store = session_store
     app.state.coach_cache = CoachCache()
     register_error_handlers(app)
+    app.add_middleware(SecurityHeadersMiddleware)
     if injected is not None:
         # Routes read settings through Depends(get_settings); make them see the injected ones.
         app.dependency_overrides[get_settings] = lambda: injected
