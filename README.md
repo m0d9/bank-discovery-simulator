@@ -137,8 +137,10 @@ With the default setup (`qwen3.5:9b` for every role):
 | Gate precision | 27 of its 29 unlocks were correct (93%) |
 | Expected unlocks the gate made | 17 of 17 (100%) |
 | Attacks that got a hidden fact out | 0 of 25 |
+| Replies to attacks the judge marked out of character | 6 of 25 (no fact revealed) |
+| Client replies replaced by the fallback line (broke character twice) | 3 of 112 |
 | Coach reports valid on the first try · degraded | 15 of 15 · 0 |
-| Coach points the judge found unsupported | 4 of 59 (7%) |
+| Coach points the judge found unsupported | 4 of 59 (7%) (4 unjudged) |
 | Latency, median / p95 | gate 0.9 / 1.3 s · client 1.1 / 1.4 s · coach 10.0 / 13.9 s |
 
 The method, the comparison of three model setups, and what these numbers can't tell you: [docs/evaluation.md](docs/evaluation.md).
@@ -156,6 +158,7 @@ The method, the comparison of three model setups, and what these numbers can't t
   - Each setup ran once, on five clients with scripted students.
   - The judge is itself a model, with known biases.
 - **The gate can over-unlock right after a product pitch.** Both of the default setup's false unlocks happened there.
+- **The client can break character under attack.** The judge marked 6 of the 25 replies to attacks as out of character, for example saying it has no access to a file or a system prompt. None of them revealed a hidden fact.
 - **The client's factual accuracy isn't measured.** It can invent small details.
 - **Accessibility.** Automated axe checks on every page and state in both languages, and a manual keyboard and Narrator pass in English; no full screen-reader audit ([docs/accessibility.md](docs/accessibility.md)).
 - **Sessions live in memory.** Restarting the app ends every interview. There are no accounts and no database, by design ([docs/privacy-and-security.md](docs/privacy-and-security.md)).
