@@ -5,8 +5,8 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import APIRouter, FastAPI, HTTPException
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi import APIRouter, FastAPI
+from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 
 from app.api.errors import error_response, register_error_handlers
@@ -45,9 +45,10 @@ def _mount_spa(app: FastAPI, dist: Path) -> None:
     dist_root = dist.resolve()
 
     @app.get("/{path:path}", include_in_schema=False)
-    async def spa(path: str) -> FileResponse:
+    async def spa(path: str) -> Response:
         if path == "api":
-            raise HTTPException(status_code=404)
+            # `/api/...` is the API's own (see _api_not_found_router); `/api` itself too.
+            return error_response("NOT_FOUND", "/api")
         # Serve real top-level files (favicon etc.); fall back to index.html for client routes.
         candidate = (dist_root / path).resolve()
         if path and candidate.is_relative_to(dist_root) and candidate.is_file():
@@ -67,7 +68,7 @@ def _mount_dev_note(app: FastAPI) -> None:
 
     @app.get("/{path:path}", include_in_schema=False)
     async def not_found(path: str) -> JSONResponse:
-        raise HTTPException(status_code=404)
+        return error_response("NOT_FOUND", f"/{path}")
 
 
 def _open_content(content_dir: Path) -> ContentStore:
