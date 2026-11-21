@@ -39,11 +39,11 @@ You need [Docker](https://docs.docker.com/get-docker/), [Ollama](https://ollama.
 **A smaller GPU** can use `qwen3.5:4b` (3.7 GB), which is faster but less safe and less accurate.
 <details><summary>The 4b trade-off, measured</summary>
 
-Set `LLM_MODEL=qwen3.5:4b`. It is about a third faster per call, but in the [evaluation](docs/evaluation.md):
+Set `LLM_MODEL=qwen3.5:4b`. It is about a third faster per call, but in the [evaluation](docs/evaluation.md)'s `single-small` column (baseline run, older coach prompt):
 - its gate made 9 false unlocks, against 2;
 - it let 1 of 25 attacks through;
 - its client answered in the wrong language 16 times;
-- 20% of its coach's points were unsupported, against 7% (measured with an older coach prompt).
+- 20% of its coach's points were unsupported, against 7% for the default with the final coach prompt.
 
 **Without a GPU,** Ollama uses the CPU, much more slowly (not measured). **The first reply after a cold start** took about 8 s on the test machine, while the model loaded.
 </details>

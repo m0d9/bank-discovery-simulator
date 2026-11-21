@@ -112,6 +112,33 @@ def test_the_section_has_the_table_the_notes_and_the_recommendation() -> None:
     assert "so that row's coach is judged by its own model" in both
 
 
+def test_a_run_with_older_prompts_is_labelled_and_no_commit_is_shown() -> None:
+    older_coach = {**PROMPT_VERSION, "coach": "00000000"}
+    run = summary(
+        "default",
+        "20261120-1900",
+        prompt_versions=older_coach,
+        git={"commit": "abc1234", "dirty": True},
+    )
+    stale = choose([run], "default")
+    assert stale is not None and stale.current is False
+
+    text = render(CONFIGS, {"default": stale}, {})
+
+    assert "| Setup | Run | Coach prompt | Notes |" in text
+    assert (
+        "| `default` | `default-20261120-1900` | `00000000`"
+        " | **baseline run, older coach prompt** |"
+    ) in text
+    assert "|  | `default` (baseline run, older coach prompt) |" in text
+    assert "abc1234" not in text and "uncommitted" not in text
+
+    older_two = {**older_coach, "gate": "00000000"}
+    both = choose([summary("default", "20261120-1900", prompt_versions=older_two)], "default")
+    assert both is not None
+    assert "baseline run, older gate and coach prompts" in render(CONFIGS, {"default": both}, {})
+
+
 def test_write_replaces_only_the_section_between_the_markers(tmp_path: Path) -> None:
     doc = tmp_path / "evaluation.md"
     doc.write_text(f"# Evaluation\n\nKept.\n\n{START}\nold\n{END}\n\n## Prompt iterations\n")
