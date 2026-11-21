@@ -87,7 +87,7 @@ LLM_MODEL=openai/gpt-oss-20b
 
 **Languages.** The interface is fully bilingual: English, and Arabic from right to left. Switch with the button in the header. Conversations in Arabic with the AI client and coach are **experimental**.
 
-**A complete example:** [samples/noura-al-kuwari-en.md](samples/noura-al-kuwari-en.md).
+**A complete example:** [samples/noura-al-kuwari-en.md](samples/noura-al-kuwari-en.md). The same interview in Arabic, with its known issues listed at the top: [samples/noura-al-kuwari-ar.md](samples/noura-al-kuwari-ar.md) (experimental).
 
 ## How it works
 
@@ -163,7 +163,7 @@ The method, the comparison of three model setups, and what these numbers can't t
   - With a female client, it sometimes uses her gender for the student too.
   - The client's Arabic also slips.
 
-  This is why Arabic conversations are marked experimental.
+  This is why Arabic conversations are marked experimental. The [Arabic sample](samples/noura-al-kuwari-ar.md) shows these issues.
 - **The "strong coach" is experimental.** `gpt-oss:20b` as the coach doesn't fit next to `qwen3.5:9b` on a 16 GB GPU, so Ollama swaps models. 11 of 15 of its reports were degraded, because its reasoning ran past the coach's token budget.
 - **The evaluation is small.**
   - Each setup ran once, on five clients with scripted students.
@@ -189,7 +189,7 @@ The method, the comparison of three model setups, and what these numbers can't t
 | A simple web interface, with no login and no database | [`frontend/`](frontend/); sessions in memory |
 | A repository with the code, sample client data, products and `.env.example` | This repository |
 | A README covering installing, running and configuring the AI, and the model used for testing | [Quick start](#quick-start), [Hardware](#hardware), [Groq](#optional-groq-instead-of-ollama-not-tested) |
-| One sample interview: the conversation, the student's summary and recommendations, the coach's feedback | [samples/noura-al-kuwari-en.md](samples/noura-al-kuwari-en.md) |
+| One sample interview: the conversation, the student's summary and recommendations, the coach's feedback | [samples/noura-al-kuwari-en.md](samples/noura-al-kuwari-en.md), plus an [Arabic one](samples/noura-al-kuwari-ar.md) (experimental) |
 | The workflow Select Client → Interview → Receive Feedback | [Using it](#using-it) |
 
 ## Next steps
@@ -240,7 +240,7 @@ docs/           architecture, decisions, evaluation, accessibility, privacy, dem
 - [Evaluation](docs/evaluation.md): the method, the results and their limits
 - [Accessibility](docs/accessibility.md) and [Privacy and security](docs/privacy-and-security.md)
 - [Faculty guide to the content](content/README.md)
-- [Sample interview](samples/noura-al-kuwari-en.md) and [demo script](docs/demo-script.md)
+- [Sample interview](samples/noura-al-kuwari-en.md), the [Arabic one](samples/noura-al-kuwari-ar.md) (experimental), and the [demo script](docs/demo-script.md)
 
 ## License
 [MIT](LICENSE)
