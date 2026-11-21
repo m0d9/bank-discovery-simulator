@@ -4,9 +4,11 @@ BACKEND := backend
 FRONTEND := frontend
 
 # Model routing. `make dev` uses .env (default: qwen3.5:9b for every role; no model swap).
-# `make dev COACH=gpt-oss:20b` (or `make dev-strong-coach`) starts the backend with that coach
-# and LLM_MAX_RETRIES=4 without editing .env: the bigger coach makes Ollama swap models at
-# feedback time, and the extra retries absorb Ollama's occasional reload crash (HTTP 500).
+# Experimental: `make dev COACH=gpt-oss:20b` (or `make dev-strong-coach`) starts the backend
+# with that coach and LLM_MAX_RETRIES=4 without editing .env. The bigger coach makes Ollama
+# swap models at feedback time, and the extra retries absorb Ollama's occasional reload crash
+# (HTTP 500). On a 16 GB GPU it doesn't work as configured: its coach degraded 11 of 15
+# reports in the M7 evaluation (docs/evaluation.md).
 STRONG_COACH := gpt-oss:20b
 COACH ?=
 COACH_ENV := $(if $(strip $(COACH)),LLM_MODEL_COACH=$(COACH) LLM_MAX_RETRIES=4)
@@ -27,7 +29,7 @@ hooks: ## Install pre-commit persistently and enable the git hook
 dev: ## Run backend (:8000) and frontend (:5173); COACH=<model> overrides the coach
 	@$(MAKE) -j2 --no-print-directory dev-backend dev-frontend
 
-dev-strong-coach: ## Same as `make dev COACH=gpt-oss:20b` (models swap at feedback time)
+dev-strong-coach: ## Experimental: `make dev COACH=gpt-oss:20b` (models swap; see docs/evaluation.md)
 	@$(MAKE) --no-print-directory dev COACH=$(STRONG_COACH)
 
 dev-backend: ## Run the FastAPI backend with reload on :8000 (accepts COACH= like dev)

@@ -62,6 +62,8 @@ class Settings(BaseSettings):
     MAX_MESSAGE_CHARS: int = Field(default=1000, ge=1)
     CLIENT_HISTORY_TURNS: int = Field(default=12, ge=1)
     MAX_UNLOCKS_PER_TURN: int = Field(default=2, ge=1)
+    # The API refuses a second message in one session within this many seconds (0: off).
+    MIN_MESSAGE_INTERVAL_S: float = Field(default=1.0, ge=0)
 
 
 @lru_cache

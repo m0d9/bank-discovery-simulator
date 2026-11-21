@@ -14,6 +14,7 @@ from app.api.dto import (
 )
 from app.api.errors import error_responses
 from app.api.mappers import message_result_dto, session_created_dto, session_public_dto
+from app.api.throttle import throttle_messages
 from app.config import Settings, get_settings
 from app.content import ContentRegistry, get_registry
 from app.llm import LLMClient, llm_dep
@@ -92,16 +93,19 @@ async def get_session(session_id: str, service: Service, settings: SettingsDep) 
         "TURN_LIMIT",
         "INVALID_STATE",
         "INVALID_INPUT",
+        "SESSION_RATE_LIMIT",
         *_MODEL_ERRORS,
         "INTERNAL_ERROR",
     ),
+    dependencies=[Depends(throttle_messages)],
 )
 async def send_message(
     session_id: str, body: StudentMessageDTO, service: Service, settings: SettingsDep
 ) -> MessageResultDTO:
     """Send the student's message and get the client's reply.
 
-    If a model fails, nothing is saved, so the same message can simply be sent again.
+    If a model fails, nothing is saved, so the same message can simply be sent again. A
+    second message within `MIN_MESSAGE_INTERVAL_S` (1 s) gets `SESSION_RATE_LIMIT`.
     """
     result = await service.student_message(session_id, body.text)
     return message_result_dto(result, settings)

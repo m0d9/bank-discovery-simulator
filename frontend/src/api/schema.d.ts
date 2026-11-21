@@ -15,9 +15,10 @@ export interface paths {
          * Health
          * @description Report the app version, the model endpoint, each role's model and the content status.
          *
-         *     Always HTTP 200: the body says whether the models can be used. The model check is cached
-         *     for 30 seconds; the content status is checked on every call, so a broken file shows up
-         *     as soon as the store notices it.
+         *     Always HTTP 200: the body says whether the models can be used. A good model check is
+         *     cached for 30 seconds; a problem is checked again on every call, so Retry sees a
+         *     restarted endpoint at once, and a failed model call clears the cache. The content status
+         *     is checked on every call, so a broken file shows up as soon as the store notices it.
          */
         get: operations["health_api_health_get"];
         put?: never;
@@ -145,7 +146,8 @@ export interface paths {
          * Send Message
          * @description Send the student's message and get the client's reply.
          *
-         *     If a model fails, nothing is saved, so the same message can simply be sent again.
+         *     If a model fails, nothing is saved, so the same message can simply be sent again. A
+         *     second message within `MIN_MESSAGE_INTERVAL_S` (1 s) gets `SESSION_RATE_LIMIT`.
          */
         post: operations["send_message_api_sessions__session_id__messages_post"];
         delete?: never;
@@ -1103,7 +1105,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelopeDTO"];
                 };
             };
-            /** @description RATE_LIMITED */
+            /** @description SESSION_RATE_LIMIT, RATE_LIMITED */
             429: {
                 headers: {
                     [name: string]: unknown;

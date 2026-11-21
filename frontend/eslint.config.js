@@ -1,4 +1,5 @@
 import js from '@eslint/js';
+import i18next from 'eslint-plugin-i18next';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
 import reactHooks from 'eslint-plugin-react-hooks';
 import globals from 'globals';
@@ -26,6 +27,15 @@ export default tseslint.config(
     rules: {
       ...reactHooks.configs.recommended.rules,
       '@typescript-eslint/no-explicit-any': 'error',
+    },
+  },
+  {
+    // UI text comes only from src/locales: no literal text between JSX tags in app code.
+    files: ['src/**/*.tsx'],
+    ignores: ['src/**/*.test.tsx', 'src/test/**'],
+    plugins: { i18next },
+    rules: {
+      'i18next/no-literal-string': ['error', { mode: 'jsx-text-only' }],
     },
   },
 );

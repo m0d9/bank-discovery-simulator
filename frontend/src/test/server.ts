@@ -1,7 +1,16 @@
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import type { MessageResult, SessionPublic, Turn } from '../api/types';
-import { bank, clients, created, feedback, products, session, transcript } from './fixtures';
+import {
+  bank,
+  clients,
+  created,
+  feedback,
+  health,
+  products,
+  session,
+  transcript,
+} from './fixtures';
 
 /** An API error in the envelope the backend sends. */
 export function apiError(code: string, status: number) {
@@ -13,6 +22,7 @@ export function apiError(code: string, status: number) {
 
 /** The happy path. Tests replace single routes with `server.use(...)`. */
 export const server = setupServer(
+  http.get('/api/health', () => HttpResponse.json(health())),
   http.get('/api/bank', () => HttpResponse.json(bank)),
   http.get('/api/clients', () => HttpResponse.json(clients)),
   http.get('/api/products', () => HttpResponse.json(products)),

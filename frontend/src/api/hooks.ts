@@ -1,5 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
-import { type ApiError, getBank, getClients, getProducts, getSession, toApiError } from './client';
+import {
+  type ApiError,
+  getBank,
+  getClients,
+  getHealth,
+  getProducts,
+  getSession,
+  onModelError,
+  toApiError,
+} from './client';
+import type { Health } from './types';
 
 export type Loadable<T> =
   | { status: 'loading' }
@@ -58,4 +68,42 @@ export function useProducts() {
 
 export function useSession(sessionId: string) {
   return useLoad(getSession, sessionId);
+}
+
+interface HealthCheck {
+  /** The last answer from `/api/health`, or null before the first one. */
+  health: Health | null;
+  checking: boolean;
+  recheck: () => void;
+}
+
+/** The model endpoint's health, checked on mount, on `recheck()` and after any request fails
+ * with MODEL_UNAVAILABLE or MODEL_TIMEOUT. The last answer stays while a check runs, so a
+ * banner built on it doesn't flicker, and when a check fails: the page then reports the
+ * unreachable server itself. */
+export function useHealth(): HealthCheck {
+  const [attempt, setAttempt] = useState(0);
+  const [settled, setSettled] = useState<{ attempt: number; health: Health | null }>({
+    attempt: -1,
+    health: null,
+  });
+
+  useEffect(() => {
+    let current = true;
+    const settle = (health?: Health) => {
+      if (current) setSettled((previous) => ({ attempt, health: health ?? previous.health }));
+    };
+    getHealth().then(settle, () => {
+      settle();
+    });
+    return () => {
+      current = false;
+    };
+  }, [attempt]);
+
+  const recheck = useCallback(() => {
+    setAttempt((n) => n + 1);
+  }, []);
+  useEffect(() => onModelError(recheck), [recheck]);
+  return { health: settled.health, checking: settled.attempt !== attempt, recheck };
 }

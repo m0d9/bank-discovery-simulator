@@ -5,6 +5,7 @@ import { useBank } from '../api/hooks';
 import type { SessionModels } from '../api/types';
 import { currentLanguage } from '../i18n';
 import { localize } from '../i18n/format';
+import { HealthBanner } from './HealthBanner';
 import { LanguageToggle } from './LanguageToggle';
 import { SkipLink } from './SkipLink';
 
@@ -14,8 +15,9 @@ interface ShellContext {
 
 const MODEL_ROLES = ['client', 'gate', 'coach'] as const;
 
-/** Every page's frame: skip link, header (bank name and language), <main>, and a footer with
- * the disclaimer and, during a session, its models. */
+/** Every page's frame: skip link, header (bank name and language), <main> (with the model
+ * health banner when the model can't be used), and a footer with the disclaimer and, during a
+ * session, its models. */
 export function AppShell() {
   const { t } = useTranslation();
   const language = currentLanguage();
@@ -43,6 +45,7 @@ export function AppShell() {
       </header>
 
       <main id="main" tabIndex={-1} className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6">
+        <HealthBanner />
         <Outlet context={context} />
       </main>
 

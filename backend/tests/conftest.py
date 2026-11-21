@@ -57,6 +57,9 @@ def settings_factory(tmp_path: Path) -> SettingsFactory:
             "LLM_BASE_URL": TEST_BASE_URL,
             "LLM_API_KEY": TEST_API_KEY,
             "LLM_MODEL": TEST_MODEL,
+            # Fake replies are instant, so API tests would trip the 1 s message interval;
+            # tests/api/test_security.py checks it with a moved clock.
+            "MIN_MESSAGE_INTERVAL_S": 0,
         }
         values.update(overrides)
         return Settings(_env_file=None, **values)

@@ -1,7 +1,10 @@
 import pytest
 from pydantic import ValidationError
 
-from tests.conftest import SettingsFactory
+from app.config import Settings
+from tests.conftest import TEST_API_KEY, TEST_BASE_URL, TEST_MODEL, SettingsFactory
+
+REQUIRED = {"LLM_BASE_URL": TEST_BASE_URL, "LLM_API_KEY": TEST_API_KEY, "LLM_MODEL": TEST_MODEL}
 
 SESSION_DEFAULTS = {
     "SESSION_TTL_MINUTES": 120,
@@ -24,3 +27,17 @@ def test_session_settings_must_be_at_least_one(
 ) -> None:
     with pytest.raises(ValidationError, match=name):
         settings_factory(**{name: 0})
+
+
+def test_the_message_interval_defaults_to_one_second_and_cannot_be_negative(
+    settings_factory: SettingsFactory,
+) -> None:
+    # The test settings turn it off (tests/conftest.py), so build without the overrides.
+    defaults = Settings(_env_file=None, **REQUIRED)
+    assert defaults.MIN_MESSAGE_INTERVAL_S == 1.0
+    with pytest.raises(ValidationError, match="MIN_MESSAGE_INTERVAL_S"):
+        settings_factory(MIN_MESSAGE_INTERVAL_S=-1)
+
+
+def test_transcripts_stay_out_of_the_logs_unless_asked_for() -> None:
+    assert Settings(_env_file=None, **REQUIRED).LOG_TRANSCRIPTS is False

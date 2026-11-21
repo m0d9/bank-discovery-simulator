@@ -23,7 +23,10 @@ describe('InterviewPage', () => {
     expect(messages[0]).toHaveTextContent(`Sara Test said:${OPENING}`);
     expect(messages[1]).toHaveTextContent('You said:Question 1?');
     expect(screen.getByText('Questions used: 2 of 30')).toBeInTheDocument();
-    expect(document.title).toBe('Interview with Sara Test – Bank Client Discovery Simulator');
+    // The page heading sets the title in an effect, which can run after the log appears.
+    await waitFor(() => {
+      expect(document.title).toBe('Interview with Sara Test – Bank Client Discovery Simulator');
+    });
   });
 
   it("shows the session's models in the footer", async () => {

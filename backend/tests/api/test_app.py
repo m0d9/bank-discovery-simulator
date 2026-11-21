@@ -1,3 +1,5 @@
+import httpx
+import pytest
 from fastapi.testclient import TestClient
 
 
@@ -35,13 +37,26 @@ def test_spa_serves_assets(client: TestClient) -> None:
     assert "console.log" in res.text
 
 
-def test_unknown_api_path_is_json_404(client: TestClient) -> None:
-    for path in ("/api/nope", "/api/nope/deeper", "/api"):
-        res = client.get(path)
-        assert res.status_code == 404, path
-        assert res.headers["content-type"].startswith("application/json"), path
-    assert client.get("/api/nope").json()["error"]["code"] == "NOT_FOUND"
-    assert client.post("/api/nope").status_code == 404
+API_PATHS = ("/api", "/api/", "/api/nope", "/api/nope/deeper", "/api?x=1")
+
+
+def assert_not_found_envelope(res: httpx.Response) -> None:
+    assert res.status_code == 404, res.url
+    assert res.headers["content-type"].startswith("application/json"), res.url
+    error = res.json()["error"]
+    assert (error["code"], error["message_key"]) == ("NOT_FOUND", "errors.NOT_FOUND"), res.url
+
+
+@pytest.mark.parametrize("path", API_PATHS)
+def test_unknown_api_paths_get_the_error_envelope_never_the_spa(
+    client: TestClient, path: str
+) -> None:
+    assert_not_found_envelope(client.get(path))
+
+
+def test_unknown_api_paths_get_the_envelope_for_any_method(client: TestClient) -> None:
+    for method in ("POST", "PUT", "PATCH", "DELETE"):
+        assert_not_found_envelope(client.request(method, "/api/nope"))
 
 
 def test_spa_does_not_escape_dist(client: TestClient) -> None:
@@ -55,4 +70,5 @@ def test_dev_mode_without_dist(dev_client: TestClient) -> None:
     assert res.status_code == 200
     assert "note" in res.json()
     assert dev_client.get("/api/health").status_code == 200
-    assert dev_client.get("/api/nope").status_code == 404
+    for path in (*API_PATHS, "/interview/x"):
+        assert_not_found_envelope(dev_client.get(path))

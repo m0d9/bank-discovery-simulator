@@ -30,6 +30,22 @@
       "body": "The address may be wrong. You can go back to the list of clients."
     }
   },
+  "health": {
+    "down": "The AI model isn't reachable right now.",
+    "degraded": "Some of the AI models aren't available right now.",
+    "ENDPOINT_UNREACHABLE": "If you're running the app yourself, check that Ollama is running and the model is pulled.",
+    "ENDPOINT_AUTH": "If you're running the app yourself, check the API key (LLM_API_KEY) in .env.",
+    "ENDPOINT_ERROR": "If you're running the app yourself, check the model endpoint's address (LLM_BASE_URL) in .env.",
+    "MODEL_MISSING": "If you're running the app yourself, pull the missing model in Ollama. The technical details name it.",
+    "checking": "Checking…",
+    "details": "Technical details",
+    "endpoint": "Model endpoint",
+    "reachable": "reachable",
+    "unreachable": "not reachable",
+    "available": "available",
+    "missing": "not found",
+    "serverMessage": "Server message"
+  },
   "select": {
     "title": "Choose a client",
     "intro": "In each interview, your goal is to discover what the client needs. Some needs come up only when you ask the right questions.",
@@ -210,7 +226,9 @@
     "TURN_LIMIT": "You've used all your questions. You can now end the interview.",
     "INVALID_STATE": "This step isn't available at this point in the interview.",
     "INVALID_INPUT": "Some of what you entered isn't valid. Check it, then try again.",
+    "REQUEST_TOO_LARGE": "That's too much to send at once. Shorten it, then try again.",
     "RATE_LIMITED": "The AI model is busy. Wait a few seconds, then try again.",
+    "SESSION_RATE_LIMIT": "You're sending messages too quickly. Wait a moment, then send it again.",
     "INTERNAL_ERROR": "Something went wrong on the server. Please try again.",
     "INVALID_OUTPUT": "The AI client's reply couldn't be used. Please try again.",
     "LLM_ERROR": "The AI model returned an error. Please try again.",
