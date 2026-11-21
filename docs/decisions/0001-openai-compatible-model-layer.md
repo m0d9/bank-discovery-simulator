@@ -40,7 +40,7 @@
 **Costs:**
 - We maintain the retry and JSON handling ourselves: about 600 lines, with their own tests.
 - Settings that only a provider's native API offers can't be used, such as Ollama's per-request context size. That is why `OLLAMA_CONTEXT_LENGTH` must be set on the Ollama server.
-- The Groq path was written for, but not tested.
+- Not every hosted model works through it. On Groq, tested on 2026-11-21, `qwen/qwen3.8-27b` works in every role, but `openai/gpt-oss-20b` doesn't: Groq rejects `reasoning_effort="none"` for it, and its hidden reasoning then uses up the gate's and the client's token budgets. In two runs no hidden fact unlocked, some replies were cut off and the feedback came back degraded.
 
 ## Evidence
 
