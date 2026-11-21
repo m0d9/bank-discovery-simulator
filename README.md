@@ -69,6 +69,14 @@ LLM_MODEL=qwen/qwen3.8-27b
 On 2026-11-21, [Groq's rate-limits page](https://console.groq.com/docs/rate-limits) listed these free-plan limits for `qwen/qwen3.8-27b`: 30 requests a minute, 1,000 a day, 8,000 tokens a minute and 200,000 a day. The test key also had a limit of 7,000 input tokens a minute. The test interview used about 13,000 tokens, feedback included.
 </details>
 
+## Start here
+The core of the app is five files in `backend/app/`:
+- [`prompts/gate.md`](backend/app/prompts/gate.md): the gate's prompt, which decides from fact ids and unlock conditions alone which hidden facts a student message has earned.
+- [`prompts/client_system.md`](backend/app/prompts/client_system.md): the AI client's prompt: its persona, open facts, unlocked facts and hints, never a locked fact.
+- [`prompts/coach.md`](backend/app/prompts/coach.md): the coach's prompt, which writes the feedback from the analysis, the transcript, the wrap-up and the client's full profile.
+- [`simulation/disclosure.py`](backend/app/simulation/disclosure.py): calls the gate and enforces its rules in code: the quote check, at most 2 unlocks per message, and the pitch rule.
+- [`coaching/coach.py`](backend/app/coaching/coach.py): calls the coach and checks its report: it drops ungrounded praise, clears product names from suggested questions and adds missed critical needs.
+
 ## Using it
 1. **Choose a client:** five fictional clients of a fictional bank, from easy to hard.
 2. **Interview them.** Hidden needs, such as late-paying customers or a preference for Sharia-compliant banking, come out when you ask about them, or when you pitch a product they rule out; the feedback then marks that need "After a pitch". The product catalogue is on the page.
