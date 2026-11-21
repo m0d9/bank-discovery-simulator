@@ -1,12 +1,12 @@
 # Accessibility
 
-**Status: draft (M8).** It says what is checked automatically and what isn't, and leaves room for the manual check at the end.
+This page says what is checked automatically, what was checked by hand, and what hasn't been checked.
 
 ## Target
 
 [WCAG 2.1](https://www.w3.org/TR/WCAG21/) level **AA**, in English (LTR) and Arabic (RTL).
 
-**A full screen-reader audit was not done.** The automated checks below can't replace one. The *Manual check* section is for that pass.
+**A full screen-reader audit was not done.** The automated checks below can't replace one. The *Manual check* section records one pass with the keyboard and Narrator, in English.
 
 ## What is automated
 
@@ -114,26 +114,39 @@ Text needs at least 4.5:1. Large text, icons, focus rings and the borders of con
 
 ## Known gaps
 
-- **No full screen-reader audit.** The app hasn't been used end to end with NVDA, JAWS, Narrator, VoiceOver or TalkBack, in English or Arabic. Live regions, the dialog and the `<details>` sections are built from native elements and ARIA roles, but nobody has listened to them.
-- **Zoom and reflow aren't tested automatically.** 200% zoom and 320 px width haven't been checked. Only 375 px was checked, once, in M5.
+- **Not checked by hand:** Narrator with the Arabic UI, NVDA, the 320 px width, and the reduced-motion setting.
+- **No full screen-reader audit.**
+  - The one manual pass used Narrator, in English. JAWS, VoiceOver and TalkBack haven't been tried.
+  - Of the live regions, the pass checked only the conversation's. It didn't include the loading and error announcements or the health banner.
+- **Zoom and reflow aren't tested automatically.** 200% zoom was checked by hand once (see *Manual check*), and 375 px once in M5.
 - **No browser-based axe run in CI.** jsdom can't check contrast, visible focus or layout. The Chrome runs in M4 and M5 were one-off, and this milestone's states weren't run in Chrome.
 - **Mixed-language reading is unverified:** how screen readers pronounce English model and product names inside Arabic text, and Arabic inside English.
-- **Untested modes:** Windows high-contrast (forced colours) and the reduced-motion setting in a real browser.
+- **Windows high contrast (forced colours) is untested.**
 - **The models' text can't be guaranteed.** The AI client's and the coach's replies are free text. Their clarity, length and Arabic quality aren't accessibility-checked (see `docs/evaluation.md` for their quality).
 
 ## Manual check
 
-*To be filled in by Mahmoud: a 10-minute pass with the keyboard only and a screen reader.*
+One pass through the whole flow, with the keyboard and Narrator.
 
-Tester: · Date: · Browser and screen reader:
+- **Tester:** Mahmoud Abdelaziz
+- **Date:** 2026-11-21
+- **Setup:** Edge on Windows 11, with Narrator, and the UI in English
 
-| Check | English | Arabic | Notes |
-|---|---|---|---|
-| Keyboard only: choose a client, interview, end the interview (dialog), wrap up, read the feedback | | | |
-| Focus is always visible, and its order follows the reading order (mirrored in Arabic) | | | |
-| Focus returns to "End interview" when the dialog is cancelled | | | |
-| NVDA or Narrator spot check: the page title, the headings, a new reply in the conversation, an error, the health banner | | | |
-| Live regions announce each message once | | | |
-| 200% browser zoom: nothing cut off, no horizontal scroll | | | |
-| 320 px width: nothing cut off, no horizontal scroll | | | |
-| `prefers-reduced-motion`: the typing dots don't animate | | | |
+| Check | Result |
+|---|---|
+| The skip link is the first Tab stop and moves focus to the main content | Pass |
+| The language switch works by keyboard, and the page flips to RTL and back | Pass |
+| Every client card is reachable, and the focus is always visible | Pass |
+| Enter on a card opens the interview | Pass (see the observation below) |
+| Enter sends the message, and focus stays in the message box after the reply | Pass |
+| Narrator reads the client's reply once | Pass |
+| The "End interview" dialog opens with focus inside it. Esc closes it and returns focus to the button, and confirming goes to the wrap-up | Pass |
+| Submitting an empty wrap-up shows the error, and the field can be reached | Pass |
+| The whole wrap-up works by keyboard, with products ticked using Space | Pass |
+| A "Turn" link opens the transcript, with that message focused and the focus ring visible | Pass |
+| "Behind the scenes" (the client's full profile) opens and closes with Enter | Pass |
+| At 200% zoom there's no horizontal scrolling, and nothing is cut off | Pass |
+
+**An observation, not a failure:** opening the interview doesn't move focus to the message box, so it's reached with Tab. This is by design: after a navigation inside the app, focus goes to the new page's heading, so that screen readers start at the new page.
+
+**Not checked by hand:** Narrator with the Arabic UI, NVDA, the 320 px width, and reduced motion (see *Known gaps*).
