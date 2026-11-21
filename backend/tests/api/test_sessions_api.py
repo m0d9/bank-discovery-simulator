@@ -406,6 +406,7 @@ def test_the_error_code_table() -> None:
         "TURN_LIMIT",
         "INVALID_STATE",
         "INVALID_INPUT",
+        "REQUEST_TOO_LARGE",
         "MODEL_UNAVAILABLE",
         "MODEL_TIMEOUT",
         "RATE_LIMITED",
