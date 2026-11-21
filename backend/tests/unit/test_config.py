@@ -37,3 +37,7 @@ def test_the_message_interval_defaults_to_one_second_and_cannot_be_negative(
     assert defaults.MIN_MESSAGE_INTERVAL_S == 1.0
     with pytest.raises(ValidationError, match="MIN_MESSAGE_INTERVAL_S"):
         settings_factory(MIN_MESSAGE_INTERVAL_S=-1)
+
+
+def test_transcripts_stay_out_of_the_logs_unless_asked_for() -> None:
+    assert Settings(_env_file=None, **REQUIRED).LOG_TRANSCRIPTS is False
