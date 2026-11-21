@@ -1,7 +1,7 @@
 # Bank Client Discovery Simulator
 
 Business students practise a discovery interview with an AI bank client, recommend banking products, and get feedback from an AI coach.
-The client keeps hidden needs that only the right questions unlock, and the coach's feedback is grounded in what the student actually asked and found.
+The client keeps hidden needs that the right questions unlock, and the coach's feedback is grounded in what the student actually asked and found.
 It runs on free, open models through any OpenAI-compatible API (tested with Ollama and `qwen3.5:9b`), in English or Arabic.
 
 ![The feedback page after an interview with Noura Al-Kuwari: counts, then what went well, each point linked to the student's turns](docs/images/feedback-page.png)
@@ -68,7 +68,7 @@ On 2026-11-21, [Groq's rate-limits page](https://console.groq.com/docs/rate-limi
 
 ## Using it
 1. **Choose a client:** five fictional clients of a fictional bank, from easy to hard.
-2. **Interview them.** Hidden needs, such as late-paying customers or a preference for Sharia-compliant banking, come out only when you ask about them. The product catalogue is on the page.
+2. **Interview them.** Hidden needs, such as late-paying customers or a preference for Sharia-compliant banking, come out when you ask about them, or when you pitch a product they rule out; the feedback then marks that need "After a pitch". The product catalogue is on the page.
 3. **Wrap up:** summarise the needs and recommend 1–3 products.
 4. **Get feedback:** the coach's notes on what went well, what was missed and how to improve, each citing your turns, next to the answer key's discovery map and product verdicts. You can download it all as Markdown.
 
@@ -166,7 +166,7 @@ The method, the comparison of three model setups, and what these numbers can't t
 |---|---|
 | Two AI chatbots: a client and a coach | [`simulation/client_agent.py`](backend/app/simulation/client_agent.py), [`coaching/coach.py`](backend/app/coaching/coach.py) |
 | At least two fictional clients with a background, finances, needs and hidden information | 5 clients in [`content/clients/`](content/clients/): `persona`, `open_facts`, `hidden_facts`, `needs` |
-| The client stays in character, answers naturally, and reveals hidden information only to relevant questions, not all at the start | The gate ([`disclosure.py`](backend/app/simulation/disclosure.py), [`gate.md`](backend/app/prompts/gate.md)); the client's prompt and checks ([`client_system.md`](backend/app/prompts/client_system.md)); measured in [evaluation.md](docs/evaluation.md) |
+| The client stays in character, answers naturally, and reveals hidden information only to relevant questions, not all at the start | The gate ([`disclosure.py`](backend/app/simulation/disclosure.py), [`gate.md`](backend/app/prompts/gate.md)) unlocks a hidden fact on a relevant question, or when the student pitches a product the fact rules out, and the feedback then marks that need "After a pitch"; the client's prompt and checks ([`client_system.md`](backend/app/prompts/client_system.md)); measured in [evaluation.md](docs/evaluation.md) |
 | A catalogue of at least three fictional products with features and limitations, which students can discuss in the interview | 8 products in [`content/products/`](content/products/); the catalogue on the interview page; the client learns about a product once the student mentions it |
 | Feedback on what went well, what was missed (including unsuitable recommendations) and how to improve, to help students learn rather than to score them | [`coaching/`](backend/app/coaching/), [`coach.md`](backend/app/prompts/coach.md); the feedback page shows counts, never a score |
 | An OpenAI-compatible API for both chatbots, with a provider or a local model | [`llm/client.py`](backend/app/llm/client.py) (the `openai` SDK); tested with Ollama, Groq optional |
