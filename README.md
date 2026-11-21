@@ -151,7 +151,7 @@ The method, the comparison of three model setups, and what these numbers can't t
   - The judge is itself a model, with known biases.
 - **The gate can over-unlock right after a product pitch.** Both of the default setup's false unlocks happened there.
 - **The client's factual accuracy isn't measured.** It can invent small details.
-- **Accessibility.** Automated axe checks cover every page and its key states in both languages, and a keyboard-only run was scripted. There has been no full screen-reader audit yet ([docs/accessibility.md](docs/accessibility.md)).
+- **Accessibility.** Automated axe checks on every page and state in both languages, and a manual keyboard and Narrator pass in English; no full screen-reader audit ([docs/accessibility.md](docs/accessibility.md)).
 - **Sessions live in memory.** Restarting the app ends every interview. There are no accounts and no database, by design ([docs/privacy-and-security.md](docs/privacy-and-security.md)).
 
 ## The brief's requirements
