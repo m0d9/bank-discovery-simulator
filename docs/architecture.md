@@ -249,7 +249,7 @@ The [faculty guide](../content/README.md) covers how to write a client.
 
 **The states.** A session moves from `interviewing` to `wrapped_up` to `feedback_ready`.
 
-**Private content.** A client's private content leaves the server only at `feedback_ready`: the persona, the hidden facts, the needs and the coach notes.
+**Private content.** A client's persona, hidden facts and needs reach the browser only at `feedback_ready`, with the feedback and in the export. The coach notes never do: only the coach's prompt holds them.
 
 **Sessions.** `SessionStore` keeps sessions in memory:
 - each has a lock;
