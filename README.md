@@ -15,12 +15,12 @@ You need [Docker](https://docs.docker.com/get-docker/), [Ollama](https://ollama.
    <details><summary>Exact steps for Windows, macOS and Linux</summary>
 
    - **Windows:** quit Ollama from the taskbar. Run `setx OLLAMA_CONTEXT_LENGTH 16384`, or add the variable under *Edit environment variables for your account*. Then start Ollama again.
-   - **macOS:** run `launchctl setenv OLLAMA_CONTEXT_LENGTH 16384`, then quit and reopen the Ollama app.
+   - **macOS:** open the Ollama app's *Settings* and set *Context length* to 16k (16384), as tested on the Apple M3 Pro. Alternative (untested): run `launchctl setenv OLLAMA_CONTEXT_LENGTH 16384`, then quit and reopen the Ollama app.
    - **Linux (systemd):** run `sudo systemctl edit ollama.service` and add `Environment="OLLAMA_CONTEXT_LENGTH=16384"` under `[Service]`. Then run `sudo systemctl daemon-reload && sudo systemctl restart ollama`.
    - **Linux with Docker:** also add `Environment="OLLAMA_HOST=0.0.0.0:11434"`. Ollama otherwise listens only on 127.0.0.1, which a container can't reach. This also exposes Ollama to your network.
    - **Check:** once the app has used the model, `ollama ps` shows `16384` under `CONTEXT`.
 
-   These steps follow [Ollama's FAQ](https://docs.ollama.com/faq). The Windows and macOS ones were tested.
+   These steps follow Ollama's [FAQ](https://docs.ollama.com/faq) and [context-length page](https://docs.ollama.com/context-length). The Windows and macOS ones were tested.
    </details>
 3. **Get the app and its settings.** Only `LLM_BASE_URL`, `LLM_API_KEY` and `LLM_MODEL` are required, and their defaults already point the container at Ollama on your machine.
    ```bash
