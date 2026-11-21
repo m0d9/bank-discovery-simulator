@@ -267,4 +267,4 @@ The judge's first call in the replay hit Ollama's reload crash, so Fatima's stro
 ### Final runs
 
 - **`strong-coach`** ran again in full with the final coach prompt `e52bc479`, after an Ollama restart, as its baseline had (`strong-coach-20261120-2102`).
-- **`single-small`'s final re-run was cut,** under the time box's cut order. Its row above still uses the baseline prompt `86e02860`, marked "older prompts".
+- **`single-small` wasn't re-run with the final coach prompt.** That re-run was cut to keep the evaluation within its planned time, so its column above is still its baseline run, made with the older coach prompt `86e02860`.

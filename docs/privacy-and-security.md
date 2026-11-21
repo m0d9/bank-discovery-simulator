@@ -40,7 +40,7 @@ This covers the prototype as built: a teaching tool with no login and no databas
   - A test drives the API at DEBUG while the endpoint quotes the key back. It checks that the key appears in none of the app's log lines and in no response.
 - **gitleaks** runs in the pre-commit hook, and in CI over the full git history.
 
-## Hardening in the app (M8)
+## Hardening in the app
 
 - **Headers on every response** (except a 500 from an unexpected error, which Starlette sends from outside the middleware; its body is a fixed envelope):
   - `Content-Security-Policy: default-src 'self'; img-src 'self' data:; font-src 'self'; style-src 'self'; frame-ancestors 'none'`;
