@@ -1,0 +1,4 @@
+# Lint and format evals/ with the backend's ruff settings. `app` (the backend package) and
+# `evals` (this folder) both sort as first-party imports.
+extend = "../backend/pyproject.toml"
+src = ["../backend", ".."]

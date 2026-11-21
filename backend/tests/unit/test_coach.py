@@ -187,6 +187,45 @@ def test_a_missed_critical_need_the_model_covered_is_not_backfilled() -> None:
     assert [item.need_id for item in report.missed] == ["fund-gap"]
 
 
+# M6's traced live failure (Noura's weak interview): the coach's only item for the cash gap was
+# about the overdraft, with the need's id but no better question. The log cut its text short.
+OVERDRAFT_ONLY = (
+    "You pitched an interest-based product before she mentioned her values. She revealed her "
+    "Sharia preference only in reaction to the overdraft."
+)
+NOURA_WEAK = (
+    ("Thanks for coming in. Could you tell me a bit about yourself?", [], []),
+    ("How is business going at the moment?", [], []),
+    ("What brings you in today?", [], []),
+    ("Is there anything else I should know?", [], []),
+    ("I'd suggest our Business Overdraft.", ["sharia-only"], ["sharia-only"]),
+    ("So would that work for you?", [], []),
+)
+
+
+def test_a_product_item_does_not_cover_the_missed_need_it_names() -> None:
+    session = real_interview(
+        "noura-al-kuwari",
+        *NOURA_WEAK,
+        recommend=["business-overdraft"],
+        pitched={"business-overdraft": [9]},
+    )
+    product_item = missed_item(
+        OVERDRAFT_ONLY,
+        need_id="bridge-cash-gap",
+        product_id="business-overdraft",
+        better_question=None,
+    )
+
+    report, backfilled = checked(session, coach_reply(missed=[product_item]))
+
+    assert backfilled == ("bridge-cash-gap",)
+    discovery, kept = report.missed
+    assert (discovery.need_id, discovery.product_id) == ("bridge-cash-gap", None)
+    assert discovery.better_question == "How quickly do your customers usually pay you?"
+    assert (kept.point, kept.product_id) == (OVERDRAFT_ONLY, "business-overdraft")
+
+
 async def test_invalid_output_degrades_the_feedback() -> None:
     session = interview(ASK_PAYMENTS, recommend=[BETA])
 

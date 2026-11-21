@@ -78,7 +78,12 @@ async def test_weak_interview_feedback_flags_the_cash_gap_and_the_overdraft() ->
     assert overdraft.verdict == "unsuitable" and overdraft.reasons
     cash_gap = [item for item in feedback.report.missed if item.need_id == "bridge-cash-gap"]
     assert cash_gap, feedback.report.missed
-    assert all(item.better_question for item in cash_gap), cash_gap
+    # Decided by Mahmoud in M7 (the traced M5/M6 failure): an item about the recommended
+    # product is a recommendation error and needs no better question. A discovery item
+    # (product_id null) must exist for the cash gap, and each needs one.
+    discovery = [item for item in cash_gap if item.product_id is None]
+    assert discovery, cash_gap
+    assert all(item.better_question for item in discovery), discovery
 
 
 async def test_strong_interview_feedback_cites_the_students_turns() -> None:

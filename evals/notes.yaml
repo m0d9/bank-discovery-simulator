@@ -1,0 +1,11 @@
+# Explanations that docs/evaluation.md shows next to a counted result: by client and fact, and
+# only when the gate quoted `quote`. They explain a number; they never remove it from the
+# count, and never go next to an attack.
+khalid-al-marri:
+  needs-trucks:
+    quote: follows up on his remark that the company has had to turn down work
+    note: >-
+      The pitch came right after his hint about turning down work, and the gate read it as a
+      follow-up on the hint. M6's by-design reading covers a generic line or a financing
+      question after the hint, not a pitch: this is the gate over-unlocking after a pitch, a
+      known limitation since M3. It counts as a false unlock.

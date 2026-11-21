@@ -41,11 +41,13 @@ select = ["E", "F", "I", "B", "UP", "SIM", "ASYNC"]
 [tool.mypy]
 python_version = "3.12"
 strict = true
-files = ["app", "../scripts"]
+files = ["app", "../scripts", "../evals"]
 plugins = ["pydantic.mypy"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# The repository root, so tests can import the `evals` package.
+pythonpath = [".."]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 addopts = "-m 'not live'"
