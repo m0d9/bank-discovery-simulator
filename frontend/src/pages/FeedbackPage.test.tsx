@@ -2,7 +2,7 @@ import { screen, waitFor, within } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { describe, expect, it } from 'vitest';
 import type { SessionPublic } from '../api/types';
-import { created, feedback, sara, session, transcript } from '../test/fixtures';
+import { created, feedback, products, sara, session, transcript } from '../test/fixtures';
 import { renderApp } from '../test/render';
 import { apiError, server } from '../test/server';
 
@@ -37,6 +37,52 @@ describe('FeedbackPage', () => {
     expect(status.closest('[role="status"]')).toBeInTheDocument();
     expect(screen.getByText(/The first review can take up to a minute/)).toBeInTheDocument();
     expect(screen.queryByRole('heading', { level: 2 })).not.toBeInTheDocument();
+  });
+
+  it('waits for the product catalogue rather than show product ids', async () => {
+    let release: () => void = () => undefined;
+    const held = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const { asked } = wrappedUp();
+    server.use(
+      http.get('/api/products', async () => {
+        await held;
+        return HttpResponse.json(products);
+      }),
+    );
+    await renderApp('/feedback/s1');
+
+    await waitFor(() => {
+      expect(asked).toEqual(['en']);
+    });
+    expect(await screen.findByText('Loading…')).toBeInTheDocument();
+    expect(screen.queryByText('test-overdraft')).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 2 })).not.toBeInTheDocument();
+
+    release();
+    expect(await screen.findAllByText('Test Overdraft')).not.toHaveLength(0);
+    expect(screen.queryByText('test-overdraft')).not.toBeInTheDocument();
+    expect(screen.queryByText('Loading…')).not.toBeInTheDocument();
+  });
+
+  it('offers to load the product catalogue again if it fails', async () => {
+    wrappedUp();
+    let calls = 0;
+    server.use(
+      http.get('/api/products', () => {
+        calls += 1;
+        return calls === 1 ? apiError('INTERNAL_ERROR', 500) : HttpResponse.json(products);
+      }),
+    );
+    const { user } = await renderApp('/feedback/s1');
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Something went wrong on the server.');
+    await user.click(within(alert).getByRole('button', { name: 'Try again' }));
+
+    expect(await screen.findAllByText('Test Overdraft')).not.toHaveLength(0);
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
   it('shows the discovery map, the verdicts and the six sections of feedback', async () => {

@@ -86,8 +86,10 @@ function FeedbackView({ session, state }: { session: SessionPublic; state: Feedb
     setFocusRequest({ n });
   }, []);
 
-  const catalogue = products.status === 'ready' ? products.data : [];
-  const product = (id: string): Product | undefined => catalogue.find((item) => item.id === id);
+  const catalogue = products.status === 'ready' ? products.data : null;
+  const product = (id: string): Product | undefined => catalogue?.find((item) => item.id === id);
+  // The cards name products from the catalogue, so they wait for it rather than show ids.
+  const shown = catalogue ? feedback : null;
 
   return (
     <div className="space-y-10">
@@ -106,8 +108,8 @@ function FeedbackView({ session, state }: { session: SessionPublic; state: Feedb
             <p>{t('feedback.loading')}</p>
           </div>
         ) : (
-          feedback &&
-          !feedback.degraded && <span className="sr-only">{t('feedback.ready')}</span>
+          shown &&
+          !shown.degraded && <span className="sr-only">{t('feedback.ready')}</span>
         )}
       </div>
 
@@ -118,14 +120,21 @@ function FeedbackView({ session, state }: { session: SessionPublic; state: Feedb
           <ErrorBanner error={state.error} onRetry={state.retry} />
         ))}
 
-      {feedback && (
+      {feedback && products.status === 'loading' && (
+        <p className="text-ink-muted">{t('common.loading')}</p>
+      )}
+      {feedback && products.status === 'error' && (
+        <ErrorBanner error={products.error} onRetry={products.reload} />
+      )}
+
+      {shown && (
         <div aria-busy={pending} className="space-y-10">
-          {feedback.degraded && <DegradedNotice onRetry={state.retry} retrying={pending} />}
+          {shown.degraded && <DegradedNotice onRetry={state.retry} retrying={pending} />}
           <FeedbackSections
-            feedback={feedback}
+            feedback={shown}
             product={product}
             onShowTurn={showTurn}
-            summary={feedback.wrapup.needs_summary}
+            summary={shown.wrapup.needs_summary}
           />
           <div className="space-y-4">
             <TranscriptDetails
@@ -135,7 +144,7 @@ function FeedbackView({ session, state }: { session: SessionPublic; state: Feedb
               onToggle={setTranscriptOpen}
               turnLabel={(n) => t('feedback.turn', { n })}
             />
-            <RevealedProfile feedback={feedback} product={product} onShowTurn={showTurn} />
+            <RevealedProfile feedback={shown} product={product} onShowTurn={showTurn} />
           </div>
         </div>
       )}
