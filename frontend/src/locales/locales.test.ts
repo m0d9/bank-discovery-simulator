@@ -1,9 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import errorCodes from '../api/error-codes.json';
+import openapi from '../api/openapi.json';
 import ar from './ar.json';
 import en from './en.json';
 
 const LOCALES = { en, ar } as const;
+/** The codes `/api/health` can send as `hint_code`, from the API contract. */
+const HINT_CODES = openapi.components.schemas.HealthDTO.properties.hint_code.anyOf.flatMap(
+  (option) => option.enum ?? [],
+);
 const PLURAL_SUFFIX = /_(zero|one|two|few|many|other)$/;
 /** Codes the browser produces itself (`src/api/client.ts`), on top of the API's. */
 const FRONTEND_CODES = ['GENERIC', 'NETWORK'];
@@ -63,6 +68,17 @@ describe('locale files', () => {
       const keys = flatten(locale);
       for (const code of [...errorCodes, ...FRONTEND_CODES]) {
         expect(keys.has(`errors.${code}`), code).toBe(true);
+      }
+    },
+  );
+
+  it.each(Object.entries(LOCALES))(
+    '%s has health.<CODE> for every hint code /api/health can send',
+    (_language, locale) => {
+      const keys = flatten(locale);
+      expect(HINT_CODES.length).toBeGreaterThan(0);
+      for (const code of HINT_CODES) {
+        expect(keys.has(`health.${code}`), code).toBe(true);
       }
     },
   );

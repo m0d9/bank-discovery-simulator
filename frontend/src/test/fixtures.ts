@@ -3,6 +3,7 @@ import type {
   Bank,
   ClientCard,
   Feedback,
+  Health,
   Product,
   SessionCreated,
   SessionModels,
@@ -288,4 +289,38 @@ export function feedback(overrides: Partial<Feedback> = {}): Feedback {
     },
     ...overrides,
   };
+}
+
+/** `/api/health` with every role's model available. */
+export function health(overrides: Partial<Health> = {}): Health {
+  return {
+    status: 'ok',
+    version: '0.1.0',
+    endpoint: { reachable: true, host: 'localhost:11434' },
+    models: {
+      gate: { name: models.gate, available: true },
+      client: { name: models.client, available: true },
+      coach: { name: models.coach, available: true },
+    },
+    hint: null,
+    hint_code: null,
+    content: { ok: true, errors: [] },
+    ...overrides,
+  };
+}
+
+/** `/api/health` while nothing answers at the model endpoint, as when Ollama isn't running. */
+export function healthDown(): Health {
+  const unavailable = (name: string) => ({ name, available: false });
+  return health({
+    status: 'down',
+    endpoint: { reachable: false, host: 'localhost:11434' },
+    models: {
+      gate: unavailable(models.gate),
+      client: unavailable(models.client),
+      coach: unavailable(models.coach),
+    },
+    hint: 'Cannot reach the model endpoint at localhost:11434. Is Ollama running?',
+    hint_code: 'ENDPOINT_UNREACHABLE',
+  });
 }

@@ -30,6 +30,22 @@
       "body": "The address may be wrong. You can go back to the list of clients."
     }
   },
+  "health": {
+    "down": "The AI model isn't reachable right now.",
+    "degraded": "Some of the AI models aren't available right now.",
+    "ENDPOINT_UNREACHABLE": "If you're running the app yourself, check that Ollama is running and the model is pulled.",
+    "ENDPOINT_AUTH": "If you're running the app yourself, check the API key (LLM_API_KEY) in .env.",
+    "ENDPOINT_ERROR": "If you're running the app yourself, check the model endpoint's address (LLM_BASE_URL) in .env.",
+    "MODEL_MISSING": "If you're running the app yourself, pull the missing model in Ollama. The technical details name it.",
+    "checking": "Checking…",
+    "details": "Technical details",
+    "endpoint": "Model endpoint",
+    "reachable": "reachable",
+    "unreachable": "not reachable",
+    "available": "available",
+    "missing": "not found",
+    "serverMessage": "Server message"
+  },
   "select": {
     "title": "Choose a client",
     "intro": "In each interview, your goal is to discover what the client needs. Some needs come up only when you ask the right questions.",

@@ -4,6 +4,8 @@ type Schemas = components['schemas'];
 
 export type Bank = Schemas['BankDTO'];
 export type ClientCard = Schemas['ClientCardDTO'];
+export type Health = Schemas['HealthDTO'];
+export type HealthHintCode = NonNullable<Health['hint_code']>;
 export type LocalizedText = Schemas['LocalizedTextDTO'];
 export type Product = Schemas['ProductDTO'];
 export type SessionCreated = Schemas['SessionCreatedDTO'];

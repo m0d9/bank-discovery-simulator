@@ -4,6 +4,7 @@ import type {
   Bank,
   ClientCard,
   Feedback,
+  Health,
   Language,
   MessageResult,
   Product,
@@ -30,6 +31,20 @@ export class ApiError extends Error {
     this.messageKey = messageKey;
     this.detail = detail;
   }
+}
+
+/** Codes that mean the model endpoint itself failed, after which the health banner checks
+ * `/api/health` again. */
+const ENDPOINT_FAILURES = new Set(['MODEL_UNAVAILABLE', 'MODEL_TIMEOUT']);
+const modelErrorListeners = new Set<() => void>();
+
+/** Calls `listener` whenever a request fails with MODEL_UNAVAILABLE or MODEL_TIMEOUT. Returns
+ * the function that stops it. */
+export function onModelError(listener: () => void): () => void {
+  modelErrorListeners.add(listener);
+  return () => {
+    modelErrorListeners.delete(listener);
+  };
 }
 
 const api = createClient<paths>({
@@ -78,11 +93,20 @@ async function unwrap<T>(call: Promise<CallResult<T>>): Promise<T> {
   const { data, error, response } = result;
   if (response.ok && data !== undefined) return data;
   if (isErrorEnvelope(error)) {
-    throw new ApiError(error.error.code, error.error.message_key, error.error.detail);
+    const { code, message_key: messageKey, detail } = error.error;
+    if (ENDPOINT_FAILURES.has(code)) {
+      for (const listener of modelErrorListeners) listener();
+    }
+    throw new ApiError(code, messageKey, detail);
   }
   // Without the envelope, the reply didn't come from the API itself. In dev, Vite's proxy
   // answers 502 in plain text when the backend is down.
   throw new ApiError(response.ok ? GENERIC : NETWORK);
+}
+
+/** The app's view of the model endpoint and the content files. Always HTTP 200. */
+export function getHealth(): Promise<Health> {
+  return unwrap(api.GET('/api/health'));
 }
 
 export function getBank(): Promise<Bank> {
