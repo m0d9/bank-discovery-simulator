@@ -12,6 +12,7 @@ from fastapi.staticfiles import StaticFiles
 from app.api.errors import error_response, register_error_handlers
 from app.api.middleware import BodyLimitMiddleware, SecurityHeadersMiddleware
 from app.api.router import api_router
+from app.api.throttle import MessageThrottle
 from app.coaching import CoachCache
 from app.config import Settings, get_settings
 from app.content import ContentStore, ContentValidationError
@@ -110,6 +111,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.content_store = content_store
     app.state.session_store = session_store
     app.state.coach_cache = CoachCache()
+    app.state.message_throttle = MessageThrottle(settings.MIN_MESSAGE_INTERVAL_S)
     register_error_handlers(app)
     # The last one added runs first, so the headers also go on the body limit's 413.
     app.add_middleware(BodyLimitMiddleware)

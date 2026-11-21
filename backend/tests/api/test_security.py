@@ -1,10 +1,21 @@
-"""Security hygiene: response headers and the CSP, and the request body limit."""
+"""Security hygiene: response headers and the CSP, the request body limit, and the
+per-session message interval."""
 
 import json
 from collections.abc import Iterator
+from pathlib import Path
 
+import httpx
 import pytest
 from fastapi.testclient import TestClient
+
+from app.api import throttle
+from app.api.throttle import MessageThrottle
+from app.llm import Role, llm_dep
+from app.llm.fake import FakeLLM
+from app.main import create_app
+from tests.conftest import SettingsFactory
+from tests.interview_factory import gate_reply
 
 CSP = (
     "default-src 'self'; img-src 'self' data:; font-src 'self'; style-src 'self'; "
@@ -85,3 +96,71 @@ def test_a_body_of_exactly_32_kb_reaches_the_app(client: TestClient) -> None:
 
     assert res.status_code == 404
     assert res.json()["error"]["code"] == "UNKNOWN_CLIENT"
+
+
+@pytest.fixture
+def clock(monkeypatch: pytest.MonkeyPatch) -> list[float]:
+    """The throttle's clock, in seconds; tests move it by hand."""
+    now = [1000.0]
+    monkeypatch.setattr(throttle, "_now", lambda: now[0])
+    return now
+
+
+@pytest.fixture
+def throttled(
+    settings_factory: SettingsFactory, fake_llm: FakeLLM, tmp_path: Path, clock: list[float]
+) -> Iterator[TestClient]:
+    """The API with the default 1 s message interval (the test settings turn it off)."""
+    settings = settings_factory(FRONTEND_DIST=tmp_path / "missing", MIN_MESSAGE_INTERVAL_S=1.0)
+    app = create_app(settings)
+    app.dependency_overrides[llm_dep] = lambda: fake_llm
+    with TestClient(app) as test_client:
+        yield test_client
+
+
+def _start(api: TestClient) -> str:
+    created = api.post("/api/sessions", json={"client_id": "noura-al-kuwari", "language": "en"})
+    assert created.status_code == 201, created.text
+    session_id: str = created.json()["session_id"]
+    return session_id
+
+
+def _send(api: TestClient, session_id: str, fake: FakeLLM | None = None) -> httpx.Response:
+    """Send a message; script the gate and the client when it should get through."""
+    if fake is not None:
+        fake.script(Role.GATE, gate_reply())
+        fake.script(Role.CLIENT, "Some of them pay late.")
+    return api.post(f"/api/sessions/{session_id}/messages", json={"text": "How do they pay?"})
+
+
+def test_a_second_message_within_a_second_gets_429_and_is_not_recorded(
+    throttled: TestClient, fake_llm: FakeLLM, clock: list[float]
+) -> None:
+    session_id = _start(throttled)
+    assert _send(throttled, session_id, fake_llm).status_code == 200
+
+    clock[0] += 0.9
+    refused = _send(throttled, session_id)
+
+    assert refused.status_code == 429
+    assert refused.json()["error"] == {
+        "code": "SESSION_RATE_LIMIT",
+        "message_key": "errors.SESSION_RATE_LIMIT",
+        "detail": "send at most one message every 1 s",
+    }
+    assert throttled.get(f"/api/sessions/{session_id}").json()["student_turns_used"] == 1
+    clock[0] += 0.1  # one second after the first message: the refusal didn't restart it
+    assert _send(throttled, session_id, fake_llm).status_code == 200
+
+
+def test_each_session_has_its_own_interval(throttled: TestClient, fake_llm: FakeLLM) -> None:
+    first, second = _start(throttled), _start(throttled)
+
+    assert _send(throttled, first, fake_llm).status_code == 200
+    assert _send(throttled, second, fake_llm).status_code == 200
+
+
+def test_an_interval_of_zero_turns_the_check_off() -> None:
+    off = MessageThrottle(0)
+    for _ in range(3):
+        off.check("s1")

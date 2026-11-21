@@ -146,7 +146,8 @@ export interface paths {
          * Send Message
          * @description Send the student's message and get the client's reply.
          *
-         *     If a model fails, nothing is saved, so the same message can simply be sent again.
+         *     If a model fails, nothing is saved, so the same message can simply be sent again. A
+         *     second message within `MIN_MESSAGE_INTERVAL_S` (1 s) gets `SESSION_RATE_LIMIT`.
          */
         post: operations["send_message_api_sessions__session_id__messages_post"];
         delete?: never;
@@ -1104,7 +1105,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelopeDTO"];
                 };
             };
-            /** @description RATE_LIMITED */
+            /** @description SESSION_RATE_LIMIT, RATE_LIMITED */
             429: {
                 headers: {
                     [name: string]: unknown;

@@ -228,6 +228,7 @@
     "INVALID_INPUT": "Some of what you entered isn't valid. Check it, then try again.",
     "REQUEST_TOO_LARGE": "That's too much to send at once. Shorten it, then try again.",
     "RATE_LIMITED": "The AI model is busy. Wait a few seconds, then try again.",
+    "SESSION_RATE_LIMIT": "You're sending messages too quickly. Wait a moment, then send it again.",
     "INTERNAL_ERROR": "Something went wrong on the server. Please try again.",
     "INVALID_OUTPUT": "The AI client's reply couldn't be used. Please try again.",
     "LLM_ERROR": "The AI model returned an error. Please try again.",

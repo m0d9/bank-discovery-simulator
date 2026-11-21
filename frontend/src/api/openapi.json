@@ -296,7 +296,7 @@
           "sessions"
         ],
         "summary": "Send Message",
-        "description": "Send the student's message and get the client's reply.\n\nIf a model fails, nothing is saved, so the same message can simply be sent again.",
+        "description": "Send the student's message and get the client's reply.\n\nIf a model fails, nothing is saved, so the same message can simply be sent again. A\nsecond message within `MIN_MESSAGE_INTERVAL_S` (1 s) gets `SESSION_RATE_LIMIT`.",
         "operationId": "send_message_api_sessions__session_id__messages_post",
         "parameters": [
           {
@@ -361,7 +361,7 @@
             }
           },
           "429": {
-            "description": "RATE_LIMITED",
+            "description": "SESSION_RATE_LIMIT, RATE_LIMITED",
             "content": {
               "application/json": {
                 "schema": {
