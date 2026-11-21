@@ -40,8 +40,8 @@
 
 ## Evidence
 
-**PR #5:** axe-core in Chrome found 0 violations in 18 states, and a scripted keyboard run reached the same focus stops in both languages.
+**[PR #5](https://github.com/m0d9/bank-discovery-simulator/pull/5):** axe-core in Chrome found 0 violations in 18 states, and a scripted keyboard run reached the same focus stops in both languages.
 
-**PR #8 ([evaluation.md](../evaluation.md)):**
+**[PR #8](https://github.com/m0d9/bank-discovery-simulator/pull/8) ([evaluation.md](../evaluation.md)):**
 - None of the 5 Arabic reports addressed the student neutrally.
 - The reverted iteration left that at 0 of 5, and raised unsupported points from 4 of 59 to 13 of 64.

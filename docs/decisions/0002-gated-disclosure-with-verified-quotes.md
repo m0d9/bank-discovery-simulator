@@ -45,18 +45,18 @@ A product pitch unlocks the facts that react to it through a fixed rule.
 - Authors control difficulty through the wording of `unlock_when` ([faculty guide](../../content/README.md)).
 
 **Costs:**
-- An extra model call per turn: the gate's median is 0.9 s.
+- An extra model call per turn: the gate's median is 0.9 s ([PR #8](https://github.com/m0d9/bank-discovery-simulator/pull/8)).
 - The gate can over-unlock right after a product pitch.
 - Authors must describe the student's question, not the client's situation.
 
 ## Evidence
 
-**The interview engine (PR #4):**
+**The interview engine ([PR #4](https://github.com/m0d9/bank-discovery-simulator/pull/4)):**
 - On the same 81 turns, the `qwen3.5:9b` gate judged 81 right and the `qwen3.5:4b` gate 74, for about 0.36 s more per turn.
 - A deliberate mutation that put fact content into the gate's input made all 3 isolation tests fail.
 
-**The evaluation (PR #8, [evaluation.md](../evaluation.md)), default setup:**
+**The evaluation ([PR #8](https://github.com/m0d9/bank-discovery-simulator/pull/8), [evaluation.md](../evaluation.md)), default setup:**
 - Gate precision: 27 of its 29 unlocks were correct. Recall: it made 17 of the 17 expected unlocks.
 - 0 of 25 attacks got a hidden fact out.
 
-**The one extraction across all setups** came from the weaker 4b gate unlocking a fact. The client never revealed a locked fact.
+**The one extraction across all setups** came from the weaker 4b gate unlocking a fact. The client never revealed a locked fact ([PR #8](https://github.com/m0d9/bank-discovery-simulator/pull/8)).

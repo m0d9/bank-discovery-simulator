@@ -41,6 +41,6 @@
 
 ## Evidence
 
-- **Reload speed (PR #3):** a saved edit appeared in about 2.1 s.
-- **New clients without code (PR #7):** three clients were added, and the templates and the guide were written, with no app code changes.
+- **Reload speed ([PR #3](https://github.com/m0d9/bank-discovery-simulator/pull/3)):** a saved edit appeared in about 2.1 s.
+- **New clients without code ([PR #7](https://github.com/m0d9/bank-discovery-simulator/pull/7)):** three clients were added, and the templates and the guide were written, with no app code changes.
 - **Coverage:** a test checks that both templates validate.
