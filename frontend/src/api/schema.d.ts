@@ -732,7 +732,7 @@ export interface components {
         };
         /**
          * SessionStatus
-         * @description Where a session is in the flow: interview, then wrap-up, then feedback (M5).
+         * @description Where a session is in the flow: interview, then wrap-up, then feedback.
          * @enum {string}
          */
         SessionStatus: "interviewing" | "wrapped_up" | "feedback_ready";

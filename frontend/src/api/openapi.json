@@ -1925,7 +1925,7 @@
           "feedback_ready"
         ],
         "title": "SessionStatus",
-        "description": "Where a session is in the flow: interview, then wrap-up, then feedback (M5)."
+        "description": "Where a session is in the flow: interview, then wrap-up, then feedback."
       },
       "StudentMessageDTO": {
         "properties": {

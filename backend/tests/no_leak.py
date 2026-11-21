@@ -1,4 +1,4 @@
-"""Reusable check that a public response carries no private content (CLAUDE.md rule 3).
+"""Reusable check that a public response carries no private content.
 
 Use it on every response a student can see before the session reaches `feedback_ready`:
 

@@ -3,8 +3,9 @@
     uv run --project backend python -m evals.report
 
 For each setup in `evals/configs.yaml`, it uses the latest complete run (every client and
-every script) made with the current prompts; failing that, the latest complete run, marked as
-made with older prompts. Only the text between the EVAL markers is replaced.
+every script) made with the current prompts; failing that, the latest complete run, labelled
+as a baseline run with the older prompts it used. Only the text between the EVAL markers is
+replaced.
 """
 
 import sys
@@ -120,7 +121,7 @@ def main(
     }
     write(render(configs, chosen, load_notes()), doc)
     for name, found in chosen.items():
-        marker = "" if found.current else " (older prompts)"
+        marker = "" if found.current else f" ({_label(found.summary)})"
         out.write(f"{name}: {found.summary.config}-{found.summary.stamp}{marker}\n")
     missing = [name for name in configs.configs if name not in chosen]
     if missing:
@@ -129,7 +130,25 @@ def main(
 
 
 def _current(summary: RunSummary) -> bool:
-    return all(summary.prompt_versions.get(name) == PROMPT_VERSION[name] for name in APP_PROMPTS)
+    return not _older(summary)
+
+
+def _older(summary: RunSummary) -> list[str]:
+    """The app's prompts that the run used in an older version than the current one."""
+    return [
+        name for name in APP_PROMPTS if summary.prompt_versions.get(name) != PROMPT_VERSION[name]
+    ]
+
+
+def _label(summary: RunSummary) -> str:
+    """How a run with older prompts is labelled wherever it's shown, such as "baseline run,
+    older coach prompt": it predates the current prompts, so it's what they were measured
+    against. Empty for a run with the current prompts."""
+    older = [name.replace("_", " ") for name in _older(summary)]
+    if not older:
+        return ""
+    listed = older[0] if len(older) == 1 else f"{', '.join(older[:-1])} and {older[-1]}"
+    return f"baseline run, older {listed} prompt{'' if len(older) == 1 else 's'}"
 
 
 def _method(configs: EvalConfigs, chosen: Mapping[str, Chosen], names: Sequence[str]) -> str:
@@ -164,8 +183,8 @@ def _method(configs: EvalConfigs, chosen: Mapping[str, Chosen], names: Sequence[
         "**Each setup ran once,** so every number is one sample: a single flip in a five-report"
         " row moves its rate by 20 points.",
         "",
-        "| Setup | Run | Commit | Coach prompt | Notes |",
-        "|---|---|---|---|---|",
+        "| Setup | Run | Coach prompt | Notes |",
+        "|---|---|---|---|",
     ]
     for name in names:
         found = chosen[name]
@@ -174,11 +193,9 @@ def _method(configs: EvalConfigs, chosen: Mapping[str, Chosen], names: Sequence[
         if summary.replay_of:
             notes.append(f"coach and judge replayed on `{summary.replay_of}`'s interviews")
         if not found.current:
-            notes.append("**older prompts**")
-        if summary.git.get("dirty"):
-            notes.append("uncommitted changes")
+            notes.append(f"**{_label(summary)}**")
         lines.append(
-            f"| `{name}` | `{summary.config}-{summary.stamp}` | `{summary.git.get('commit', '?')}`"
+            f"| `{name}` | `{summary.config}-{summary.stamp}`"
             f" | `{summary.prompt_versions.get('coach', '?')}` | {'; '.join(notes) or '-'} |"
         )
     return "\n".join(lines)
@@ -193,7 +210,7 @@ def _table(chosen: Mapping[str, Chosen], names: Sequence[str]) -> str:
     rows = [
         "### Comparison",
         "",
-        row("", [f"`{name}`" for name in names]),
+        row("", [_heading(name, chosen[name]) for name in names]),
         "|---" * (len(names) + 1) + "|",
         row("Models: gate · client · coach", [_models(s[n].models) for n in names]),
         row("**Gate** precision (all scripts)", [_pct(m[n].gate.unlocks) for n in names]),
@@ -414,6 +431,10 @@ def _recommendation(configs: EvalConfigs, chosen: Mapping[str, Chosen]) -> str:
         f" claims {_claims(m.coach.claims.get('all'))},"
         f" coach p95 {_seconds(m.perf.coach_all.p95_ms)}."
     )
+
+
+def _heading(name: str, found: Chosen) -> str:
+    return f"`{name}`" if found.current else f"`{name}` ({_label(found.summary)})"
 
 
 def _models(models: Mapping[str, str]) -> str:

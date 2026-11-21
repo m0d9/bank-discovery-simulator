@@ -1,4 +1,5 @@
-"""Import boundaries from CLAUDE.md, checked by scanning `backend/app` with the AST."""
+"""Import boundaries, checked by scanning `backend/app` with the AST: only `app/llm` imports
+`openai`, and `app/api` imports from the `app.llm` package root, never its submodules."""
 
 import ast
 from pathlib import Path

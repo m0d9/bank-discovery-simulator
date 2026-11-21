@@ -1,4 +1,4 @@
-# Noura Al-Kuwari: the M3 acceptance run.
+# Noura Al-Kuwari: the acceptance run from PR #4.
 #   make chat CLIENT=noura-al-kuwari DEBUG=1 SCRIPT=scripts/chat-scripts/noura-al-kuwari.txt
 # Generic questions: nothing should unlock, and she shouldn't volunteer any preferences.
 Thanks for coming in. Could you tell me a bit about your business?

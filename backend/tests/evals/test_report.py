@@ -90,7 +90,7 @@ def test_the_section_has_the_table_the_notes_and_the_recommendation() -> None:
     assert chosen is not None
     notes = {
         "khalid-al-marri": {
-            "needs-trucks": Note(quote=FOLLOW_UP, note="By design (decided in M6).")
+            "needs-trucks": Note(quote=FOLLOW_UP, note="By design (decided in PR #7).")
         }
     }
 
@@ -101,7 +101,7 @@ def test_the_section_has_the_table_the_notes_and_the_recommendation() -> None:
     assert (
         "`default` · weak: false unlock of `needs-trucks` at turn 3 («What brings you in"
         " today?»), quoting «follows up on his remark that the company has had to turn down"
-        " work». *By design (decided in M6).*"
+        " work». *By design (decided in PR #7).*"
     ) in text
     assert "**Recommendation:** `default`: gate precision 0/1 (0%)" in text
     # Only a row whose coach is the judge is judged by its own model.
@@ -110,6 +110,33 @@ def test_the_section_has_the_table_the_notes_and_the_recommendation() -> None:
     assert strong is not None
     both = render(CONFIGS, {"default": chosen, "strong-coach": strong}, notes)
     assert "so that row's coach is judged by its own model" in both
+
+
+def test_a_run_with_older_prompts_is_labelled_and_no_commit_is_shown() -> None:
+    older_coach = {**PROMPT_VERSION, "coach": "00000000"}
+    run = summary(
+        "default",
+        "20261120-1900",
+        prompt_versions=older_coach,
+        git={"commit": "abc1234", "dirty": True},
+    )
+    stale = choose([run], "default")
+    assert stale is not None and stale.current is False
+
+    text = render(CONFIGS, {"default": stale}, {})
+
+    assert "| Setup | Run | Coach prompt | Notes |" in text
+    assert (
+        "| `default` | `default-20261120-1900` | `00000000`"
+        " | **baseline run, older coach prompt** |"
+    ) in text
+    assert "|  | `default` (baseline run, older coach prompt) |" in text
+    assert "abc1234" not in text and "uncommitted" not in text
+
+    older_two = {**older_coach, "gate": "00000000"}
+    both = choose([summary("default", "20261120-1900", prompt_versions=older_two)], "default")
+    assert both is not None
+    assert "baseline run, older gate and coach prompts" in render(CONFIGS, {"default": both}, {})
 
 
 def test_write_replaces_only_the_section_between_the_markers(tmp_path: Path) -> None:

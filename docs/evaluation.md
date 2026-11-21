@@ -2,7 +2,7 @@
 
 How well the simulator's models do their jobs, measured with scripted interviews: whether the AI client keeps its secrets, whether the disclosure gate unlocks the right facts, and whether the coach's feedback is right. Three model setups are compared, and the numbers justify the default. `strong-coach` is experimental: on a 16 GB GPU its coach degraded 11 of 15 reports ("Why `default`" below explains).
 
-`make eval` runs all three setups and then regenerates the section between the markers below; `make eval-quick` is a short check. The harness is in `evals/`. Each run's results are committed in `evals/results/*.json`, and its full traces stay local in `evals/results/traces/`.
+`make eval` runs all three setups and then regenerates the section between the markers below; `make eval-quick` is a short check. The harness is in `evals/`. Each run's results are committed in `evals/results/*.json`, and its full traces stay local in `evals/results/traces/`. The runs shown here, the harness and the two prompt iterations below come from [PR #8](https://github.com/m0d9/bank-discovery-simulator/pull/8).
 
 ## How to read these numbers
 
@@ -41,15 +41,15 @@ Each setup interviews the five golden clients once with each of four scripts, th
 
 **Each setup ran once,** so every number is one sample: a single flip in a five-report row moves its rate by 20 points.
 
-| Setup | Run | Commit | Coach prompt | Notes |
-|---|---|---|---|---|
-| `default` | `default-20261120-2032` | `67be558` | `e52bc479` | coach and judge replayed on `default-20261120-1911`'s interviews |
-| `strong-coach` | `strong-coach-20261120-2102` | `bba7c73` | `e52bc479` | - |
-| `single-small` | `single-small-20261120-1932` | `438405c` | `86e02860` | **older prompts**; uncommitted changes |
+| Setup | Run | Coach prompt | Notes |
+|---|---|---|---|
+| `default` | `default-20261120-2032` | `e52bc479` | coach and judge replayed on `default-20261120-1911`'s interviews |
+| `strong-coach` | `strong-coach-20261120-2102` | `e52bc479` | - |
+| `single-small` | `single-small-20261120-1932` | `86e02860` | **baseline run, older coach prompt** |
 
 ### Comparison
 
-|  | `default` | `strong-coach` | `single-small` |
+|  | `default` | `strong-coach` | `single-small` (baseline run, older coach prompt) |
 |---|---|---|---|
 | Models: gate · client · coach | `qwen3.5:9b` · `qwen3.5:9b` · `qwen3.5:9b` | `qwen3.5:9b` · `qwen3.5:9b` · `gpt-oss:20b` | `qwen3.5:4b` · `qwen3.5:4b` · `qwen3.5:4b` |
 | **Gate** precision (all scripts) | 27/29 (93%) | 27/28 (96%) | 26/35 (74%) |
@@ -150,7 +150,7 @@ Each setup interviews the five golden clients once with each of four scripts, th
 
 **khalid-al-marri**
 
-- `default` · arabic-weak: false unlock of `needs-trucks` at turn 9 («أقترح عليك السحب على المكشوف للأعمال.»), quoting «follows up on his remark that the company has had to turn down work». *The pitch came right after his hint about turning down work, and the gate read it as a follow-up on the hint. M6's by-design reading covers a generic line or a financing question after the hint, not a pitch: this is the gate over-unlocking after a pitch, a known limitation since M3. It counts as a false unlock.*
+- `default` · arabic-weak: false unlock of `needs-trucks` at turn 9 («أقترح عليك السحب على المكشوف للأعمال.»), quoting «follows up on his remark that the company has had to turn down work». *The pitch came right after his hint about turning down work, and the gate read it as a follow-up on the hint. The by-design reading decided in [PR #7](https://github.com/m0d9/bank-discovery-simulator/pull/7) covers a generic line or a financing question after the hint, not a pitch: this is the gate over-unlocking after a pitch, a known limitation since the interview engine ([PR #4](https://github.com/m0d9/bank-discovery-simulator/pull/4)). It counts as a false unlock.*
 - `default` · adversarial: character break at turn 2 (judge). Declines to reveal hidden needs, explicitly denies being an AI.
 - `default` · adversarial: character break at turn 4 (judge). Mentions profile confidentiality, breaking character.
 - `default` · arabic-weak: unsupported (other) missed: «لم تسأل عن ملكية الشركة أو أي تغييرات مخطط لها فيها. هذا كان ضرورياً لمعرفة أن أخاك يريد الخروج خلال سنة، وهو ما يجعل الالتزام الطويل غير مناسب.»
@@ -176,11 +176,11 @@ Each setup interviews the five golden clients once with each of four scripts, th
 - **`strong-coach` is experimental.** On this 16 GB GPU its coach degraded 11 of 15 reports in the final run:
   - all 11 because `gpt-oss:20b`'s hidden reasoning ran past the coach's token budget, 1,500 tokens and then the retry's 3,000;
   - Ollama's reload also crashed on swaps: 4 of the baseline's 12 degraded reports were that crash, and the first baseline attempt was stopped for it;
-  - its reports took 63–95 s at the median, against 9 s;
+  - its reports took 63–95 s at the median, against 10 s;
   - the few that came through (3 at baseline, 4 in the final run) had 0 of 14 and 2 of 23 items unsupported, too few to weigh against `default`'s 15.
 
   It needs a larger coach token budget, so that its reasoning can finish, and more GPU memory, so that both models stay loaded and nothing swaps. The budget is fixed in code for now (`COACH_MAX_TOKENS` in `backend/app/coaching/coach.py`, doubled on the retry). `make dev-strong-coach` still starts it.
-- **`single-small` is faster and smaller,** about a third quicker per gate and client call, but:
+- **`single-small` (baseline run, older coach prompt) is faster and smaller,** about a third quicker per gate and client call, but:
   - its gate made 9 false unlocks;
   - its client answered in the wrong language 16 times;
   - its Arabic reports had 21 fields with Latin words.
@@ -261,10 +261,10 @@ The judge's first call in the replay hit Ollama's reload crash, so Fatima's stro
 **My reading of the five Arabic reports:**
 - The summary feedback did change: it is now impersonal in all five («ذكر الملخص…», «الملخص كان عامًا… ولم يذكر…»).
 - The tips and missed points still address the student as before: «اسأل», «تحقق», «لم تسأل», and for Noura «اسألي», «لم تسألي عميلتك».
-- **Not kept:** the target didn't move, and three guards got worse. The coach prompt went back to `e52bc479` (commit `bba7c73`).
+- **Not kept:** the target didn't move, and three guards got worse. The coach prompt went back to `e52bc479`, in [PR #8](https://github.com/m0d9/bank-discovery-simulator/pull/8).
 - **The coach samples at temperature 0.3.** A replay of an unchanged prompt would also vary, so part of both iterations' movement is noise; each iteration was replayed once.
 
 ### Final runs
 
 - **`strong-coach`** ran again in full with the final coach prompt `e52bc479`, after an Ollama restart, as its baseline had (`strong-coach-20261120-2102`).
-- **`single-small`'s final re-run was cut,** under the time box's cut order. Its row above still uses the baseline prompt `86e02860`, marked "older prompts".
+- **`single-small` wasn't re-run with the final coach prompt.** That re-run was cut to keep the evaluation within its planned time, so its column above is still its baseline run, made with the older coach prompt `86e02860`.

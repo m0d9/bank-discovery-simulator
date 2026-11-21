@@ -1,9 +1,10 @@
 """The disclosure gate: which hidden facts has the student's latest message earned?
 
-The gate model sees fact ids and unlock conditions only, never a fact's content or signal
-(CLAUDE.md rule 4), and never the transcript. Its answer is only a suggestion: the rules here
-decide what actually unlocks. Each unlock must quote, as evidence, one of that fact's own
-`unlock_when` behaviours; an unlock whose quote doesn't match is rejected.
+The gate model sees fact ids and unlock conditions only, never a fact's content or signal,
+and never the transcript (docs/architecture.md, "Rules the tests enforce"). Its answer is
+only a suggestion: the rules here decide what actually unlocks. Each unlock must quote, as
+evidence, one of that fact's own `unlock_when` behaviours; an unlock whose quote doesn't
+match is rejected.
 """
 
 import json

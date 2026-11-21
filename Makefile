@@ -8,7 +8,7 @@ FRONTEND := frontend
 # with that coach and LLM_MAX_RETRIES=4 without editing .env. The bigger coach makes Ollama
 # swap models at feedback time, and the extra retries absorb Ollama's occasional reload crash
 # (HTTP 500). On a 16 GB GPU it doesn't work as configured: its coach degraded 11 of 15
-# reports in the M7 evaluation (docs/evaluation.md).
+# reports in the evaluation (docs/evaluation.md).
 STRONG_COACH := gpt-oss:20b
 COACH ?=
 COACH_ENV := $(if $(strip $(COACH)),LLM_MODEL_COACH=$(COACH) LLM_MAX_RETRIES=4)

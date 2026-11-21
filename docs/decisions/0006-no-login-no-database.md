@@ -22,7 +22,7 @@
 
 **Telemetry.** `data/events.jsonl` holds ids, counts, models and timings. It holds no message text unless an operator sets `LOG_TRANSCRIPTS=true`.
 
-**Private content.** A client's persona, hidden facts, answer key and coach notes leave the server only once feedback is ready.
+**Private content.** A client's persona, hidden facts and answer key reach the browser only once feedback is ready. The coach notes never do: only the coach's prompt holds them.
 
 ## Consequences
 

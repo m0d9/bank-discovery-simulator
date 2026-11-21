@@ -44,10 +44,10 @@ jest-axe runs axe-core 4.12.1 in jsdom, and jsdom has no layout. So jest-axe **s
   - evidence links move focus to the transcript turn;
   - the health banner's Retry keeps focus while it checks.
 
-### One-off checks in Chrome (not repeated in M8)
+### One-off checks in Chrome (not repeated after PR #6)
 
-- **M4:** axe-core 4.14.1 in Chrome against `make dev`, scripted, in both languages. No violations in 18 states.
-- **M5:** the same over the Chrome DevTools Protocol. Clean on 8 feedback states in both languages, evidence links focus the turn, and there's no horizontal scroll at 375 px.
+- **[PR #5](https://github.com/m0d9/bank-discovery-simulator/pull/5):** axe-core 4.14.1 in Chrome against `make dev`, scripted, in both languages. No violations in 18 states.
+- **[PR #6](https://github.com/m0d9/bank-discovery-simulator/pull/6):** the same over the Chrome DevTools Protocol. Clean on 8 feedback states in both languages, evidence links focus the turn, and there's no horizontal scroll at 375 px.
 
 These ran in a real browser, so they included the colour-contrast rules.
 
@@ -118,8 +118,8 @@ Text needs at least 4.5:1. Large text, icons, focus rings and the borders of con
 - **No full screen-reader audit.**
   - The one manual pass used Narrator, in English. JAWS, VoiceOver and TalkBack haven't been tried.
   - Of the live regions, the pass checked only the conversation's. It didn't include the loading and error announcements or the health banner.
-- **Zoom and reflow aren't tested automatically.** 200% zoom was checked by hand once (see *Manual check*), and 375 px once in M5.
-- **No browser-based axe run in CI.** jsdom can't check contrast, visible focus or layout. The Chrome runs in M4 and M5 were one-off, and this milestone's states weren't run in Chrome.
+- **Zoom and reflow aren't tested automatically.** 200% zoom was checked by hand once (see *Manual check*), and 375 px once, in [PR #6](https://github.com/m0d9/bank-discovery-simulator/pull/6).
+- **No browser-based axe run in CI.** jsdom can't check contrast, visible focus or layout. The Chrome runs in [PR #5](https://github.com/m0d9/bank-discovery-simulator/pull/5) and [PR #6](https://github.com/m0d9/bank-discovery-simulator/pull/6) were one-off, and the states that [PR #9](https://github.com/m0d9/bank-discovery-simulator/pull/9) added to jest-axe weren't run in Chrome.
 - **Mixed-language reading is unverified:** how screen readers pronounce English model and product names inside Arabic text, and Arabic inside English.
 - **Windows high contrast (forced colours) is untested.**
 - **The models' text can't be guaranteed.** The AI client's and the coach's replies are free text. Their clarity, length and Arabic quality aren't accessibility-checked (see `docs/evaluation.md` for their quality).

@@ -1,4 +1,4 @@
-# Rajesh Menon: the M3 acceptance run.
+# Rajesh Menon: the acceptance run from PR #4.
 #   make chat CLIENT=rajesh-menon DEBUG=1 SCRIPT=scripts/chat-scripts/rajesh-menon.txt
 # Generic questions: nothing should unlock.
 Thanks for coming in. Could you tell me a bit about your company?

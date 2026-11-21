@@ -263,8 +263,9 @@ def check_report(
             )
         )
     missed = missed[:MAX_ITEMS]
-    # Only a discovery item covers a need. A product item that also names the need (M6's
-    # traced failure) used to suppress the backfill, so the student got no question for it.
+    # Only a discovery item covers a need. A product item that also names the need (a live
+    # failure traced in PR #7) used to suppress the backfill, so the student got no question
+    # for it.
     covered = {item.need_id for item in missed if item.product_id is None}
     added = [
         _backfill(need, session.client, analysis, language)

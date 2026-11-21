@@ -24,27 +24,27 @@
 
 **Gains:**
 - In normal use there are no swaps and no reload crashes.
-- A turn takes about 2 s once warm, and feedback about 10 s.
+- A turn takes about 2 s once warm ([PR #4](https://github.com/m0d9/bank-discovery-simulator/pull/4)), and feedback about 10 s ([PR #8](https://github.com/m0d9/bank-discovery-simulator/pull/8)).
 - There is one model to download (6.6 GB).
 
 **Costs:**
-- The coach is a 9b model: about 7% of its points are unsupported, and its Arabic has gender issues.
+- The coach is a 9b model: about 7% of its points are unsupported, and its Arabic has gender issues ([PR #8](https://github.com/m0d9/bank-discovery-simulator/pull/8)).
 - A stronger coach needs two things first: a setting for the coach's token budget, and enough GPU memory to keep both models loaded. Both are on the roadmap.
 
 ## Evidence
 
-**PR #2:**
+**[PR #2](https://github.com/m0d9/bank-discovery-simulator/pull/2):**
 - A swap to the bigger coach cost about 17 s, and swapping back about 11.5 s.
 - The reload crash came and went.
 - The 9b (6.1 GB) and the 4b (3.7 GB) fit side by side with a 16k context.
 
-**PR #4:** on the same 81 turns, the 9b gate was right 81 times and the 4b gate 74 times, for about 0.36 s more per turn.
+**[PR #4](https://github.com/m0d9/bank-discovery-simulator/pull/4):** on the same 81 turns, the 9b gate was right 81 times and the 4b gate 74 times, for about 0.36 s more per turn.
 
-**PR #6:**
+**[PR #6](https://github.com/m0d9/bank-discovery-simulator/pull/6):**
 - The 9b coach gave valid JSON on the first attempt 24 of 24 times, with a median of 8.5 s.
 - `gpt-oss:20b` managed 11 of 24, with a median of 19.4 s, and degraded once.
 
-**PR #8 ([evaluation.md](../evaluation.md)):**
+**[PR #8](https://github.com/m0d9/bank-discovery-simulator/pull/8) ([evaluation.md](../evaluation.md)):**
 - `strong-coach` degraded 11 of 15 reports, because its hidden reasoning ran past the token budget.
 - `default` degraded none.
 - `single-small` (the 4b) made 9 false unlocks, against `default`'s 2.

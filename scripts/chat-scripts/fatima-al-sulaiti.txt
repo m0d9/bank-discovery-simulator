@@ -1,4 +1,4 @@
-# Fatima Al-Sulaiti: the M6 acceptance run.
+# Fatima Al-Sulaiti: the acceptance run from PR #7.
 #   make chat CLIENT=fatima-al-sulaiti DEBUG=1 SCRIPT=scripts/chat-scripts/fatima-al-sulaiti.txt
 # A generic question: nothing should unlock.
 How is work going at the moment?

@@ -1,4 +1,4 @@
-"""Prompt isolation (CLAUDE.md rule 4), the most important tests in M3.
+"""Prompt isolation, the interview engine's most important tests (docs/architecture.md).
 
 Every message sent to a model is captured, and one checker walks through all of them against
 the timeline of unlocks:

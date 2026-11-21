@@ -1,4 +1,4 @@
-"""No public endpoint may expose private content before `feedback_ready` (CLAUDE.md rule 3).
+"""No public endpoint may expose private content before `feedback_ready`.
 
 Every route in the OpenAPI schema needs an entry in `PUBLIC_CALLS`. A new endpoint therefore
 fails `test_every_api_route_is_checked_for_leaks` until it's added here with its leak rules.

@@ -1,4 +1,4 @@
-"""evals/scenarios.py builds the M7 scripts from the content, with no model calls."""
+"""evals/scenarios.py builds the evaluation's scripts from the content, with no model calls."""
 
 from typing import Any
 

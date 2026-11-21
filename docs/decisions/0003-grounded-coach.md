@@ -52,9 +52,9 @@ The coach has three layers:
 
 ## Evidence
 
-**The coach comparison (PR #6):** `qwen3.5:9b` returned valid JSON on the first attempt in 24 of 24 calls, with a median of 8.5 s in the second batch.
+**The coach comparison ([PR #6](https://github.com/m0d9/bank-discovery-simulator/pull/6)):** `qwen3.5:9b` returned valid JSON on the first attempt in 24 of 24 calls, with a median of 8.5 s in the second batch.
 
-**The evaluation (PR #8, [evaluation.md](../evaluation.md)):**
+**The evaluation ([PR #8](https://github.com/m0d9/bank-discovery-simulator/pull/8), [evaluation.md](../evaluation.md)):**
 - The coach's reports were valid 15 of 15 times, and none were degraded.
 - The checks dropped 7 items.
 - One prompt iteration, measured on the same interviews, cut unsupported points from 11 of 66 to 4 of 59.
