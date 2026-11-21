@@ -265,7 +265,7 @@ Restarting the app ends every interview.
 Tests enforce these rules:
 - **The `openai` import:** only `app/llm/` imports it (`backend/tests/architecture/`).
 - **Private content:** no route returns it before `feedback_ready`. The API tests check every route.
-- **Locked facts:** no model input during the interview contains a locked fact's content. The isolation tests check this, and a mutation that added the content made all three fail.
+- **Locked facts:** no model input during the interview contains a locked fact's content. Six isolation tests check this, one with a test client and one for each of the five real clients. A mutation that added each eligible fact's content to the gate's input made all six fail.
 - **UI text:** it comes only from the locale files. The `i18next/no-literal-string` lint rule and the locale parity tests check this.
 - **The API contract:** the committed OpenAPI document and error-code list match the backend (`test_openapi_export.py`). The frontend's types are generated from them (`make openapi`).
 - **Content schemas:** the committed JSON schemas match the content models.
