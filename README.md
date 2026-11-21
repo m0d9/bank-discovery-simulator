@@ -4,90 +4,71 @@ Business students practise a discovery interview with an AI bank client, recomme
 The client keeps hidden needs that only the right questions unlock, and the coach's feedback is grounded in what the student actually asked and found.
 It runs on free, open models through any OpenAI-compatible API (tested with Ollama and `qwen3.5:9b`), in English or Arabic.
 
-![The feedback page after an interview with Noura Al-Kuwari: counts, what went well and what was missed, each point linked to the student's turns](docs/images/feedback-page.png)
+![The feedback page after an interview with Noura Al-Kuwari: counts, then what went well, each point linked to the student's turns](docs/images/feedback-page.png)
 
 ## Quick start
 
-**You need:**
-- [Docker](https://docs.docker.com/get-docker/) (Docker Desktop on Windows and macOS);
-- [Ollama](https://ollama.com/download) (Linux: `curl -fsSL https://ollama.com/install.sh | sh`);
-- git;
-- a GPU with about 6 GB free ([Hardware](#hardware)).
+You need [Docker](https://docs.docker.com/get-docker/), [Ollama](https://ollama.com/download), git, and a GPU with about 6 GB free ([hardware](#hardware)).
 
-1. **Download the model** (6.6 GB):
-   ```bash
-   ollama pull qwen3.5:9b
-   ```
-2. **Give Ollama a 16k context window.** Its default is 4,096 tokens, and it silently cuts longer prompts from the start, which would truncate the coach's input. Set `OLLAMA_CONTEXT_LENGTH=16384` for the Ollama server, then restart it:
+1. **Download the model** (6.6 GB): `ollama pull qwen3.5:9b`
+2. **Give Ollama a 16k context window.** Set `OLLAMA_CONTEXT_LENGTH=16384` for the Ollama server and restart it. Its default of 4,096 tokens silently cuts the coach's prompt from the start.
+   <details><summary>Exact steps for Windows, macOS and Linux</summary>
+
    - **Windows:** quit Ollama from the taskbar. Run `setx OLLAMA_CONTEXT_LENGTH 16384`, or add the variable under *Edit environment variables for your account*. Then start Ollama again.
    - **macOS:** run `launchctl setenv OLLAMA_CONTEXT_LENGTH 16384`, then quit and reopen the Ollama app.
    - **Linux (systemd):** run `sudo systemctl edit ollama.service` and add `Environment="OLLAMA_CONTEXT_LENGTH=16384"` under `[Service]`. Then run `sudo systemctl daemon-reload && sudo systemctl restart ollama`.
+   - **Linux with Docker:** also add `Environment="OLLAMA_HOST=0.0.0.0:11434"`. Ollama otherwise listens only on 127.0.0.1, which a container can't reach. This also exposes Ollama to your network.
+   - **Check:** once the app has used the model, `ollama ps` shows `16384` under `CONTEXT`.
 
-   Once the app has used the model, `ollama ps` should show `16384` in its `CONTEXT` column.
-3. **Get the app and its settings:**
+   These steps follow [Ollama's FAQ](https://docs.ollama.com/faq). Only the Windows one was tested.
+   </details>
+3. **Get the app and its settings.** Only `LLM_BASE_URL`, `LLM_API_KEY` and `LLM_MODEL` are required, and their defaults already point the container at Ollama on your machine.
    ```bash
-   git clone https://github.com/m0d9/bank-discovery-simulator.git
-   cd bank-discovery-simulator
+   git clone https://github.com/m0d9/bank-discovery-simulator.git && cd bank-discovery-simulator
    cp .env.example .env
    ```
-   Only `LLM_BASE_URL`, `LLM_API_KEY` and `LLM_MODEL` are required. Their defaults already point the container at Ollama on your machine: `http://host.docker.internal:11434/v1`, `ollama` and `qwen3.5:9b`. Every other setting is optional, and [.env.example](.env.example) explains each one.
-4. **Run it:**
-   ```bash
-   docker compose up --build
-   ```
-   Then open **http://localhost:8000**.
+4. **Run it:** `docker compose up --build`, then open **http://localhost:8000**.
 
-**Where this was tested:** Windows 11, in WSL2 (Ubuntu) with Docker Desktop. The macOS and Linux steps follow [Ollama's documentation](https://docs.ollama.com/faq) but weren't tested.
+**Where this was tested:** Windows 11, in WSL2 (Ubuntu) with Docker Desktop.
 
-**On Linux,** Ollama listens only on 127.0.0.1, which a container can't reach. Either use the developer path below, or also add `Environment="OLLAMA_HOST=0.0.0.0:11434"`, which exposes Ollama to your network.
-
-### Developer path (`make dev`)
-You need [uv](https://docs.astral.sh/uv/), Node 22 and make.
-1. In `.env`, set `LLM_BASE_URL=http://localhost:11434/v1`.
-2. Run `make install`, then `make dev`.
-3. Open **http://localhost:5173**. The API runs on :8000, and both reload when you save a file.
-
-On Windows, run it in WSL2 with [mirrored networking](https://learn.microsoft.com/windows/wsl/networking#mirrored-mode-networking) (`networkingMode=mirrored` in `.wslconfig`), so that `localhost` reaches Ollama.
+**Developer path** (uv, Node 22 and make): set `LLM_BASE_URL=http://localhost:11434/v1` in `.env`, run `make install && make dev`, and open **http://localhost:5173**. On Windows, use WSL2 with [mirrored networking](https://learn.microsoft.com/windows/wsl/networking#mirrored-mode-networking).
 
 ### Hardware
-**The default model.** `qwen3.5:9b` plays all three roles, so one model stays loaded:
-- **Memory:** `ollama ps` shows 6.1 GB, all on the GPU, with the 16k context.
-- **Test machine:** an NVIDIA RTX 5060 Ti (16 GB) with Ollama 0.40.16.
-- **Speed:** the first reply after a cold start took about 8 s while the model loaded. After that, a reply takes about 2 s and the coach's feedback about 10 s.
+**The default.** `qwen3.5:9b` plays all three roles, so one model stays loaded. It takes 6.1 GB of GPU memory with the 16k context, and was tested on an NVIDIA RTX 5060 Ti (16 GB). A reply takes about 2 s, and feedback about 10 s.
 
-**A smaller machine.** Set `LLM_MODEL=qwen3.5:4b`, which takes 3.7 GB. It is about a third faster per call, but it does worse in the [evaluation](docs/evaluation.md):
-- its gate made 9 false unlocks, against 2 for the 9b;
-- its gate let 1 of 25 attacks through;
+**A smaller GPU** can use `qwen3.5:4b` (3.7 GB), which is faster but less safe and less accurate.
+<details><summary>The 4b trade-off, measured</summary>
+
+Set `LLM_MODEL=qwen3.5:4b`. It is about a third faster per call, but in the [evaluation](docs/evaluation.md):
+- its gate made 9 false unlocks, against 2;
+- it let 1 of 25 attacks through;
 - its client answered in the wrong language 16 times;
-- its coach's points were unsupported 20% of the time, against 7%, measured with an older coach prompt.
+- 20% of its coach's points were unsupported, against 7% (measured with an older coach prompt).
 
-**No GPU.** Ollama runs on the CPU, much more slowly (not measured).
+**Without a GPU,** Ollama uses the CPU, much more slowly (not measured). **The first reply after a cold start** took about 8 s on the test machine, while the model loaded.
+</details>
 
-### Optional: Groq instead of Ollama (not tested)
-Use your own free key from [console.groq.com/keys](https://console.groq.com/keys), and never commit it (`.env` is git-ignored). Then set these in `.env`:
+### Optional: Groq (not tested)
+**Your key.** Use your own free key from [console.groq.com/keys](https://console.groq.com/keys), and never commit it.
+
+**What to expect.** Groq's gpt-oss models support the JSON-schema output that the gate and the coach request. But their hidden reasoning counts against the coach's token budget, which is fixed in code, so feedback may come back degraded.
+<details><summary>The three variables for <code>.env</code></summary>
+
 ```bash
 LLM_BASE_URL=https://api.groq.com/openai/v1
 LLM_API_KEY=<your Groq key>
 LLM_MODEL=openai/gpt-oss-20b
 ```
-- **Why this model:** Groq's gpt-oss models support the JSON-schema output that the gate and the coach request.
-- **What can go wrong:** like `gpt-oss:20b` on Ollama, their hidden reasoning counts against the coach's token budget, which is fixed in code. So feedback may come back degraded.
-- **Rate limits:** the free tier has them.
+The free tier has rate limits. `.env` is git-ignored.
+</details>
 
 ## Using it
-1. **Choose a client.** There are five fictional clients of the fictional Al Murjan Bank: two individuals and three business owners, from easy to hard.
-2. **Interview them.**
-   - The client reveals a hidden need only when you ask about it. Hidden needs include customers who pay late, a preference for Sharia-compliant banking, and a contract that needs funding.
-   - The product catalogue is on the interview page, and you can discuss products as you go.
-3. **Wrap up.** Summarise the client's needs and recommend 1–3 products, each with a reason.
-4. **Get feedback.**
-   - **From the coach:** what went well, what was missed (including unsuitable recommendations) and how to improve, each point citing your turns.
-   - **From the answer key:** the discovery map and the verdict on each product.
-   - **To keep:** download the whole interview as Markdown.
+1. **Choose a client:** five fictional clients of a fictional bank, from easy to hard.
+2. **Interview them.** Hidden needs, such as late-paying customers or a preference for Sharia-compliant banking, come out only when you ask about them. The product catalogue is on the page.
+3. **Wrap up:** summarise the needs and recommend 1–3 products.
+4. **Get feedback:** the coach's notes on what went well, what was missed and how to improve, each citing your turns, next to the answer key's discovery map and product verdicts. You can download it all as Markdown.
 
-**Languages.** The interface is fully bilingual: English, and Arabic from right to left. Switch with the button in the header. Conversations in Arabic with the AI client and coach are **experimental**.
-
-**A complete example:** [samples/noura-al-kuwari-en.md](samples/noura-al-kuwari-en.md). The same interview in Arabic, with its known issues listed at the top: [samples/noura-al-kuwari-ar.md](samples/noura-al-kuwari-ar.md) (experimental).
+**Languages:** English or Arabic (right to left); Arabic conversations are **experimental**. **Samples:** [English](samples/noura-al-kuwari-en.md) and [Arabic](samples/noura-al-kuwari-ar.md), which lists its known issues at the top.
 
 ## How it works
 
@@ -188,7 +169,7 @@ The method, the comparison of three model setups, and what these numbers can't t
 | Client profiles, hidden needs and products in simple, separate files, editable without code | YAML in [`content/`](content/), validated and reloaded while the app runs; [faculty guide](content/README.md) |
 | A simple web interface, with no login and no database | [`frontend/`](frontend/); sessions in memory |
 | A repository with the code, sample client data, products and `.env.example` | This repository |
-| A README covering installing, running and configuring the AI, and the model used for testing | [Quick start](#quick-start), [Hardware](#hardware), [Groq](#optional-groq-instead-of-ollama-not-tested) |
+| A README covering installing, running and configuring the AI, and the model used for testing | [Quick start](#quick-start), [Hardware](#hardware), [Groq](#optional-groq-not-tested) |
 | One sample interview: the conversation, the student's summary and recommendations, the coach's feedback | [samples/noura-al-kuwari-en.md](samples/noura-al-kuwari-en.md), plus an [Arabic one](samples/noura-al-kuwari-ar.md) (experimental) |
 | The workflow Select Client → Interview → Receive Feedback | [Using it](#using-it) |
 
