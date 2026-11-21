@@ -56,8 +56,10 @@ describe('HealthBanner', () => {
 
     await user.click(within(details).getByText(en.health.details));
     expect(details).toHaveAttribute('open');
-    expect(details).toHaveTextContent(`${en.health.endpoint}localhost:11434${en.health.unreachable}`);
-    expect(details).toHaveTextContent(`${en.common.modelRole.client}${models.client}${en.health.missing}`);
+    const { endpoint, unreachable, missing, available } = en.health;
+    expect(details).toHaveTextContent(`${endpoint}localhost:11434${unreachable}`);
+    expect(details).toHaveTextContent(`${en.common.modelRole.client}${models.client}${missing}`);
+    expect(details).not.toHaveTextContent(available);
     const serverHint = within(details).getByText(/^Cannot reach the model endpoint/);
     expect(serverHint).toHaveAttribute('lang', 'en');
   });
@@ -86,11 +88,12 @@ describe('HealthBanner', () => {
 
     const banner = around(await screen.findByText(en.health.degraded), '[role="status"]');
     expect(banner).toHaveTextContent(en.health.MODEL_MISSING);
-    expect(banner).toHaveTextContent(`${en.common.modelRole.coach}${models.coach}${en.health.missing}`);
-    expect(banner).toHaveTextContent(`${en.common.modelRole.client}${models.client}${en.health.available}`);
+    const { coach, client } = en.common.modelRole;
+    expect(banner).toHaveTextContent(`${coach}${models.coach}${en.health.missing}`);
+    expect(banner).toHaveTextContent(`${client}${models.client}${en.health.available}`);
   });
 
-  it('Retry checks again, says so while it checks, and the banner goes once the model is back', async () => {
+  it('Retry checks again, says so while checking, and the banner goes when the model is back', async () => {
     let release: () => void = () => undefined;
     const held = new Promise<void>((resolve) => {
       release = resolve;
