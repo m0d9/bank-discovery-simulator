@@ -2,7 +2,6 @@
 
 from functools import lru_cache
 from pathlib import Path
-from typing import Literal
 
 from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -24,7 +23,6 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    APP_ENV: Literal["dev", "test", "prod"] = "dev"
     FRONTEND_DIST: Path = _REPO_ROOT / "frontend" / "dist"
     CONTENT_DIR: Path = _REPO_ROOT / "content"
     DATA_DIR: Path = _REPO_ROOT / "data"
@@ -52,7 +50,6 @@ class Settings(BaseSettings):
     LLM_PRICE_INPUT_PER_MTOK: float | None = Field(default=None, ge=0)
     LLM_PRICE_OUTPUT_PER_MTOK: float | None = Field(default=None, ge=0)
 
-    ALLOW_MODEL_SWITCH: bool = False
     LOG_TRANSCRIPTS: bool = False
 
     # Interview sessions live in memory only; a restart clears them.

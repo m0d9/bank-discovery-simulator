@@ -17,7 +17,6 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy \
     UV_PYTHON_DOWNLOADS=never \
-    APP_ENV=prod \
     FRONTEND_DIST=/app/frontend/dist \
     CONTENT_DIR=/app/content \
     DATA_DIR=/app/data \

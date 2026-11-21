@@ -52,7 +52,6 @@ def settings_factory(tmp_path: Path) -> SettingsFactory:
 
     def make(**overrides: Any) -> Settings:
         values: dict[str, Any] = {
-            "APP_ENV": "test",
             "DATA_DIR": tmp_path / "data",
             "LLM_BASE_URL": TEST_BASE_URL,
             "LLM_API_KEY": TEST_API_KEY,
