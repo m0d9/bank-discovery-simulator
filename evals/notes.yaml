@@ -6,6 +6,9 @@ khalid-al-marri:
     quote: follows up on his remark that the company has had to turn down work
     note: >-
       The pitch came right after his hint about turning down work, and the gate read it as a
-      follow-up on the hint. M6's by-design reading covers a generic line or a financing
-      question after the hint, not a pitch: this is the gate over-unlocking after a pitch, a
-      known limitation since M3. It counts as a false unlock.
+      follow-up on the hint. The by-design reading decided in
+      [PR #7](https://github.com/m0d9/bank-discovery-simulator/pull/7) covers a generic line
+      or a financing question after the hint, not a pitch: this is the gate over-unlocking
+      after a pitch, a known limitation since the interview engine
+      ([PR #4](https://github.com/m0d9/bank-discovery-simulator/pull/4)). It counts as a false
+      unlock.

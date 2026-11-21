@@ -1,4 +1,4 @@
-"""The milestone's live acceptance runs: a weak and a strong interview with Noura, then the
+"""The coach's live acceptance runs: a weak and a strong interview with Noura, then the
 coach, against the real models in `.env`. Run with `make test-live`.
 
 The models sample their replies, so a failure here is a finding to report, not a test to loosen.
@@ -16,8 +16,9 @@ from app.telemetry.events import event_logger_for
 pytestmark = pytest.mark.live
 
 NOURA = "noura-al-kuwari"
-# M7's weak script: generic questions, then a pitch of an unsuitable product. The pitch is M3's
-# wording: one that adds "for when cash is short" made the gate unlock `late-payments` too.
+# The evaluation's weak script: generic questions, then a pitch of an unsuitable product. The
+# pitch is worded as in test_interview_live.py (PR #4): one that adds "for when cash is short"
+# made the gate unlock `late-payments` too.
 WEAK = (
     "Thanks for coming in. Could you tell me a bit about yourself?",
     "How is business going at the moment?",
@@ -27,7 +28,8 @@ WEAK = (
     "and you only pay interest on what you use.",
     "So would that work for you?",
 )
-# M7's strong script: each fact's first example question, in dependency order, then a pitch.
+# The evaluation's strong script: each fact's first example question, in dependency order,
+# then a pitch.
 STRONG = (
     "Thanks for coming in. Could you tell me a bit about your situation?",
     "How quickly do your customers usually pay you?",
@@ -78,7 +80,7 @@ async def test_weak_interview_feedback_flags_the_cash_gap_and_the_overdraft() ->
     assert overdraft.verdict == "unsuitable" and overdraft.reasons
     cash_gap = [item for item in feedback.report.missed if item.need_id == "bridge-cash-gap"]
     assert cash_gap, feedback.report.missed
-    # Decided by Mahmoud in M7 (the traced M5/M6 failure): an item about the recommended
+    # Decided in PR #8, after the live failure traced in PR #7: an item about the recommended
     # product is a recommendation error and needs no better question. A discovery item
     # (product_id null) must exist for the cash gap, and each needs one.
     discovery = [item for item in cash_gap if item.product_id is None]

@@ -32,7 +32,7 @@ RecommendationReason = Annotated[
 
 
 class SessionStatus(StrEnum):
-    """Where a session is in the flow: interview, then wrap-up, then feedback (M5)."""
+    """Where a session is in the flow: interview, then wrap-up, then feedback."""
 
     INTERVIEWING = "interviewing"
     WRAPPED_UP = "wrapped_up"

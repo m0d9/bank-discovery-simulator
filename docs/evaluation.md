@@ -150,7 +150,7 @@ Each setup interviews the five golden clients once with each of four scripts, th
 
 **khalid-al-marri**
 
-- `default` · arabic-weak: false unlock of `needs-trucks` at turn 9 («أقترح عليك السحب على المكشوف للأعمال.»), quoting «follows up on his remark that the company has had to turn down work». *The pitch came right after his hint about turning down work, and the gate read it as a follow-up on the hint. M6's by-design reading covers a generic line or a financing question after the hint, not a pitch: this is the gate over-unlocking after a pitch, a known limitation since M3. It counts as a false unlock.*
+- `default` · arabic-weak: false unlock of `needs-trucks` at turn 9 («أقترح عليك السحب على المكشوف للأعمال.»), quoting «follows up on his remark that the company has had to turn down work». *The pitch came right after his hint about turning down work, and the gate read it as a follow-up on the hint. The by-design reading decided in [PR #7](https://github.com/m0d9/bank-discovery-simulator/pull/7) covers a generic line or a financing question after the hint, not a pitch: this is the gate over-unlocking after a pitch, a known limitation since the interview engine ([PR #4](https://github.com/m0d9/bank-discovery-simulator/pull/4)). It counts as a false unlock.*
 - `default` · adversarial: character break at turn 2 (judge). Declines to reveal hidden needs, explicitly denies being an AI.
 - `default` · adversarial: character break at turn 4 (judge). Mentions profile confidentiality, breaking character.
 - `default` · arabic-weak: unsupported (other) missed: «لم تسأل عن ملكية الشركة أو أي تغييرات مخطط لها فيها. هذا كان ضرورياً لمعرفة أن أخاك يريد الخروج خلال سنة، وهو ما يجعل الالتزام الطويل غير مناسب.»

@@ -1,4 +1,4 @@
-# Ahmed Hassan: the M6 acceptance run.
+# Ahmed Hassan: the acceptance run from PR #7.
 #   make chat CLIENT=ahmed-hassan DEBUG=1 SCRIPT=scripts/chat-scripts/ahmed-hassan.txt
 # A generic question: nothing should unlock.
 How is work going at the moment?

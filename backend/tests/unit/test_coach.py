@@ -187,8 +187,9 @@ def test_a_missed_critical_need_the_model_covered_is_not_backfilled() -> None:
     assert [item.need_id for item in report.missed] == ["fund-gap"]
 
 
-# M6's traced live failure (Noura's weak interview): the coach's only item for the cash gap was
-# about the overdraft, with the need's id but no better question. The log cut its text short.
+# The live failure traced in PR #7 (Noura's weak interview): the coach's only item for the cash
+# gap was about the overdraft, with the need's id but no better question. The log cut its text
+# short.
 OVERDRAFT_ONLY = (
     "You pitched an interest-based product before she mentioned her values. She revealed her "
     "Sharia preference only in reaction to the overdraft."
@@ -257,7 +258,8 @@ async def test_any_model_error_degrades_the_feedback() -> None:
 
 
 def test_praise_that_cites_no_student_turn_is_dropped() -> None:
-    # qwen's weak run in the M5 report: praise for something the student never did.
+    # qwen's report on Noura's weak interview in PR #6's coach comparison: praise for something
+    # the student never did.
     session = interview(*ALL_FOUND, recommend=[BETA])
     reply = coach_reply(
         went_well=[
@@ -280,7 +282,7 @@ def test_praise_that_cites_no_student_turn_is_dropped() -> None:
 
 
 def test_praise_for_the_pitch_of_an_unsuitable_product_is_dropped() -> None:
-    # The Arabic UI run in the M5 report: praise citing turn 7, the overdraft pitch.
+    # An Arabic run through the UI in PR #6: praise citing turn 7, the overdraft pitch.
     session = real_interview(
         "noura-al-kuwari",
         ("شكرًا على حضورك. هل يمكنك أن تحدثيني قليلًا عن شركتك؟", [], []),
@@ -366,7 +368,7 @@ def noura_weak() -> Session:
 
 
 def test_questions_and_examples_that_name_a_product_are_cleared_and_their_items_kept() -> None:
-    # Phrasing from qwen's weak report in the M5 appendix.
+    # Phrasing from qwen's report on Noura's weak interview in PR #6's coach comparison.
     murabaha = (
         "We offer a Sharia-compliant Murabaha facility where we buy your stock and sell it to "
         "you with a fixed profit. Would that interest-free structure work for you?"
@@ -431,7 +433,7 @@ def test_discovery_questions_without_a_product_name_are_kept() -> None:
 @pytest.mark.parametrize(
     ("example", "shown"),
     [
-        # From the M5 appendix: an example nested inside quotes.
+        # From an English run through the UI in PR #6: an example nested inside quotes.
         (
             "Before suggesting credit, ask: 'Do you prefer Sharia-compliant products or "
             "conventional ones?'",
@@ -637,7 +639,7 @@ COLLECT_MISSED = (
 
 
 def test_a_missed_item_about_a_product_the_student_recommended_is_dropped() -> None:
-    # Run c-1 of the Addendum 3 re-runs: the student recommended both suitable products, and
+    # A live re-run before PR #6 merged: the student recommended both suitable products, and
     # the coach called one of them a missed opportunity.
     session = real_interview(
         "rajesh-menon", *RAJESH_STRONG, recommend=["invoice-advance", "business-collect-account"]

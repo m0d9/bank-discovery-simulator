@@ -1,4 +1,4 @@
-# Khalid Al-Marri: the M6 acceptance run.
+# Khalid Al-Marri: the acceptance run from PR #7.
 #   make chat CLIENT=khalid-al-marri DEBUG=1 SCRIPT=scripts/chat-scripts/khalid-al-marri.txt
 # A generic question, then a general one about financing: nothing should unlock.
 # He is the hard client, so asking about financing in general must not reveal the trucks.

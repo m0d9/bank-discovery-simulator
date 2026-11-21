@@ -90,7 +90,7 @@ def test_the_section_has_the_table_the_notes_and_the_recommendation() -> None:
     assert chosen is not None
     notes = {
         "khalid-al-marri": {
-            "needs-trucks": Note(quote=FOLLOW_UP, note="By design (decided in M6).")
+            "needs-trucks": Note(quote=FOLLOW_UP, note="By design (decided in PR #7).")
         }
     }
 
@@ -101,7 +101,7 @@ def test_the_section_has_the_table_the_notes_and_the_recommendation() -> None:
     assert (
         "`default` · weak: false unlock of `needs-trucks` at turn 3 («What brings you in"
         " today?»), quoting «follows up on his remark that the company has had to turn down"
-        " work». *By design (decided in M6).*"
+        " work». *By design (decided in PR #7).*"
     ) in text
     assert "**Recommendation:** `default`: gate precision 0/1 (0%)" in text
     # Only a row whose coach is the judge is judged by its own model.
