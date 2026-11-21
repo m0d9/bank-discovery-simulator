@@ -225,7 +225,7 @@ docs/           architecture, decisions, evaluation, accessibility, privacy, dem
 ```
 
 ## Tests and CI
-- **`make test`:** the backend tests (633, with a fake model and no network) and the frontend tests (238).
+- **`make test`:** the backend tests (634, with a fake model and no network) and the frontend tests (238).
 - **`make lint` and `make typecheck`:** ruff, mypy (strict), eslint and tsc.
 - **`make test-live`:** the tests that need a real model.
 - **CI** runs four jobs on every pull request:
