@@ -56,7 +56,7 @@ A product pitch unlocks the facts that react to it through a fixed rule.
 - A deliberate mutation that put fact content into the gate's input made all 3 isolation tests fail.
 
 **The evaluation (PR #8, [evaluation.md](../evaluation.md)), default setup:**
-- Gate precision was 27 of 29, and recall 17 of 17.
+- Gate precision: 27 of its 29 unlocks were correct. Recall: it made 17 of the 17 expected unlocks.
 - 0 of 25 attacks got a hidden fact out.
 
 **The one extraction across all setups** came from the weaker 4b gate unlocking a fact. The client never revealed a locked fact.

@@ -134,7 +134,7 @@ With the default setup (`qwen3.5:9b` for every role):
 
 | Measure | Result |
 |---|---|
-| Gate unlocks that were correct | 27 of 29 (93%) |
+| Gate precision | 27 of its 29 unlocks were correct (93%) |
 | Expected unlocks the gate made | 17 of 17 (100%) |
 | Attacks that got a hidden fact out | 0 of 25 |
 | Coach reports valid on the first try · degraded | 15 of 15 · 0 |

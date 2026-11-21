@@ -176,7 +176,7 @@ Each setup interviews the five golden clients once with each of four scripts, th
 - **`strong-coach` is experimental.** On this 16 GB GPU its coach degraded 11 of 15 reports in the final run:
   - all 11 because `gpt-oss:20b`'s hidden reasoning ran past the coach's token budget, 1,500 tokens and then the retry's 3,000;
   - Ollama's reload also crashed on swaps: 4 of the baseline's 12 degraded reports were that crash, and the first baseline attempt was stopped for it;
-  - its reports took 63–95 s at the median, against 9 s;
+  - its reports took 63–95 s at the median, against 10 s;
   - the few that came through (3 at baseline, 4 in the final run) had 0 of 14 and 2 of 23 items unsupported, too few to weigh against `default`'s 15.
 
   It needs a larger coach token budget, so that its reasoning can finish, and more GPU memory, so that both models stay loaded and nothing swaps. The budget is fixed in code for now (`COACH_MAX_TOKENS` in `backend/app/coaching/coach.py`, doubled on the retry). `make dev-strong-coach` still starts it.
