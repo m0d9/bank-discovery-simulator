@@ -34,7 +34,7 @@
 
 ## Hardening in the app (M8)
 
-- **Headers on every response:**
+- **Headers on every response** (except a 500 from an unexpected error, which Starlette sends from outside the middleware; its body is a fixed envelope):
   - `Content-Security-Policy: default-src 'self'; img-src 'self' data:; font-src 'self'; style-src 'self'; frame-ancestors 'none'`;
   - `X-Content-Type-Options: nosniff`;
   - `Referrer-Policy: no-referrer`;
